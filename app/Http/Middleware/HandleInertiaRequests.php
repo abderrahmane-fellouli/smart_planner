@@ -34,6 +34,14 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // Flash messages from redirect()->back()->with('success', ...) etc.
+            // Without this, controllers' flash messages are silently lost on the frontend.
+            // The fn() closures (lazy evaluation) avoid reading session data until the
+            // Inertia serializer actually needs them, preventing unnecessary session loads.
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error'   => fn () => $request->session()->get('error'),
+            ],
         ];
     }
 }

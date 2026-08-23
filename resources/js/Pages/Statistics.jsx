@@ -1,5 +1,6 @@
-import { Head } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import AppLayout from "./AppLayout";
+import { useTheme } from "./AppLayout";
 
 // Translation object – add to your existing T or keep here
 const T = {
@@ -132,6 +133,7 @@ const T = {
 };
 
 export default function Statistics({ schedules = [], fixedEvents = [], user }) {
+  const { dark } = useTheme();
   // Get language from localStorage (same as your Dashboard)
   let lang = "fr";
   if (typeof window !== "undefined") {
@@ -208,7 +210,7 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>📊</div>
             <h2 style={s.emptyTitle}>{tr.emptyTitle}</h2>
             <p style={s.emptySub}>{tr.emptySub}</p>
-            <a href="/schedules" style={s.emptyBtn}>{tr.generateBtn}</a>
+            <Link href="/schedules" style={s.emptyBtn}>{tr.generateBtn}</Link>
           </div>
         </div>
       </AppLayout>
@@ -232,7 +234,7 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
         </div>
 
         {/* KPI Cards */}
-        <div style={s.kpiRow}>
+        <div style={s.kpiRow} className="sp-kpi-row">
           {[
             { label: tr.hoursPerWeek, value: `${resume.total_heures_semaine ?? 0}${tr.hourUnit}`, icon: "⏱️", color: "#4F46E5", bg: "#EEF2FF" },
             { label: tr.totalSessions, value: resume.sessions_totales ?? 0, icon: "📚", color: "#10B981", bg: "#ECFDF5" },
@@ -248,7 +250,7 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
           ))}
         </div>
 
-        <div style={s.grid2}>
+        <div style={s.grid2} className="sp-grid-2col">
           {/* Bar Chart */}
           <div style={s.card}>
             <h2 style={s.cardTitle}>{tr.hoursPerDayTitle}</h2>
@@ -257,7 +259,7 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
               {hoursPerDay.map((d, i) => (
                 <div key={i} style={s.barCol}>
                   <div style={s.barWrap}>
-                    <div style={s.barBg}>
+                      <div style={s.barBg}>
                       <div style={{ ...s.barFill, height: `${(d.hours / maxHours) * 100}%`, background: dayColors[i] }} />
                     </div>
                     <span style={s.barVal}>{d.hours}{tr.hourUnit}</span>
@@ -302,15 +304,15 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
             <h2 style={s.cardTitle}>{tr.subjectsTitle}</h2>
             <p style={s.cardSub}>{tr.subjectsSub}</p>
             {subjects.length === 0 ? (
-              <p style={{ color: "#9CA3AF", fontSize: "13px" }}>{tr.noSubjects}</p>
+              <p style={{ color: "var(--sp-textMuted)", fontSize: "13px" }}>{tr.noSubjects}</p>
             ) : (
               <div style={s.subjectList}>
                 {subjects.map((sub, i) => (
                   <div key={i} style={s.subjectItem}>
                     <div style={s.subjectHeader}>
                       <span style={s.subjectDot(dayColors[i % dayColors.length])} />
-                      <span style={s.subjectName}>{sub.name}</span>
-                      <span style={s.subjectHours}>{sub.hours}{tr.hourUnit}</span>
+                        <span style={s.subjectName}>{sub.name}</span>
+                        <span style={s.subjectHours}>{sub.hours}{tr.hourUnit}</span>
                     </div>
                     <div style={s.progressBg}>
                       <div style={{ ...s.progressFill, width: `${(sub.hours / totalSubjectHours) * 100}%`, background: dayColors[i % dayColors.length] }} />
@@ -333,7 +335,7 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
                     <div style={s.dayMiniStats}>
                       <span style={s.dayMiniStat}>📘 {d.cours} {tr.courseCount}</span>
                       <span style={s.dayMiniStat}>📚 {d.sessions} {tr.sessionCount}</span>
-                      <span style={{ ...s.dayMiniStat, fontWeight: 700, color: "#111827" }}>{d.hours}{tr.hourUnit} {tr.studyHoursAbbr}</span>
+                      <span style={{ ...s.dayMiniStat, fontWeight: 700 }}>{d.hours}{tr.hourUnit} {tr.studyHoursAbbr}</span>
                     </div>
                     <div style={s.progressBg}>
                       <div style={{ ...s.progressFill, width: `${(d.hours / maxHours) * 100}%`, background: dayColors[i] }} />
@@ -349,54 +351,54 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
   );
 }
 
-// Styles (unchanged)
+// Styles
 const s = {
-  page: { maxWidth: "1100px", margin: "0 auto", padding: "32px 24px 60px", fontFamily: "'DM Sans', sans-serif" },
+  page: { maxWidth: "1100px", margin: "0 auto", padding: "32px 24px 60px", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" },
   header: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px", flexWrap: "wrap", gap: "12px" },
-  title: { fontSize: "22px", fontWeight: 700, color: "#111827", margin: "0 0 4px" },
-  subtitle: { fontSize: "14px", color: "#6B7280", margin: 0 },
-  planningBadge: { background: "#EEF2FF", color: "#4F46E5", padding: "8px 16px", borderRadius: "20px", fontSize: "13px", fontWeight: 600 },
+  title: { fontSize: "22px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
+  subtitle: { fontSize: "14px", color: "var(--sp-textSecondary)", margin: 0 },
+  planningBadge: { background: "var(--sp-accentLight)", color: "var(--sp-accent)", padding: "8px 16px", borderRadius: "20px", fontSize: "13px", fontWeight: 600 },
   kpiRow: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px", marginBottom: "24px" },
-  kpiCard: { background: "#fff", border: "1px solid #E5E7EB", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", textAlign: "center" },
+  kpiCard: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "12px", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", textAlign: "center" },
   kpiIcon: { width: "40px", height: "40px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" },
   kpiValue: { fontSize: "22px", fontWeight: 800, letterSpacing: "-0.02em" },
-  kpiLabel: { fontSize: "11px", color: "#9CA3AF", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" },
-  grid2: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(440px, 1fr))", gap: "16px" },
-  card: { background: "#fff", border: "1px solid #E5E7EB", borderRadius: "14px", padding: "22px 24px" },
-  cardTitle: { fontSize: "15px", fontWeight: 700, color: "#111827", margin: "0 0 4px" },
-  cardSub: { fontSize: "12px", color: "#9CA3AF", margin: "0 0 20px" },
+  kpiLabel: { fontSize: "11px", color: "var(--sp-textMuted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" },
+  grid2: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(440px, 100%), 1fr))", gap: "16px" },
+  card: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "14px", padding: "22px 24px" },
+  cardTitle: { fontSize: "15px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
+  cardSub: { fontSize: "12px", color: "var(--sp-textMuted)", margin: "0 0 20px" },
   barChart: { display: "flex", alignItems: "flex-end", gap: "12px", height: "160px", paddingBottom: "32px", position: "relative" },
   barCol: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", height: "100%" },
   barWrap: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-end", width: "100%", gap: "4px" },
-  barBg: { width: "100%", maxWidth: "36px", height: "120px", background: "#F3F4F6", borderRadius: "6px", overflow: "hidden", display: "flex", alignItems: "flex-end" },
+  barBg: { width: "100%", maxWidth: "36px", height: "120px", background: "var(--sp-subtleBg)", borderRadius: "6px", overflow: "hidden", display: "flex", alignItems: "flex-end" },
   barFill: { width: "100%", borderRadius: "6px 6px 0 0", transition: "height 0.6s ease", minHeight: "4px" },
-  barVal: { fontSize: "10px", fontWeight: 700, color: "#374151" },
-  barLabel: { fontSize: "11px", fontWeight: 700, color: "#6B7280" },
-  barSessions: { fontSize: "9px", color: "#9CA3AF" },
+  barVal: { fontSize: "10px", fontWeight: 700, color: "var(--sp-text)" },
+  barLabel: { fontSize: "11px", fontWeight: 700, color: "var(--sp-textSecondary)" },
+  barSessions: { fontSize: "9px", color: "var(--sp-textMuted)" },
   compareList: { display: "flex", flexDirection: "column", gap: "16px" },
   compareItem: { display: "flex", flexDirection: "column", gap: "6px" },
   compareHeader: { display: "flex", alignItems: "center", gap: "8px" },
   compareIcon: { fontSize: "16px" },
   compareLabel: { flex: 1, fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" },
-  compareVal: { fontSize: "13px", fontWeight: 700, color: "#111827" },
-  compareSub: { fontSize: "11px", color: "#9CA3AF" },
+  compareVal: { fontSize: "13px", fontWeight: 700, color: "var(--sp-text)" },
+  compareSub: { fontSize: "11px", color: "var(--sp-textMuted)" },
   activePill: { fontSize: "10px", color: "#fff", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
-  progressBg: { height: "8px", background: "#F3F4F6", borderRadius: "20px", overflow: "hidden" },
+  progressBg: { height: "8px", background: "var(--sp-subtleBg)", borderRadius: "20px", overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: "20px", transition: "width 0.8s ease" },
   subjectList: { display: "flex", flexDirection: "column", gap: "12px" },
   subjectItem: { display: "flex", flexDirection: "column", gap: "6px" },
   subjectHeader: { display: "flex", alignItems: "center", gap: "8px" },
   subjectDot: (color) => ({ width: "10px", height: "10px", borderRadius: "50%", background: color, flexShrink: 0 }),
-  subjectName: { flex: 1, fontSize: "13px", fontWeight: 500, color: "#374151" },
-  subjectHours: { fontSize: "12px", fontWeight: 700, color: "#111827" },
+  subjectName: { flex: 1, fontSize: "13px", fontWeight: 500, color: "var(--sp-text)" },
+  subjectHours: { fontSize: "12px", fontWeight: 700, color: "var(--sp-text)" },
   dayDetailList: { display: "flex", flexDirection: "column", gap: "12px" },
   dayDetailRow: { display: "flex", alignItems: "center", gap: "12px" },
   dayBadge: { width: "36px", height: "36px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, flexShrink: 0 },
   dayDetailBar: { flex: 1, display: "flex", flexDirection: "column", gap: "4px" },
   dayMiniStats: { display: "flex", gap: "10px" },
-  dayMiniStat: { fontSize: "11px", color: "#6B7280" },
-  empty: { background: "#fff", border: "1px solid #E5E7EB", borderRadius: "16px", padding: "60px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" },
-  emptyTitle: { fontSize: "18px", fontWeight: 700, color: "#111827", margin: "0 0 8px" },
-  emptySub: { fontSize: "13px", color: "#9CA3AF", margin: "0 0 20px" },
-  emptyBtn: { display: "inline-flex", padding: "10px 20px", background: "#4F46E5", color: "#fff", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none" },
+  dayMiniStat: { fontSize: "11px", color: "var(--sp-textSecondary)" },
+  empty: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "16px", padding: "60px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" },
+  emptyTitle: { fontSize: "18px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 8px" },
+  emptySub: { fontSize: "13px", color: "var(--sp-textMuted)", margin: "0 0 20px" },
+  emptyBtn: { display: "inline-flex", padding: "10px 20px", background: "var(--sp-accent)", color: "var(--sp-accentText)", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none" },
 };

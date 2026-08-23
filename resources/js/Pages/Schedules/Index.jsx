@@ -40,7 +40,7 @@ const T = {
       descIntensif: "2h/session · 4 sessions/jour max",
       descEquilibre: "1h/session · 3 sessions/jour max",
       descLeger: "30min/session · 2 sessions/jour max",
-      days: { monday:"Lundi", tuesday:"Mardi", wednesday:"Mercredi", thursday:"Jeudi", friday:"Vendredi", saturday:"Samedi" },
+      days: { monday:"Lundi", tuesday:"Mardi", wednesday:"Mercredi", thursday:"Jeudi", friday:"Vendredi", saturday:"Samedi", sunday:"Dimanche" },
     },
   },
   en: {
@@ -79,7 +79,7 @@ const T = {
       descIntensif: "2h/session · 4 sessions/day max",
       descEquilibre: "1h/session · 3 sessions/day max",
       descLeger: "30min/session · 2 sessions/day max",
-      days: { monday:"Monday", tuesday:"Tuesday", wednesday:"Wednesday", thursday:"Thursday", friday:"Friday", saturday:"Saturday" },
+      days: { monday:"Monday", tuesday:"Tuesday", wednesday:"Wednesday", thursday:"Thursday", friday:"Friday", saturday:"Saturday", sunday:"Sunday" },
     },
   },
   ar: {
@@ -118,7 +118,7 @@ const T = {
       descIntensif: "ساعتان/جلسة · 4 جلسات/يوم كحد أقصى",
       descEquilibre: "ساعة/جلسة · 3 جلسات/يوم كحد أقصى",
       descLeger: "30 دقيقة/جلسة · 2 جلسات/يوم كحد أقصى",
-      days: { monday:"الاثنين", tuesday:"الثلاثاء", wednesday:"الأربعاء", thursday:"الخميس", friday:"الجمعة", saturday:"السبت" },
+      days: { monday:"الاثنين", tuesday:"الثلاثاء", wednesday:"الأربعاء", thursday:"الخميس", friday:"الجمعة", saturday:"السبت", sunday:"الأحد" },
     },
   },
 };
@@ -170,7 +170,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
   };
 
   // French keys match what PHP stores — display labels come from translation
-  const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
   const jourLabels = {
     'Lundi':    tr.days.monday,
     'Mardi':    tr.days.tuesday,
@@ -178,6 +178,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
     'Jeudi':    tr.days.thursday,
     'Vendredi': tr.days.friday,
     'Samedi':   tr.days.saturday,
+    'Dimanche': tr.days.sunday,
   };
 
   return (
@@ -201,7 +202,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
         {/* Loading banner */}
         {processing && (
           <div style={{ ...s.loadingBanner, flexDirection: isRTL ? "row-reverse" : "row" }}>
-            <Spinner color="#4F46E5" />
+            <Spinner color="var(--sp-accent)" />
             <div style={{ textAlign: isRTL ? "right" : "left" }}>
               <p style={s.loadingTitle}>{tr.loadingTitle}</p>
               <p style={s.loadingSub}>{tr.loadingSub}</p>
@@ -304,6 +305,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
                                     <button
                                       style={s.moveBtn}
                                       title={tr.moveSession}
+                                      aria-label={`${tr.moveSession} ${sess.matiere}`}
                                       onClick={() => openMoveModal(plan.id, jour, i, sess)}
                                     >
                                       ✏️
@@ -395,55 +397,55 @@ function ChevronIcon({ rotated }) {
 }
 
 const s = {
-  page:            { padding: '32px', maxWidth: '1100px' },
+  page:            { padding: '32px', maxWidth: '1100px', overflowX: 'hidden' },
   header:          { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' },
-  title:           { fontSize: '22px', fontWeight: 700, color: '#111827', margin: '0 0 4px' },
-  subtitle:        { fontSize: '14px', color: '#6B7280', margin: 0 },
-  generateBtn:     { display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: '#4F46E5', color: '#fff', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
-  loadingBanner:   { display: 'flex', alignItems: 'center', gap: '14px', background: '#EEF2FF', border: '1px solid #C7D2FE', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px' },
-  loadingTitle:    { fontSize: '14px', fontWeight: 600, color: '#3730A3', margin: '0 0 2px' },
-  loadingSub:      { fontSize: '12px', color: '#6366F1', margin: 0 },
-  emptyCard:       { background: '#fff', border: '1px solid #F3F4F6', borderRadius: '16px', padding: '60px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
+  title:           { fontSize: '22px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
+  subtitle:        { fontSize: '14px', color: 'var(--sp-textSecondary)', margin: 0 },
+  generateBtn:     { display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: 'var(--sp-accent)', color: 'var(--sp-accentText)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
+  loadingBanner:   { display: 'flex', alignItems: 'center', gap: '14px', background: 'var(--sp-accentLight)', border: '1px solid var(--sp-cardBorder)', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px' },
+  loadingTitle:    { fontSize: '14px', fontWeight: 600, color: 'var(--sp-accent)', margin: '0 0 2px' },
+  loadingSub:      { fontSize: '12px', color: 'var(--sp-accent)', margin: 0 },
+  emptyCard:       { background: 'var(--sp-card)', border: '1px solid var(--sp-cardBorder)', borderRadius: '16px', padding: '60px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
   emptyIcon:       { fontSize: '48px' },
-  emptyTitle:      { fontSize: '16px', fontWeight: 600, color: '#111827', margin: 0 },
-  emptyText:       { fontSize: '13px', color: '#9CA3AF', margin: 0, maxWidth: '320px' },
+  emptyTitle:      { fontSize: '16px', fontWeight: 600, color: 'var(--sp-text)', margin: 0 },
+  emptyText:       { fontSize: '13px', color: 'var(--sp-textMuted)', margin: 0, maxWidth: '320px' },
   grid:            { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', alignItems: 'flex-start' },
-  card:            { background: '#fff', border: '1px solid #F3F4F6', borderRadius: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
+  card:            { background: 'var(--sp-card)', border: '1px solid var(--sp-cardBorder)', borderRadius: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
   cardTop:         { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   cardTopLeft:     { display: 'flex', alignItems: 'center', gap: '10px' },
   cardIcon:        { fontSize: '22px' },
   cardLabel:       { fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' },
-  cardDesc:        { fontSize: '12px', color: '#9CA3AF', marginTop: '2px' },
+  cardDesc:        { fontSize: '12px', color: 'var(--sp-textMuted)', marginTop: '2px' },
   activeBadge:     { fontSize: '10px', fontWeight: 700, color: '#fff', padding: '2px 8px', borderRadius: '20px' },
-  resumeRow:       { display: 'flex', borderTop: '1px solid #F3F4F6', borderBottom: '1px solid #F3F4F6' },
-  resumeStat:      { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', borderRight: '1px solid #F3F4F6' },
-  resumeVal:       { fontSize: '16px', fontWeight: 700, color: '#111827' },
-  resumeKey:       { fontSize: '11px', color: '#9CA3AF' },
+  resumeRow:       { display: 'flex', borderTop: '1px solid var(--sp-cardBorder)', borderBottom: '1px solid var(--sp-cardBorder)' },
+  resumeStat:      { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', borderRight: '1px solid var(--sp-cardBorder)' },
+  resumeVal:       { fontSize: '16px', fontWeight: 700, color: 'var(--sp-text)' },
+  resumeKey:       { fontSize: '11px', color: 'var(--sp-textMuted)' },
   cardBody:        { padding: '14px 18px', flex: 1 },
-  expandBtn:       { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: '1px solid #E5E7EB', borderRadius: '8px', padding: '7px 12px', fontSize: '12px', color: '#6B7280', cursor: 'pointer', width: '100%', justifyContent: 'center' },
+  expandBtn:       { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', padding: '7px 12px', fontSize: '12px', color: 'var(--sp-textSecondary)', cursor: 'pointer', width: '100%', justifyContent: 'center' },
   dayList:         { marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' },
   dayRow:          { display: 'flex', gap: '10px', alignItems: 'flex-start' },
-  dayName:         { fontSize: '12px', fontWeight: 700, color: '#374151', minWidth: '64px', paddingTop: '4px' },
+  dayName:         { fontSize: '12px', fontWeight: 700, color: 'var(--sp-textSecondary)', minWidth: '64px', paddingTop: '4px' },
   dayContent:      { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 },
-  coursTag:        { fontSize: '11px', background: '#F3F4F6', color: '#374151', padding: '3px 8px', borderRadius: '6px' },
+  coursTag:        { fontSize: '11px', background: 'var(--sp-subtleBg)', color: 'var(--sp-textSecondary)', padding: '3px 8px', borderRadius: '6px' },
   sessionRow:      { display: 'flex', alignItems: 'center', gap: '4px' },
   sessionTag:      { fontSize: '11px', padding: '3px 8px', borderRadius: '6px', fontWeight: 500, flex: 1 },
   moveBtn:         { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', padding: '2px 4px', borderRadius: '4px', opacity: 0.55, flexShrink: 0 },
-  noSession:       { fontSize: '11px', color: '#D1D5DB' },
-  cardFooter:      { padding: '14px 18px', borderTop: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: '10px' },
+  noSession:       { fontSize: '11px', color: 'var(--sp-textMuted)' },
+  cardFooter:      { padding: '14px 18px', borderTop: '1px solid var(--sp-cardBorder)', display: 'flex', alignItems: 'center', gap: '10px' },
   activateBtn:     { flex: 1, padding: '9px', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
   activeLabel:     { flex: 1, fontSize: '13px', fontWeight: 600, textAlign: 'center' },
-  deleteBtn:       { padding: '9px 14px', background: 'none', border: '1px solid #FCA5A5', color: '#EF4444', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' },
-  modalOverlay:    { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modalBox:        { background: '#fff', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '380px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' },
-  modalTitle:      { fontSize: '16px', fontWeight: 700, color: '#111827', margin: '0 0 4px' },
-  modalSub:        { fontSize: '13px', color: '#6B7280', margin: '0 0 18px' },
-  modalSessionInfo:{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: '10px', padding: '12px 14px', marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '4px' },
-  modalSessionName:{ fontSize: '13px', fontWeight: 600, color: '#111827' },
-  modalSessionTime:{ fontSize: '12px', color: '#6B7280' },
-  modalLabel:      { display: 'block', fontSize: '12px', fontWeight: 600, color: '#374151', marginBottom: '6px' },
-  modalInput:      { width: '100%', padding: '10px 12px', border: '1px solid #D1D5DB', borderRadius: '8px', fontSize: '14px', color: '#111827', boxSizing: 'border-box', marginBottom: '20px' },
+  deleteBtn:       { padding: '9px 14px', background: 'none', border: '1px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' },
+  modalOverlay:    { position: 'fixed', inset: 0, background: 'var(--sp-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
+  modalBox:        { background: 'var(--sp-card)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '380px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' },
+  modalTitle:      { fontSize: '16px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
+  modalSub:        { fontSize: '13px', color: 'var(--sp-textSecondary)', margin: '0 0 18px' },
+  modalSessionInfo:{ background: 'var(--sp-subtleBg)', border: '1px solid var(--sp-inputBorder)', borderRadius: '10px', padding: '12px 14px', marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '4px' },
+  modalSessionName:{ fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
+  modalSessionTime:{ fontSize: '12px', color: 'var(--sp-textSecondary)' },
+  modalLabel:      { display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--sp-textSecondary)', marginBottom: '6px' },
+  modalInput:      { width: '100%', padding: '10px 12px', background: 'var(--sp-inputBg)', border: '1px solid var(--sp-inputBorder)', borderRadius: '8px', fontSize: '14px', color: 'var(--sp-text)', boxSizing: 'border-box', marginBottom: '20px' },
   modalFooter:     { display: 'flex', gap: '10px' },
-  modalCancelBtn:  { flex: 1, padding: '10px', background: 'none', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '13px', color: '#6B7280', cursor: 'pointer' },
-  modalConfirmBtn: { flex: 1, padding: '10px', background: '#4F46E5', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
+  modalCancelBtn:  { flex: 1, padding: '10px', background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', fontSize: '13px', color: 'var(--sp-textSecondary)', cursor: 'pointer' },
+  modalConfirmBtn: { flex: 1, padding: '10px', background: 'var(--sp-accent)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--sp-accentText)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
 };

@@ -16,12 +16,13 @@ class StatisticsController extends Controller
             ->orderBy('is_active', 'desc')
             ->get();
 
-        $fixedEvents = FixedEvent::where('user_id', $user->id)->get();
+        // The Statistics page only displays the number of fixed courses,
+        // so count them in SQL instead of hydrating every row.
+        $fixedEventsCount = FixedEvent::where('user_id', $user->id)->count();
 
         return Inertia::render('Statistics', [
-            'schedules'   => $schedules,
-            'fixedEvents' => $fixedEvents,
-            'user'        => $user,
+            'schedules'        => $schedules,
+            'fixedEventsCount' => $fixedEventsCount,
         ]);
     }
 }
