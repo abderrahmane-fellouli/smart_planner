@@ -716,7 +716,7 @@ test('export PDF with French labels', function () {
     expect($content)->toContain('SmartPlanner')
         ->toContain('Cours fixes')
         ->toContain('Mathematics')
-        ->toContain($user->name);
+        ->toContain(e($user->name));
 });
 
 test('export PDF with English labels', function () {

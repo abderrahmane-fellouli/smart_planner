@@ -292,7 +292,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
                               <div style={s.dayContent}>
                                 {cours.map((c, i) => (
                                   <div key={i} style={s.coursTag}>
-                                    📘 {c.title} {c.start_time?.slice(0,5)}–{c.end_time?.slice(0,5)}
+                                    📘 {c.title}{c.teacher ? ` · ${c.teacher}` : ''} {c.start_time?.slice(0,5)}–{c.end_time?.slice(0,5)}
                                   </div>
                                 ))}
                                 {isEmpty && <span style={s.noSession}>{tr.noSession}</span>}

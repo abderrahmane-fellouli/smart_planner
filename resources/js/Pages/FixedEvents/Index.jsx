@@ -12,6 +12,10 @@ const T = {
       addCourse: "Ajouter un cours",
       subject: "MatiÃ¨re",
       subjectPlaceholder: "Ex: MathÃ©matiques",
+      teacher: "Enseignant",
+      teacherPlaceholder: "Ex: M. Dupont",
+      description: "Description",
+      descriptionPlaceholder: "Notes optionnelles sur le cours...",
       day: "Jour",
       everyDay: "Tous les jours",
       everyDayDesc: "Appliquer Ã  tous les jours (lundiâ€“samedi)",
@@ -41,6 +45,10 @@ const T = {
       addCourse: "Add a course",
       subject: "Subject",
       subjectPlaceholder: "E.g., Mathematics",
+      teacher: "Teacher",
+      teacherPlaceholder: "E.g., Mr. Smith",
+      description: "Description",
+      descriptionPlaceholder: "Optional notes about the course...",
       day: "Day",
       everyDay: "Every day",
       everyDayDesc: "Apply to all days (Mondayâ€“Saturday)",
@@ -70,6 +78,10 @@ const T = {
       addCourse: "Ø¥Ø¶Ø§ÙØ© Ø¯Ø±Ø³",
       subject: "Ø§Ù„Ù…Ø§Ø¯Ø©",
       subjectPlaceholder: "Ù…Ø«Ø§Ù„: Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª",
+      teacher: "Ø§Ù„Ù…Ø¹Ù„Ù…",
+      teacherPlaceholder: "Ù…Ø«Ø§Ù„: Ø§Ù„Ø³ÙŠØ¯ Ø£Ø­Ù…Ø¯",
+      description: "Ø§Ù„ÙˆØµÙ",
+      descriptionPlaceholder: "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø®Ø§ØµØ© Ø¹Ù† Ø§Ù„Ø¯Ø±Ø³...",
       day: "Ø§Ù„ÙŠÙˆÙ…",
       everyDay: "ÙƒÙ„ ÙŠÙˆÙ…",
       everyDayDesc: "ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ ÙƒÙ„ Ø§Ù„Ø£ÙŠØ§Ù… (Ø§Ù„Ø§Ø«Ù†ÙŠÙ†â€“Ø§Ù„Ø³Ø¨Øª)",
@@ -159,6 +171,8 @@ export default function FixedEventsIndex({ fixedEvents }) {
 
   const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
+    teacher: '',
+    description: '',
     day_of_week: tr.days.monday,
     start_time: '09:00',
     end_time: '11:00',
@@ -169,7 +183,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
     e.preventDefault();
     post('/fixed-events', { onSuccess: () => {
       // Reset form after successful submission, keeping the day in current language
-      reset('title', 'start_time', 'end_time');
+      reset('title', 'teacher', 'description', 'start_time', 'end_time');
       setData('is_recurring_daily', false);
       setData('day_of_week', tr.days.monday);
     }});
@@ -224,6 +238,31 @@ export default function FixedEventsIndex({ fixedEvents }) {
                   onChange={e => setData('title', e.target.value)}
                   required
                 />
+              </div>
+
+              <div style={s.fieldRow}>
+                <div style={s.field}>
+                  <label style={s.label} htmlFor="fe-teacher">{tr.teacher}</label>
+                  <input
+                    id="fe-teacher"
+                    type="text"
+                    style={s.input}
+                    placeholder={tr.teacherPlaceholder}
+                    value={data.teacher}
+                    onChange={e => setData('teacher', e.target.value)}
+                  />
+                </div>
+                <div style={s.field}>
+                  <label style={s.label} htmlFor="fe-description">{tr.description}</label>
+                  <input
+                    id="fe-description"
+                    type="text"
+                    style={s.input}
+                    placeholder={tr.descriptionPlaceholder}
+                    value={data.description}
+                    onChange={e => setData('description', e.target.value)}
+                  />
+                </div>
               </div>
 
               {/* Every day toggle â€” uses role="checkbox" for keyboard accessibility */}
@@ -344,9 +383,11 @@ export default function FixedEventsIndex({ fixedEvents }) {
                       </div>
                       <div style={{ ...s.eventInfo, textAlign: isRTL ? "right" : "left" }}>
                         <span style={s.eventTitle}>{event.title}</span>
+                        {event.teacher && <span style={s.eventTeacher}>👤 {event.teacher}</span>}
+                        {event.description && <span style={s.eventDesc}>{event.description}</span>}
                         <span style={s.eventTime}>
-                          {isDaily ? tr.everyDay + ' Â· ' : ''}
-                          {event.start_time?.slice(0, 5)} â€“ {event.end_time?.slice(0, 5)}
+                          {isDaily ? tr.everyDay + ' · ' : ''}
+                          {event.start_time?.slice(0, 5)} – {event.end_time?.slice(0, 5)}
                         </span>
                       </div>
                       <button onClick={() => handleDelete(event.id)} style={s.deleteBtn} title={tr.deleteConfirm}>
@@ -444,6 +485,8 @@ const s = {
   },
   eventInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' },
   eventTitle: { fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
+  eventTeacher: { fontSize: '11px', color: 'var(--sp-accent)', fontWeight: 500 },
+  eventDesc: { fontSize: '11px', color: 'var(--sp-textMuted)', fontStyle: 'italic' },
   eventTime: { fontSize: '12px', color: 'var(--sp-textMuted)' },
   deleteBtn: { background: 'none', border: '1px solid var(--sp-errorBorder)', color: 'var(--sp-error)', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' },
 };

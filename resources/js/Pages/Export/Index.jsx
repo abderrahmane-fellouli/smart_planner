@@ -1,4 +1,4 @@
-import { Head, Link, router } from "@inertiajs/react";
+import { Head, Link } from "@inertiajs/react";
 import AppLayout from "@/Pages/AppLayout";
 import { useTheme } from "@/Pages/AppLayout";
 import { useState } from "react";
@@ -11,24 +11,21 @@ const T = {
       emptyTitle: "Aucun planning disponible",
       emptySub: "Générez d'abord un planning depuis la page \"Mon planning\"",
       emptyBtn: "Aller à Mon planning →",
-      step1_title: "1. Choisir le planning",
-      step1_sub: "Sélectionnez le planning à exporter",
+      step1_title: "Sélectionner le planning",
+      step1_sub: "Choisissez le planning à exporter",
       planningIntensif: "Intensif",
       planningEquilibre: "Équilibré",
       planningLeger: "Léger",
       activeBadge: "Actif",
-      generatedFor: "Généré pour le {date}",
-      previewTitle: "Aperçu du planning sélectionné",
+      generatedFor: "Généré le {date}",
+      previewTitle: "Aperçu",
       perWeek: "/ semaine",
       sessions: "sessions",
       avgPerDay: "moy/jour",
-      step2_title: "2. Choisir le format",
-      step2_sub: "Cliquez sur le format souhaité pour télécharger",
       exportPdf: "Exporter en PDF",
       pdfOpening: "Ouverture...",
-      pdfDesc: "S'ouvre dans un nouvel onglet · Imprimable",
-      infoPdf: "PDF :",
-      infoText: "S'ouvre dans un nouvel onglet. Utilisez Ctrl+P ou le bouton \"Imprimer\" pour sauvegarder en PDF.",
+      pdfDesc: "S'ouvre dans un nouvel onglet · Imprimable avec Ctrl+P",
+      infoText: "Le PDF s'ouvre dans un nouvel onglet. Utilisez Ctrl+P ou le bouton « Imprimer » pour sauvegarder en PDF.",
     },
   },
   en: {
@@ -38,24 +35,21 @@ const T = {
       emptyTitle: "No schedule available",
       emptySub: "First generate a schedule from the \"My Schedule\" page",
       emptyBtn: "Go to My Schedule →",
-      step1_title: "1. Choose schedule",
-      step1_sub: "Select the schedule to export",
+      step1_title: "Select schedule",
+      step1_sub: "Choose the schedule to export",
       planningIntensif: "Intensive",
       planningEquilibre: "Balanced",
       planningLeger: "Light",
       activeBadge: "Active",
-      generatedFor: "Generated for {date}",
-      previewTitle: "Selected schedule preview",
+      generatedFor: "Generated on {date}",
+      previewTitle: "Preview",
       perWeek: "/ week",
       sessions: "sessions",
       avgPerDay: "avg/day",
-      step2_title: "2. Choose format",
-      step2_sub: "Click the desired format to download",
       exportPdf: "Export as PDF",
       pdfOpening: "Opening...",
-      pdfDesc: "Opens in new tab · Printable",
-      infoPdf: "PDF:",
-      infoText: "Opens in a new tab. Use Ctrl+P or the Print button to save as PDF.",
+      pdfDesc: "Opens in new tab · Printable with Ctrl+P",
+      infoText: "The PDF opens in a new tab. Use Ctrl+P or the Print button to save as PDF.",
     },
   },
   ar: {
@@ -65,24 +59,21 @@ const T = {
       emptyTitle: "لا يوجد جدول متاح",
       emptySub: "قم أولاً بإنشاء جدول من صفحة \"جدولي\"",
       emptyBtn: "الذهاب إلى جدولي →",
-      step1_title: "١. اختر الجدول",
-      step1_sub: "حدد الجدول الذي تريد تصديره",
+      step1_title: "تحديد الجدول",
+      step1_sub: "اختر الجدول الذي تريد تصديره",
       planningIntensif: "مكثف",
       planningEquilibre: "متوازن",
       planningLeger: "خفيف",
       activeBadge: "نشط",
-      generatedFor: "تم إنشاؤه لـ {date}",
-      previewTitle: "معاينة الجدول المحدد",
+      generatedFor: "تم الإنشاء في {date}",
+      previewTitle: "معاينة",
       perWeek: "/ أسبوع",
       sessions: "جلسات",
       avgPerDay: "معدل/يوم",
-      step2_title: "٢. اختر الصيغة",
-      step2_sub: "انقر على الصيغة المطلوبة للتنزيل",
       exportPdf: "تصدير بصيغة PDF",
       pdfOpening: "جاري الفتح...",
-      pdfDesc: "يفتح في علامة تبويب جديدة · قابل للطباعة",
-      infoPdf: "PDF:",
-      infoText: "يفتح في علامة تبويب جديدة. استخدم Ctrl+P أو زر الطباعة للحفظ بصيغة PDF.",
+      pdfDesc: "يفتح في علامة تبويب جديدة · قابل للطباعة بـ Ctrl+P",
+      infoText: "يفتح PDF في علامة تبويب جديدة. استخدم Ctrl+P أو زر الطباعة للحفظ بصيغة PDF.",
     },
   },
 };
@@ -112,19 +103,6 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
     setTimeout(() => setLoading(null), 1500);
   };
 
-  const btnHoverIn = (e) => {
-    const el = e.currentTarget;
-    if (!el.disabled) {
-      el.style.background = "var(--sp-accentHover)";
-      el.style.borderColor = "var(--sp-accentHover)";
-    }
-  };
-
-  const btnHoverOut = (e) => {
-    e.currentTarget.style.background = "var(--sp-subtleBg)";
-    e.currentTarget.style.borderColor = "var(--sp-cardBorder)";
-  };
-
   const selectedSchedule = allSchedules?.find(s => s.id == selectedId) ?? activeSchedule;
   const resume = selectedSchedule?.schedule?.resume ?? null;
   const cfg = selectedSchedule ? (typeConfig[selectedSchedule.type] ?? typeConfig.equilibre) : null;
@@ -134,7 +112,8 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
       <Head title={tr.title} />
       <div style={{ ...s.page, direction: isRTL ? "rtl" : "ltr" }}>
 
-        <div style={{ ...s.header, textAlign: isRTL ? "right" : "left" }}>
+        {/* Header */}
+        <div style={{ textAlign: isRTL ? "right" : "left" }}>
           <h1 style={s.title}>{tr.title}</h1>
           <p style={s.subtitle}>{tr.subtitle}</p>
         </div>
@@ -147,8 +126,9 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
             <Link href="/schedules" style={s.emptyBtn}>{tr.emptyBtn}</Link>
           </div>
         ) : (
-          <div style={{ ...s.grid, flexDirection: isRTL ? "row-reverse" : "row" }} className="sp-export-grid" id="export-grid">
-            {/* Left: Select planning */}
+          <div style={s.content}>
+
+            {/* Schedule selection */}
             <div style={s.card}>
               <h2 style={s.cardTitle}>{tr.step1_title}</h2>
               <p style={s.cardSub}>{tr.step1_sub}</p>
@@ -173,7 +153,7 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                       <span style={s.selectIcon}>{c.icon}</span>
                       <div style={{ ...s.selectInfo, textAlign: isRTL ? "right" : "left" }}>
                         <span style={{ ...s.selectLabel, color: isSelected ? c.color : "var(--sp-textSecondary)" }}>
-                          {tr.planningIntensif && c.label} {/* c.label already translated */}
+                          {c.label}
                           {plan.is_active && (
                             <span style={{ ...s.activeBadge, background: c.color }}>{tr.activeBadge}</span>
                           )}
@@ -193,71 +173,65 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
               </div>
             </div>
 
-            {/* Right: Export options */}
-            <div>
-              {selectedSchedule && resume && (
-                <div style={{ ...s.card, marginBottom: "16px", borderLeft: isRTL ? "none" : `4px solid ${cfg.color}`, borderRight: isRTL ? `4px solid ${cfg.color}` : "none" }}>
+            {/* Preview + Export */}
+            {selectedSchedule && resume && (
+              <>
+                <div style={s.card}>
                   <h2 style={s.cardTitle}>{tr.previewTitle}</h2>
                   <div style={s.previewRow}>
                     <div style={s.previewStat}>
                       <span style={s.previewVal}>{resume.total_heures_semaine}h</span>
                       <span style={s.previewKey}>{tr.perWeek}</span>
                     </div>
-                    <div style={s.previewStat}>
+                    <div style={{ ...s.previewStat, borderLeft: "1px solid var(--sp-cardBorder)" }}>
                       <span style={s.previewVal}>{resume.sessions_totales}</span>
                       <span style={s.previewKey}>{tr.sessions}</span>
                     </div>
-                    <div style={s.previewStat}>
+                    <div style={{ ...s.previewStat, borderLeft: "1px solid var(--sp-cardBorder)" }}>
                       <span style={s.previewVal}>{resume.moyenne_par_jour}h</span>
                       <span style={s.previewKey}>{tr.avgPerDay}</span>
                     </div>
                   </div>
                 </div>
-              )}
 
-              <div style={s.card}>
-                <h2 style={s.cardTitle}>{tr.step2_title}</h2>
-                <p style={s.cardSub}>{tr.step2_sub}</p>
-                <div style={s.exportBtns}>
-                  <button
-                    onClick={handleExportPdf}
-                    disabled={!selectedId && !activeSchedule}
-                    onMouseEnter={btnHoverIn}
-                    onMouseLeave={btnHoverOut}
-                    style={{
-                      ...s.exportBtn,
-                      opacity: (!selectedId && !activeSchedule) ? 0.5 : 1,
-                      flexDirection: isRTL ? "row-reverse" : "row",
-                    }}
-                  >
-                    <div style={{ ...s.exportBtnIcon, background: "var(--sp-errorBg)" }}>
-                      <svg width="28" height="28" fill="none" stroke="var(--sp-error)" strokeWidth="1.8" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6M9 17h4"/>
-                      </svg>
-                    </div>
-                    <div style={{ ...s.exportBtnInfo, textAlign: isRTL ? "right" : "left" }}>
-                      <span style={s.exportBtnTitle}>
-                        {loading === "pdf" ? tr.pdfOpening : tr.exportPdf}
-                      </span>
-                      <span style={s.exportBtnDesc}>{tr.pdfDesc}</span>
-                    </div>
-                    <svg width="16" height="16" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24" style={{ transform: isRTL ? "rotate(180deg)" : "none" }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                <button
+                  onClick={handleExportPdf}
+                  disabled={!selectedId && !activeSchedule}
+                  style={{
+                    ...s.exportBtn,
+                    opacity: (!selectedId && !activeSchedule) ? 0.5 : 1,
+                    flexDirection: isRTL ? "row-reverse" : "row",
+                  }}
+                  onMouseEnter={e => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = "var(--sp-accentHover)"; e.currentTarget.style.borderColor = "var(--sp-accentHover)"; } }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "var(--sp-subtleBg)"; e.currentTarget.style.borderColor = "var(--sp-cardBorder)"; }}
+                >
+                  <div style={{ ...s.exportBtnIcon, background: "var(--sp-errorBg)" }}>
+                    <svg width="28" height="28" fill="none" stroke="var(--sp-error)" strokeWidth="1.8" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6M9 17h4"/>
                     </svg>
-                  </button>
-                </div>
-              </div>
+                  </div>
+                  <div style={{ ...s.exportBtnInfo, textAlign: isRTL ? "right" : "left" }}>
+                    <span style={s.exportBtnTitle}>
+                      {loading === "pdf" ? tr.pdfOpening : tr.exportPdf}
+                    </span>
+                    <span style={s.exportBtnDesc}>{tr.pdfDesc}</span>
+                  </div>
+                  <svg width="16" height="16" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24" style={{ transform: isRTL ? "rotate(180deg)" : "none" }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
 
-              <div style={{ ...s.infoBox, flexDirection: isRTL ? "row-reverse" : "row" }}>
-                <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
-                </svg>
-                <div style={{ fontSize: "12px", color: "var(--sp-accent)", textAlign: isRTL ? "right" : "left" }}>
-                  <strong>{tr.infoPdf}</strong> {tr.infoText}
+                <div style={{ ...s.infoBox, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                  <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
+                  </svg>
+                  <div style={{ fontSize: "12px", color: "var(--sp-accent)", textAlign: isRTL ? "right" : "left" }}>
+                    {tr.infoText}
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -266,32 +240,30 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
 }
 
 const s = {
-  page: { maxWidth: "960px", margin: "0 auto", padding: "32px 24px 60px", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" },
-  header: { marginBottom: "28px" },
+  page: { maxWidth: "640px", margin: "0 auto", padding: "32px 24px 60px", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" },
   title: { fontSize: "22px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
-  subtitle: { fontSize: "14px", color: "var(--sp-textSecondary)", margin: 0 },
-  grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" },
-  card: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "14px", padding: "20px 22px", marginBottom: 0 },
+  subtitle: { fontSize: "14px", color: "var(--sp-textSecondary)", margin: "0 0 28px" },
+  content: { display: "flex", flexDirection: "column", gap: "16px" },
+  card: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "14px", padding: "20px 22px" },
   cardTitle: { fontSize: "15px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
-  cardSub: { fontSize: "12px", color: "var(--sp-textMuted)", margin: "0 0 16px" },
+  cardSub: { fontSize: "12px", color: "var(--sp-textMuted)", margin: "0 0 14px" },
   selectList: { display: "flex", flexDirection: "column", gap: "8px" },
   selectItem: { display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", cursor: "pointer", transition: "all 0.12s" },
   selectIcon: { fontSize: "20px", flexShrink: 0 },
   selectInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "2px" },
   selectLabel: { fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" },
   selectDate: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  activeBadge: { fontSize: "10px", color: "var(--sp-accentText)", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
-  previewRow: { display: "flex", gap: "0", marginTop: "12px", borderTop: "1px solid var(--sp-cardBorder)", paddingTop: "12px" },
-  previewStat: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", borderRight: "1px solid var(--sp-cardBorder)", padding: "0" },
+  activeBadge: { fontSize: "10px", color: "#fff", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
+  previewRow: { display: "flex", marginTop: "12px", borderTop: "1px solid var(--sp-cardBorder)", paddingTop: "12px" },
+  previewStat: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "0" },
   previewVal: { fontSize: "18px", fontWeight: 800, color: "var(--sp-text)" },
   previewKey: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  exportBtns: { display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" },
-  exportBtn: { display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", background: "var(--sp-subtleBg)", border: "1px solid var(--sp-cardBorder)", borderRadius: "12px", cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.12s" },
+  exportBtn: { display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", background: "var(--sp-subtleBg)", border: "1px solid var(--sp-cardBorder)", borderRadius: "12px", cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.12s" },
   exportBtnIcon: { width: "52px", height: "52px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   exportBtnInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "3px" },
   exportBtnTitle: { fontSize: "14px", fontWeight: 600, color: "var(--sp-text)" },
   exportBtnDesc: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  infoBox: { display: "flex", gap: "10px", alignItems: "flex-start", background: "var(--sp-accentLight)", border: "1px solid var(--sp-accent)", borderRadius: "10px", padding: "12px 14px", marginTop: "12px" },
+  infoBox: { display: "flex", gap: "10px", alignItems: "flex-start", background: "var(--sp-accentLight)", border: "1px solid var(--sp-accent)", borderRadius: "10px", padding: "12px 14px" },
   empty: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "16px", padding: "60px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" },
   emptyIcon: { fontSize: "48px" },
   emptyTitle: { fontSize: "16px", fontWeight: 600, color: "var(--sp-text)", margin: 0 },
