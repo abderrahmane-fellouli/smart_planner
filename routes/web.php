@@ -48,10 +48,9 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}',            [ScheduleGeneratorController::class, 'destroy'])->name('destroy');
     });
 
-    // Export — PDF and CSV
+    // Export — PDF
     Route::get('/export',     [ExportController::class, 'index'])->name('export.index');
     Route::get('/export/pdf', [ExportController::class, 'exportPdf'])->name('export.pdf');
-    Route::get('/export/csv', [ExportController::class, 'exportCsv'])->name('export.csv');
 
     // Statistics dashboard
     Route::get('/statistics', [StatisticsController::class, 'index'])->name('statistics.index');

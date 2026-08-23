@@ -1,4 +1,4 @@
-import React, { useState, useEffect, createContext, useContext } from "react";
+﻿import React, { useState, useEffect, createContext, useContext } from "react";
 import { Link, usePage, router } from "@inertiajs/react";
 
 function FlashBanner() {
@@ -43,12 +43,6 @@ const TRANSLATIONS = {
 export const LangContext = createContext({ lang: "fr", tr: TRANSLATIONS.fr, setLang: () => {} });
 export const useLang = () => useContext(LangContext);
 
-// Theme context — provides dark mode state + theme token colors to all pages.
-// `tk` = theme tokens (colors). `dark` = boolean.
-const ThemeContext = createContext({ dark: false, tk: THEME.light });
-export const useTheme = () => useContext(ThemeContext);
-
-// Theme color tokens — single source of truth for all colors.
 export const THEME = {
     light: {
         body: '#F9FAFB', card: '#FFFFFF', cardBorder: '#E5E7EB',
@@ -59,6 +53,9 @@ export const THEME = {
         accent: '#4F46E5', accentLight: '#EEF2FF', accentText: '#FFFFFF', accentHover: '#4338CA',
         danger: '#EF4444', dangerBg: '#FEF2F2', dangerBorder: '#FECACA',
         success: '#065F46', successBg: '#ECFDF5', successBorder: '#A7F3D0',
+        warning: '#92400E', warningBg: '#FFFBEB', warningBorder: '#FDE68A',
+        error: '#EF4444', errorBg: '#FEF2F2', errorBorder: '#FCA5A5',
+        muted: '#9CA3AF',
         overlay: 'rgba(0,0,0,0.3)',
     },
     dark: {
@@ -70,14 +67,20 @@ export const THEME = {
         accent: '#6366F1', accentLight: '#1E1B4B', accentText: '#FFFFFF', accentHover: '#818CF8',
         danger: '#F87171', dangerBg: '#2D1215', dangerBorder: '#7F1D1D',
         success: '#6EE7B7', successBg: '#0D2818', successBorder: '#065F46',
+        warning: '#FCD34D', warningBg: '#422006', warningBorder: '#92400E',
+        error: '#F87171', errorBg: '#2D1215', errorBorder: '#7F1D1D',
+        muted: '#64748B',
         overlay: 'rgba(0,0,0,0.6)',
     },
 };
 
+const ThemeContext = createContext({ dark: false, tk: THEME.light });
+export const useTheme = () => useContext(ThemeContext);
+
 export default function AppLayout({ children }) {
     const { url, props } = usePage();
     const user = props.auth?.user;
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     const [dark, setDark] = useState(() => {
         try { return localStorage.getItem("smartplanner_dark") === "true"; }
@@ -110,6 +113,15 @@ export default function AppLayout({ children }) {
         });
     }, [dark, isRTL, lang, tk]);
 
+    useEffect(() => {
+        if (drawerOpen) {
+            document.body.style.overflow = 'hidden';
+            const handleEsc = (e) => { if (e.key === 'Escape') setDrawerOpen(false); };
+            document.addEventListener('keydown', handleEsc);
+            return () => { document.body.style.overflow = ''; document.removeEventListener('keydown', handleEsc); };
+        }
+    }, [drawerOpen]);
+
     const toggleDark = () => setDark(d => !d);
     const handleLogout = () => router.post('/logout');
 
@@ -123,103 +135,56 @@ export default function AppLayout({ children }) {
     ];
 
     function isActive(href) { return url === href || url.startsWith(href + '/'); }
+    const closeDrawer = () => setDrawerOpen(false);
 
-    const LogoutBtn = () => (
-        <button
-            onClick={handleLogout}
-            aria-label={tr.logout}
-            title={tr.logout}
-            style={{
-                width:"28px", height:"28px", borderRadius:"7px",
-                background:tk.dangerBg, border:`1px solid ${tk.dangerBorder}`,
-                cursor:"pointer", display:"flex", alignItems:"center",
-                justifyContent:"center", flexShrink:0, transition:"all 0.2s",
-            }}
-        >
+    const DarkToggle = ({ size = 28 }) => (
+        <button onClick={toggleDark} aria-pressed={dark}
+            aria-label={dark ? "Passer en mode clair" : "Passer en mode sombre"}
+            style={{ width:`${size}px`, height:`${size}px`, borderRadius:"7px", background:tk.subtleBg, border:"none", cursor:"pointer", fontSize:"14px", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+            {dark ? "\u2600\uFE0F" : "\uD83C\uDF19"}
+        </button>
+    );
+
+    const LogoutBtn = ({ size = 28 }) => (
+        <button onClick={handleLogout} aria-label={tr.logout} title={tr.logout}
+            style={{ width:`${size}px`, height:`${size}px`, borderRadius:"7px", background:tk.dangerBg, border:`1px solid ${tk.dangerBorder}`, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, transition:"all 0.2s" }}>
             <svg width="15" height="15" fill="none" stroke={tk.danger} strokeWidth="1.8" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
             </svg>
         </button>
     );
 
-    const SidebarContent = ({ mobile = false }) => (
-        <>
-            {/* Logo */}
-            <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"16px 14px", borderBottom:`1px solid ${tk.sidebarBorder}`, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div style={{ display:"flex", alignItems:"center", gap:"8px", flex:1, minWidth:0 }}>
-                    <div style={{ width:"32px", height:"32px", background:tk.accent, borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                        <svg width="18" height="18" fill="none" stroke={tk.accentText} strokeWidth="2" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <span style={{ fontSize:"14px", fontWeight:800, color:tk.text, letterSpacing:"-0.02em" }}>SmartPlanner</span>
-                </div>
-                <button onClick={toggleDark} aria-label={dark ? (lang === 'ar' ? 'الوضع النهاري' : lang === 'en' ? 'Switch to light mode' : 'Passer en mode clair') : (lang === 'ar' ? 'الوضع الليلي' : lang === 'en' ? 'Switch to dark mode' : 'Passer en mode sombre')} style={{ width:"28px", height:"28px", borderRadius:"7px", background:tk.subtleBg, border:"none", cursor:"pointer", fontSize:"14px", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    {dark ? "☀️" : "🌙"}
-                </button>
-            </div>
+    const NavLinks = ({ onNavClick }) => (
+        <nav role="navigation" aria-label={tr.nav_section} style={{ flex:1, padding:"12px 10px", display:"flex", flexDirection:"column", gap:"2px", direction: isRTL ? 'rtl' : 'ltr' }}>
+            <p style={{ fontSize:"10px", fontWeight:700, color:tk.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", padding:"0 8px", margin:"0 0 8px" }}>{tr.nav_section}</p>
+            {NAV.map((item) => {
+                const active = isActive(item.href);
+                return (
+                    <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={onNavClick}
+                        style={{ display:"flex", alignItems:"center", gap:"10px", padding:"9px 10px", borderRadius:"8px", fontSize:"13px", fontWeight:500, textDecoration:"none", transition:"all 0.12s", position:"relative", color: active ? tk.accentText : tk.textSecondary, background: active ? tk.accent : "transparent", flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <span style={{ color: active ? tk.accentText : tk.textSecondary, flexShrink:0 }}>{item.icon}</span>
+                        {item.label}
+                        {active && <span style={{ width:"6px", height:"6px", borderRadius:"50%", background:tk.accentText, flexShrink:0, marginLeft: isRTL ? 0 : 'auto', marginRight: isRTL ? 'auto' : 0 }} />}
+                    </Link>
+                );
+            })}
+        </nav>
+    );
 
-            {/* Language switcher */}
-            <div style={{ padding:"10px 12px", borderBottom:`1px solid ${tk.sidebarBorder}` }}>
-                <p style={{ fontSize:"10px", fontWeight:700, color:tk.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 6px", textAlign: isRTL ? 'right' : 'left' }}>
-                    {lang==='ar' ? 'اللغة' : lang==='en' ? 'Language' : 'Langue'}
-                </p>
-                <div role="group" aria-label={lang === 'ar' ? 'اختيار اللغة' : lang === 'en' ? 'Language selection' : 'Sélection de la langue'} style={{ display:"flex", gap:"4px" }}>
-                    {['fr','en','ar'].map(l => (
-                        <button key={l} aria-label={l === 'fr' ? 'Français' : l === 'en' ? 'English' : 'العربية'} aria-pressed={lang===l} onClick={() => {
-                            setLang(l);
-                            setTimeout(() => router.reload(), 100);
-                        }} style={{ flex:1, padding:"5px 0", borderRadius:"7px", border:"none", cursor:"pointer", fontSize:"16px", transition:"all 0.15s", background: lang===l ? tk.accent : tk.subtleBg }}>
-                            {l==='fr' ? '🇫🇷' : l==='en' ? '🇬🇧' : '🇲🇦'}
-                        </button>
-                    ))}
-                </div>
+    const LangSwitcher = () => (
+        <div style={{ padding:"10px 12px", borderBottom:`1px solid ${tk.sidebarBorder}` }}>
+            <p style={{ fontSize:"10px", fontWeight:700, color:tk.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", margin:"0 0 6px", textAlign: isRTL ? 'right' : 'left' }}>
+                {lang==='ar' ? 'اللغة' : lang==='en' ? 'Language' : 'Langue'}
+            </p>
+            <div role="group" aria-label="Language selection" style={{ display:"flex", gap:"4px" }}>
+                {['fr','en','ar'].map(l => (
+                    <button key={l} aria-label={l === 'fr' ? 'Français' : l === 'en' ? 'English' : 'العربية'} aria-pressed={lang===l} onClick={() => { setLang(l); setTimeout(() => router.reload(), 100); }}
+                        style={{ flex:1, padding:"5px 0", borderRadius:"7px", border:"none", cursor:"pointer", fontSize:"16px", transition:"all 0.15s", background: lang===l ? tk.accent : tk.subtleBg }}>
+                        {l==='fr' ? '\uD83C\uDDEB\uD83C\uDDF7' : l==='en' ? '\uD83C\uDDEC\uD83C\uDDE7' : '\uD83C\uDDF2\uD83C\uDDE6'}
+                    </button>
+                ))}
             </div>
-
-            {/* Nav */}
-            <nav role="navigation" aria-label={tr.nav_section} style={{ flex:1, padding:"12px 10px", display:"flex", flexDirection:"column", gap:"2px", direction: isRTL ? 'rtl' : 'ltr' }}>
-                <p style={{ fontSize:"10px", fontWeight:700, color:tk.textMuted, textTransform:"uppercase", letterSpacing:"0.08em", padding:"0 8px", margin:"0 0 8px" }}>{tr.nav_section}</p>
-                {NAV.map((item) => {
-                    const active = isActive(item.href);
-                    return (
-                        <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={() => mobile && setSidebarOpen(false)}
-                            style={{ display:"flex", alignItems:"center", gap:"10px", padding:"9px 10px", borderRadius:"8px", fontSize:"13px", fontWeight:500, textDecoration:"none", transition:"all 0.12s", position:"relative", color: active ? tk.accentText : tk.textSecondary, background: active ? tk.accent : "transparent", flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                            <span style={{ color: active ? tk.accentText : tk.textSecondary, flexShrink:0 }}>{item.icon}</span>
-                            {item.label}
-                            {active && <span style={{ width:"6px", height:"6px", borderRadius:"50%", background:tk.accentText, flexShrink:0, marginLeft: isRTL ? 0 : 'auto', marginRight: isRTL ? 'auto' : 0 }} />}
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            {/* CTA */}
-            <div style={{ padding:"12px 16px", borderTop:`1px solid ${tk.sidebarBorder}` }}>
-                <Link href="/schedules" aria-label={tr.generate_btn} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", width:"100%", padding:"10px", background:tk.accent, color:tk.accentText, borderRadius:"10px", fontSize:"13px", fontWeight:600, textDecoration:"none", boxSizing:"border-box", flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                    <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                    </svg>
-                    {tr.generate_btn}
-                </Link>
-            </div>
-
-            {/* User bar + LOGOUT */}
-            <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"12px 14px", borderTop:`1px solid ${tk.sidebarBorder}`, background:tk.sidebarBg, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                <div style={{ width:"32px", height:"32px", borderRadius:"50%", background: tk.accentLight, color:tk.accent, fontSize:"13px", fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                    {user?.name?.charAt(0).toUpperCase() || "U"}
-                </div>
-                <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", textAlign: isRTL ? 'right' : 'left' }}>
-                    <span style={{ fontSize:"13px", fontWeight:600, color:tk.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.name || (lang === 'ar' ? 'مستخدم' : lang === 'en' ? 'User' : 'Utilisateur')}</span>
-                    <span style={{ fontSize:"11px", color:tk.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email || ""}</span>
-                </div>
-                <Link href="/profile" aria-label={tr.profile_title} title={tr.profile_title} style={{ width:"28px", height:"28px", borderRadius:"7px", background:tk.subtleBg, border:`1px solid ${tk.sidebarBorder}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, textDecoration:"none" }}>
-                    <svg width="15" height="15" fill="none" stroke={tk.textSecondary} strokeWidth="1.8" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                    </svg>
-                </Link>
-                <LogoutBtn />
-            </div>
-        </>
+        </div>
     );
 
     return (
@@ -227,68 +192,89 @@ export default function AppLayout({ children }) {
             <ThemeContext.Provider value={{ dark, tk }}>
             <style>{`
                 @keyframes flashIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
-                *:focus-visible { outline: 2px solid var(--sp-accent, #6366F1); outline-offset: 2px; border-radius: 4px; }
-                .sp-mobile-topbar { display: flex; }
-                @media (min-width: 769px) { .sp-mobile-topbar { display: none !important; } }
-                .sp-desktop-sidebar { display: flex !important; }
-                @media (max-width: 768px) { .sp-desktop-sidebar { display: none !important; } }
-                .sp-mobile-sidebar { display: flex !important; }
-                @media (min-width: 769px) { .sp-mobile-sidebar { display: none !important; } }
-                    .sp-grid-2col { grid-template-columns: 1fr !important; }
-                    .sp-grid-stats { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; }
-                    .sp-kpi-row { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important; }
-                    .sp-auth-root { flex-direction: column !important; }
-                    .sp-auth-left { width: 100% !important; min-height: auto !important; padding: 32px 24px !important; }
-                    .sp-auth-left .features, .sp-auth-left .steps { display: none !important; }
-                    .sp-auth-left .brand { display: none !important; }
-                    .sp-auth-left h1 { font-size: 22px !important; }
-                    .sp-auth-left p { display: none !important; }
-                    .sp-preferences-grid { grid-template-columns: 1fr !important; }
-                    .sp-schedule-grid { grid-template-columns: 1fr !important; }
-                    .sp-export-grid { grid-template-columns: 1fr !important; }
-                    .sp-week-grid { grid-template-columns: repeat(2, 1fr) !important; }
-                    .sp-week-mini { grid-template-columns: repeat(3, 1fr) !important; }
-                }
-                @media (max-width: 480px) {
-                    .sp-kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
-                    .sp-week-grid { grid-template-columns: repeat(2, 1fr) !important; }
-                }
             `}</style>
             <div style={{ display:"flex", minHeight:"100vh", fontFamily:"'DM Sans',sans-serif", background:tk.body, direction: isRTL ? 'rtl' : 'ltr' }}>
 
-                {/* Mobile sidebar (slide-in) */}
-                <aside className="sp-mobile-sidebar" style={{ width:"240px", flexShrink:0, display:"flex", flexDirection:"column", top:0, left: isRTL ? 'auto' : 0, right: isRTL ? 0 : 'auto', height:"100vh", overflowY:"auto", zIndex:40, transition:"transform 0.25s ease", position:"fixed", background:tk.sidebarBg, borderRight: isRTL ? 'none' : `1px solid ${tk.sidebarBorder}`, borderLeft: isRTL ? `1px solid ${tk.sidebarBorder}` : 'none', transform: sidebarOpen ? "translateX(0)" : isRTL ? "translateX(100%)" : "translateX(-100%)" }}>
-                    <SidebarContent mobile />
-                </aside>
-
-                {/* Desktop sidebar (sticky) */}
+                {/* DESKTOP sidebar — full, sticky, visible only >768px */}
                 <aside className="sp-desktop-sidebar" style={{ width:"240px", flexShrink:0, display:"flex", flexDirection:"column", position:"sticky", top:0, height:"100vh", overflowY:"auto", zIndex:30, background:tk.sidebarBg, borderRight: isRTL ? 'none' : `1px solid ${tk.sidebarBorder}`, borderLeft: isRTL ? `1px solid ${tk.sidebarBorder}` : 'none', order: isRTL ? 2 : 0 }}>
-                    <SidebarContent />
+                    {/* Logo + Dark toggle */}
+                    <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"16px 14px", borderBottom:`1px solid ${tk.sidebarBorder}`, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <div style={{ display:"flex", alignItems:"center", gap:"8px", flex:1, minWidth:0 }}>
+                            <div style={{ width:"32px", height:"32px", background:tk.accent, borderRadius:"8px", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                                <svg width="18" height="18" fill="none" stroke={tk.accentText} strokeWidth="2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                                </svg>
+                            </div>
+                            <span style={{ fontSize:"14px", fontWeight:800, color:tk.text, letterSpacing:"-0.02em" }}>SmartPlanner</span>
+                        </div>
+                        <DarkToggle />
+                    </div>
+                    <LangSwitcher />
+                    <NavLinks />
+                    {/* CTA */}
+                    <div style={{ padding:"12px 16px", borderTop:`1px solid ${tk.sidebarBorder}` }}>
+                        <Link href="/schedules" aria-label={tr.generate_btn} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", width:"100%", padding:"10px", background:tk.accent, color:tk.accentText, borderRadius:"10px", fontSize:"13px", fontWeight:600, textDecoration:"none", boxSizing:"border-box", flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            {tr.generate_btn}
+                        </Link>
+                    </div>
+                    {/* User bar + Profile + Logout */}
+                    <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"12px 14px", borderTop:`1px solid ${tk.sidebarBorder}`, background:tk.sidebarBg, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
+                        <div style={{ width:"32px", height:"32px", borderRadius:"50%", background: tk.accentLight, color:tk.accent, fontSize:"13px", fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                            {user?.name?.charAt(0).toUpperCase() || "U"}
+                        </div>
+                        <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", textAlign: isRTL ? 'right' : 'left' }}>
+                            <span style={{ fontSize:"13px", fontWeight:600, color:tk.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.name || "Utilisateur"}</span>
+                            <span style={{ fontSize:"11px", color:tk.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email || ""}</span>
+                        </div>
+                        <Link href="/profile" aria-label={tr.profile_title} title={tr.profile_title} style={{ width:"28px", height:"28px", borderRadius:"7px", background:tk.subtleBg, border:`1px solid ${tk.sidebarBorder}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, textDecoration:"none" }}>
+                            <svg width="15" height="15" fill="none" stroke={tk.textSecondary} strokeWidth="1.8" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </Link>
+                        <LogoutBtn />
+                    </div>
                 </aside>
 
-                {/* Overlay */}
-                {sidebarOpen && <div style={{ position:"fixed", inset:0, background:tk.overlay, zIndex:35 }} onClick={() => setSidebarOpen(false)} />}
+                {/* MOBILE drawer — nav-only, slides in from left */}
+                {drawerOpen && <div style={{ position:"fixed", inset:0, background:tk.overlay, zIndex:35 }} onClick={closeDrawer} />}
+                <aside className="sp-mobile-sidebar" style={{ width:"240px", flexShrink:0, display:"flex", flexDirection:"column", top:0, left: isRTL ? 'auto' : 0, right: isRTL ? 0 : 'auto', height:"100vh", overflowY:"auto", zIndex:40, transition:"transform 0.25s ease", position:"fixed", background:tk.sidebarBg, borderRight: isRTL ? 'none' : `1px solid ${tk.sidebarBorder}`, borderLeft: isRTL ? `1px solid ${tk.sidebarBorder}` : 'none', transform: drawerOpen ? "translateX(0)" : isRTL ? "translateX(100%)" : "translateX(-100%)" }}>
+                    {/* Drawer header: close button only */}
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 14px", borderBottom:`1px solid ${tk.sidebarBorder}` }}>
+                        <span style={{ fontSize:"13px", fontWeight:700, color:tk.textMuted, textTransform:"uppercase", letterSpacing:"0.05em" }}>{tr.nav_section}</span>
+                        <button onClick={closeDrawer} aria-label="Close menu" style={{ width:"28px", height:"28px", borderRadius:"7px", background:tk.subtleBg, border:"none", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                            <svg width="16" height="16" fill="none" stroke={tk.textSecondary} strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                    {/* Nav only — no logo, no dark toggle, no user bar, no logout */}
+                    <NavLinks onNavClick={closeDrawer} />
+                    {/* Language at bottom of drawer */}
+                    <div style={{ borderTop:`1px solid ${tk.sidebarBorder}` }}>
+                        <LangSwitcher />
+                    </div>
+                </aside>
 
-                {/* Main */}
+                {/* Main content */}
                 <main style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", background:tk.body }}>
-                    {/* Mobile topbar — hidden on desktop via .sp-mobile-topbar + CSS media query */}
+                    {/* Mobile topbar — hidden on desktop via .sp-mobile-topbar */}
                     <div className="sp-mobile-topbar" style={{ alignItems:"center", gap:"12px", padding:"14px 16px", position:"sticky", top:0, zIndex:10, background:tk.topbarBg, borderBottom:`1px solid ${tk.sidebarBorder}`, flexDirection: isRTL ? 'row-reverse' : 'row' }}>
-                        <button onClick={() => setSidebarOpen(true)} aria-label={lang === 'ar' ? 'فتح القائمة' : lang === 'en' ? 'Open menu' : 'Ouvrir le menu'} style={{ background:"none", border:"none", cursor:"pointer", padding:"4px", display:"flex" }}>
+                        <button onClick={() => setDrawerOpen(true)} aria-label="Open menu" style={{ background:"none", border:"none", cursor:"pointer", padding:"4px", display:"flex" }}>
                             <svg width="20" height="20" fill="none" stroke={tk.textSecondary} strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
                             </svg>
                         </button>
                         <span style={{ fontSize:"15px", fontWeight:800, color:tk.text }}>SmartPlanner</span>
                         <div style={{ marginLeft: isRTL ? 0 : 'auto', marginRight: isRTL ? 'auto' : 0, display:'flex', gap:'6px' }}>
-                            <button onClick={toggleDark} aria-label={dark ? (lang === 'ar' ? 'الوضع النهاري' : lang === 'en' ? 'Switch to light mode' : 'Passer en mode clair') : (lang === 'ar' ? 'الوضع الليلي' : lang === 'en' ? 'Switch to dark mode' : 'Passer en mode sombre')} style={{ width:"28px", height:"28px", borderRadius:"7px", background:tk.subtleBg, border:"none", cursor:"pointer", fontSize:"14px", display:"flex", alignItems:"center", justifyContent:"center" }}>
-                                {dark ? "☀️" : "🌙"}
-                            </button>
+                            <DarkToggle />
                             <LogoutBtn />
                         </div>
                     </div>
-                    {/* Flash banner */}
                     <FlashBanner />
-                    {/* key={lang} forces page re-mount when language changes */}
                     <div key={lang} style={{ flex:1 }}>{children}</div>
                 </main>
             </div>

@@ -55,6 +55,7 @@ class DashboardController extends Controller
         }
 
         return Inertia::render('Dashboard', [
+            'user'             => $user,
             'activeSchedule'   => $activeSchedule,
             'fixedEventsCount' => FixedEvent::where('user_id', $user->id)->count(),
             'todaySessions'    => $todaySessions,

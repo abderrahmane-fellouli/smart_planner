@@ -9,7 +9,7 @@ const T = {
     features: [
       { icon: '🤖', text: "Génération IA automatique" },
       { icon: '📊', text: "Statistiques détaillées" },
-      { icon: '📤', text: "Export PDF & Excel" },
+      { icon: '📤', text: "Export PDF" },
       { icon: '🌙', text: "Mode sombre inclus" },
     ],
     formTitle: "Bon retour ! 👋",
@@ -35,7 +35,7 @@ const T = {
     features: [
       { icon: '🤖', text: "Automatic AI generation" },
       { icon: '📊', text: "Detailed statistics" },
-      { icon: '📤', text: "PDF & Excel export" },
+      { icon: '📤', text: "PDF export" },
       { icon: '🌙', text: "Dark mode included" },
     ],
     formTitle: "Welcome back! 👋",
@@ -61,7 +61,7 @@ const T = {
     features: [
       { icon: '🤖', text: "إنشاء تلقائي بالذكاء الاصطناعي" },
       { icon: '📊', text: "إحصائيات تفصيلية" },
-      { icon: '📤', text: "تصدير PDF و Excel" },
+      { icon: '📤', text: "تصدير PDF" },
       { icon: '🌙', text: "وضع مظلم مضمون" },
     ],
     formTitle: "!مرحباً بعودتك 👋",

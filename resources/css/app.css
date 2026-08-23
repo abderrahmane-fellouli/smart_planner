@@ -1,3 +1,159 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ── Theme CSS Variables (light defaults, dark overrides) ── */
+:root {
+    --sp-body: #F9FAFB;
+    --sp-card: #FFFFFF;
+    --sp-cardBorder: #E5E7EB;
+    --sp-sidebarBg: #FFFFFF;
+    --sp-sidebarBorder: #F3F4F6;
+    --sp-topbarBg: #FFFFFF;
+    --sp-text: #111827;
+    --sp-textSecondary: #6B7280;
+    --sp-textMuted: #9CA3AF;
+    --sp-inputBg: #FFFFFF;
+    --sp-inputBorder: #D1D5DB;
+    --sp-subtleBg: #F3F4F6;
+    --sp-hoverBg: #F9FAFB;
+    --sp-accent: #4F46E5;
+    --sp-accentLight: #EEF2FF;
+    --sp-accentText: #FFFFFF;
+    --sp-accentHover: #4338CA;
+    --sp-danger: #EF4444;
+    --sp-dangerBg: #FEF2F2;
+    --sp-dangerBorder: #FECACA;
+    --sp-success: #065F46;
+    --sp-successBg: #ECFDF5;
+    --sp-successBorder: #A7F3D0;
+    --sp-warning: #92400E;
+    --sp-warningBg: #FFFBEB;
+    --sp-warningBorder: #FDE68A;
+    --sp-error: #EF4444;
+    --sp-errorBg: #FEF2F2;
+    --sp-errorBorder: #FCA5A5;
+    --sp-muted: #9CA3AF;
+    --sp-overlay: rgba(0,0,0,0.3);
+    --sp-type-intensif: #FEF2F2;
+    --sp-type-intensif-fg: #EF4444;
+    --sp-type-equilibre: #ECFDF5;
+    --sp-type-equilibre-fg: #10B981;
+    --sp-type-leger: #EFF6FF;
+    --sp-type-leger-fg: #3B82F6;
+    --sp-day-lundi: #FEF2F2;
+    --sp-day-lundi-fg: #EF4444;
+    --sp-day-mardi: #ECFDF5;
+    --sp-day-mardi-fg: #10B981;
+    --sp-day-mercredi: #FFF7ED;
+    --sp-day-mercredi-fg: #EA580C;
+    --sp-day-jeudi: #EFF6FF;
+    --sp-day-jeudi-fg: #2563EB;
+    --sp-day-vendredi: #F5F3FF;
+    --sp-day-vendredi-fg: #7C3AED;
+    --sp-day-samedi: #FDF2F8;
+    --sp-day-samedi-fg: #DB2777;
+    --sp-day-dimanche: #FEF3C7;
+    --sp-day-dimanche-fg: #D97706;
+    --sp-checkboxBg: #FFFFFF;
+    --sp-stroke: #D1D5DB;
+}
+
+[data-theme="dark"],
+.dark {
+    --sp-body: #0B1120;
+    --sp-card: #1E293B;
+    --sp-cardBorder: #334155;
+    --sp-sidebarBg: #111827;
+    --sp-sidebarBorder: #1E293B;
+    --sp-topbarBg: #111827;
+    --sp-text: #F1F5F9;
+    --sp-textSecondary: #94A3B8;
+    --sp-textMuted: #64748B;
+    --sp-inputBg: #0B1120;
+    --sp-inputBorder: #334155;
+    --sp-subtleBg: #0B1120;
+    --sp-hoverBg: #1E293B;
+    --sp-accent: #6366F1;
+    --sp-accentLight: #1E1B4B;
+    --sp-accentText: #FFFFFF;
+    --sp-accentHover: #818CF8;
+    --sp-danger: #F87171;
+    --sp-dangerBg: #2D1215;
+    --sp-dangerBorder: #7F1D1D;
+    --sp-success: #6EE7B7;
+    --sp-successBg: #0D2818;
+    --sp-successBorder: #065F46;
+    --sp-warning: #FCD34D;
+    --sp-warningBg: #422006;
+    --sp-warningBorder: #92400E;
+    --sp-error: #F87171;
+    --sp-errorBg: #2D1215;
+    --sp-errorBorder: #7F1D1D;
+    --sp-muted: #64748B;
+    --sp-overlay: rgba(0,0,0,0.6);
+    --sp-type-intensif: #2D1215;
+    --sp-type-intensif-fg: #F87171;
+    --sp-type-equilibre: #0D2818;
+    --sp-type-equilibre-fg: #6EE7B7;
+    --sp-type-leger: #0C1929;
+    --sp-type-leger-fg: #60A5FA;
+    --sp-day-lundi: #2D1215;
+    --sp-day-lundi-fg: #F87171;
+    --sp-day-mardi: #0D2818;
+    --sp-day-mardi-fg: #6EE7B7;
+    --sp-day-mercredi: #431407;
+    --sp-day-mercredi-fg: #FB923C;
+    --sp-day-jeudi: #0C1929;
+    --sp-day-jeudi-fg: #60A5FA;
+    --sp-day-vendredi: #1E1B4B;
+    --sp-day-vendredi-fg: #A78BFA;
+    --sp-day-samedi: #3B0A2A;
+    --sp-day-samedi-fg: #F472B6;
+    --sp-day-dimanche: #422006;
+    --sp-day-dimanche-fg: #FCD34D;
+    --sp-checkboxBg: #0B1120;
+    --sp-stroke: #475569;
+}
+
+/* ── Focus & base ── */
+*:focus-visible {
+    outline: 2px solid var(--sp-accent, #6366F1);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* ── Responsive grid overrides ── */
+@media (max-width: 768px) {
+    .sp-grid-2col { grid-template-columns: 1fr !important; }
+    .sp-preferences-grid { grid-template-columns: 1fr !important; }
+    .sp-schedule-grid { grid-template-columns: 1fr !important; }
+    .sp-export-grid { grid-template-columns: 1fr !important; }
+    .sp-auth-root { flex-direction: column !important; }
+    .sp-auth-left { width: 100% !important; min-height: auto !important; padding: 32px 24px !important; }
+    .sp-auth-left .features, .sp-auth-left .steps { display: none !important; }
+    .sp-auth-left .brand { display: none !important; }
+    .sp-auth-left h1 { font-size: 22px !important; }
+    .sp-auth-left p { display: none !important; }
+    .sp-week-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .sp-week-mini { grid-template-columns: repeat(3, 1fr) !important; }
+}
+
+@media (min-width: 769px) {
+    .sp-mobile-topbar { display: none !important; }
+    .sp-mobile-sidebar { display: none !important; }
+    .sp-desktop-sidebar { display: flex !important; }
+}
+
+@media (max-width: 768px) {
+    .sp-mobile-topbar { display: flex !important; }
+    .sp-mobile-sidebar { display: flex !important; }
+    .sp-desktop-sidebar { display: none !important; }
+    .sp-stats-grid { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important; }
+    .sp-kpi-row { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)) !important; }
+}
+
+@media (max-width: 480px) {
+    .sp-kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
+    .sp-week-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}

@@ -372,7 +372,7 @@ const s = {
   cardSub: { fontSize: '13px', color: 'var(--sp-textMuted)', margin: '0 0 20px' },
 
   successMsg: { background: 'var(--sp-successBg)', border: '1px solid var(--sp-successBorder)', color: 'var(--sp-success)', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' },
-  warningMsg: { background: '#FFFBEB', border: '1px solid #FDE68A', color: '#92400E', borderRadius: '10px', padding: '10px 14px', fontSize: '13px' },
+  warningMsg: { background: 'var(--sp-warningBg)', border: '1px solid var(--sp-warningBorder)', color: 'var(--sp-warning)', borderRadius: '10px', padding: '10px 14px', fontSize: '13px' },
 
   // Avatar
   avatarSection: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', padding: '16px', background: 'var(--sp-hoverBg)', borderRadius: '12px' },
@@ -397,5 +397,5 @@ const s = {
 
   deleteBtn: { padding: '10px 20px', background: 'none', border: '1px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
   cancelBtn: { flex: 1, padding: '10px', background: 'var(--sp-subtleBg)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: 'var(--sp-text)' },
-  confirmDeleteBtn: { flex: 1, padding: '10px', background: 'var(--sp-danger)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: '#fff' },
+  confirmDeleteBtn: { flex: 1, padding: '10px', background: 'var(--sp-danger)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: 'var(--sp-accentText)' },
 };

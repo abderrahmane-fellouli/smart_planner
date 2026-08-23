@@ -118,11 +118,6 @@ test('full user journey: register, login, dashboard, add course, prefs, generate
     $response->assertStatus(200);
     $response->assertHeader('Content-Type', 'text/html; charset=UTF-8');
 
-    // EXPORT CSV
-    $response = $this->get('/export/csv');
-    $response->assertStatus(200);
-    $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-
     // PROFILE PAGE
     $response = $this->get('/profile');
     $response->assertStatus(200);
@@ -175,41 +170,6 @@ test('export PDF generates valid HTML with user data', function () {
     // Verify it's a valid HTML page
     $this->assertStringContainsString('<!DOCTYPE html>', $content);
     $this->assertStringContainsString('<table>', $content);
-});
-
-test('export CSV generates valid CSV with BOM', function () {
-    $user = User::create(['name' => 'CSV User', 'email' => 'csv@test.com', 'password' => bcrypt('password')]);
-    $this->actingAs($user);
-
-    OptimizedSchedule::create([
-        'user_id' => $user->id,
-        'type' => 'intensif',
-        'schedule' => [
-            'details' => [
-                'Mardi' => [
-                    'cours_fixes' => [],
-                    'sessions_etude' => [
-                        ['debut' => '14:00', 'fin' => '16:00', 'duree' => 120, 'matiere' => 'Physique'],
-                    ],
-                    'total_heures_etude' => 2,
-                ],
-            ],
-            'resume' => ['total_heures_semaine' => 2, 'sessions_totales' => 1, 'moyenne_par_jour' => 0.3],
-        ],
-        'generated_for' => now(),
-        'is_active' => true,
-    ]);
-
-    $response = $this->get('/export/csv');
-    $response->assertStatus(200);
-    $content = $response->getContent();
-
-    // BOM UTF-8
-    $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
-    // CSV content
-    $this->assertStringContainsString('CSV User', $content);
-    $this->assertStringContainsString('Physique', $content);
-    $this->assertStringContainsString('Mardi', $content);
 });
 
 test('export PDF escapes XSS payloads in content', function () {
@@ -806,33 +766,6 @@ test('export PDF with Arabic labels', function () {
         ->toContain('المواد الثابتة');
 });
 
-test('export CSV with BOM and user data', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    $this->postJson('/fixed-events', [
-        'title' => 'Mathematics', 'day_of_week' => 'Lundi',
-        'start_time' => '08:00', 'end_time' => '10:00',
-    ]);
-    Preference::create([
-        'user_id' => $user->id, 'wake_up_time' => '07:00', 'sleep_time' => '22:00',
-        'study_preference' => 'normal', 'concentration_hours' => 1, 'desired_free_time' => 2,
-    ]);
-    $this->post('/schedules/generate');
-    $s = OptimizedSchedule::where('user_id', $user->id)->first();
-    $this->post("/schedules/activate/{$s->id}");
-
-    $response = $this->get('/export/csv?lang=en');
-    $response->assertStatus(200);
-    $response->assertHeader('Content-Type', 'text/csv; charset=UTF-8');
-
-    $csv = $response->getContent();
-    expect(substr($csv, 0, 3))->toBe("\xEF\xBB\xBF");
-    expect($csv)->toContain($user->name)
-        ->toContain($user->email)
-        ->toContain('Mathematics');
-});
-
 test('export PDF escapes XSS in user name', function () {
     $user = User::factory()->create(['name' => '<script>alert(1)</script>']);
     $this->actingAs($user);
@@ -852,26 +785,6 @@ test('export PDF escapes XSS in user name', function () {
     $content = $this->get('/export/pdf')->getContent();
     expect($content)->not->toContain('<script>')
         ->toContain('&lt;script&gt;');
-});
-
-test('export CSV sanitizes formula injection', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    $this->postJson('/fixed-events', [
-        'title' => '=SUM(A1:A10)', 'day_of_week' => 'Lundi',
-        'start_time' => '08:00', 'end_time' => '10:00',
-    ]);
-    Preference::create([
-        'user_id' => $user->id, 'wake_up_time' => '07:00', 'sleep_time' => '22:00',
-        'study_preference' => 'normal', 'concentration_hours' => 1, 'desired_free_time' => 2,
-    ]);
-    $this->post('/schedules/generate');
-    $s = OptimizedSchedule::where('user_id', $user->id)->first();
-    $this->post("/schedules/activate/{$s->id}");
-
-    $csv = $this->get('/export/csv')->getContent();
-    expect($csv)->toContain("=SUM(A1:A10)");
 });
 
 // ─────────────────────────────────────────────────
