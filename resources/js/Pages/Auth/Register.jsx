@@ -1,27 +1,150 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+
+const T = {
+  fr: {
+    title: "Inscription - SmartPlanner",
+    brandTitle: "Commencez à planifier gratuitement",
+    brandSub: "Créez votre compte et laissez l'IA optimiser votre temps d'étude dès aujourd'hui.",
+    steps: [
+      { num: '01', title: 'Créez votre compte', desc: 'Inscription gratuite en 30 secondes' },
+      { num: '02', title: 'Ajoutez vos cours', desc: 'Entrez vos cours fixes et horaires' },
+      { num: '03', title: 'Générez votre planning', desc: "L'IA crée 3 plannings personnalisés" },
+    ],
+    formTitle: "Créer un compte 🎓",
+    formSub: "Rejoignez SmartPlanner — c'est gratuit !",
+    name: "Nom complet",
+    namePlaceholder: "Jean Dupont",
+    email: "Adresse email",
+    emailPlaceholder: "votre@email.com",
+    password: "Mot de passe",
+    passwordPlaceholder: "8 caractères minimum",
+    confirmPassword: "Confirmer le mot de passe",
+    submit: "Créer mon compte",
+    submitting: "Création du compte...",
+    hasAccount: "Déjà un compte ?",
+    loginLink: "Se connecter",
+    dir: "ltr",
+    errorGeneric: "Veuillez corriger les erreurs ci-dessous.",
+    passwordMismatch: "Les mots de passe ne correspondent pas.",
+    showPassword: "Afficher le mot de passe",
+    hidePassword: "Masquer le mot de passe",
+  },
+  en: {
+    title: "Register - SmartPlanner",
+    brandTitle: "Start planning for free",
+    brandSub: "Create your account and let AI optimise your study time from today.",
+    steps: [
+      { num: '01', title: 'Create your account', desc: 'Free signup in 30 seconds' },
+      { num: '02', title: 'Add your courses', desc: 'Enter your fixed courses and times' },
+      { num: '03', title: 'Generate your schedule', desc: 'AI creates 3 personalised schedules' },
+    ],
+    formTitle: "Create an account 🎓",
+    formSub: "Join SmartPlanner — it's free!",
+    name: "Full name",
+    namePlaceholder: "John Smith",
+    email: "Email address",
+    emailPlaceholder: "your@email.com",
+    password: "Password",
+    passwordPlaceholder: "At least 8 characters",
+    confirmPassword: "Confirm password",
+    submit: "Create free account",
+    submitting: "Creating account...",
+    hasAccount: "Already have an account?",
+    loginLink: "Sign in",
+    dir: "ltr",
+    errorGeneric: "Please correct the errors below.",
+    passwordMismatch: "Passwords do not match.",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
+  },
+  ar: {
+    title: "التسجيل - SmartPlanner",
+    brandTitle: "ابدأ التخطيط مجاناً",
+    brandSub: "أنشئ حسابك ودع الذكاء الاصطناعي يحسّن وقتك للدراسة من اليوم.",
+    steps: [
+      { num: '01', title: 'أنشئ حسابك', desc: 'تسجيل مجاني في 30 ثانية' },
+      { num: '02', title: 'أضف دروسك', desc: 'أدخل دروسك الثابتة والأوقات' },
+      { num: '03', title: 'أنشئ جدولك', desc: 'الذكاء الاصطناعي ينشئ 3 جداول مخصصة' },
+    ],
+    formTitle: "إنشاء حساب 🎓",
+    formSub: "انضم إلى SmartPlanner — مجاني!",
+    name: "الاسم الكامل",
+    namePlaceholder: "أحمد بن علي",
+    email: "البريد الإلكتروني",
+    emailPlaceholder: "بريدك@الإلكتروني.com",
+    password: "كلمة المرور",
+    passwordPlaceholder: "8 أحرف على الأقل",
+    confirmPassword: "تأكيد كلمة المرور",
+    submit: "إنشاء حساب مجاني",
+    submitting: "جاري إنشاء الحساب...",
+    hasAccount: "لديك حساب بالفعل؟",
+    loginLink: "تسجيل الدخول",
+    dir: "rtl",
+    errorGeneric: "يرجى تصحيح الأخطاء أدناه.",
+    passwordMismatch: "كلمتا المرور غير متطابقتين.",
+    showPassword: "إظهار كلمة المرور",
+    hidePassword: "إخفاء كلمة المرور",
+  },
+};
 
 export default function Register() {
-    const { data, setData, post, processing, errors, reset } = useForm({
+    let lang = "fr";
+    if (typeof window !== "undefined") {
+        lang = localStorage.getItem("smartplanner_lang") || "fr";
+    }
+    const tr = T[lang] || T.fr;
+    const isRTL = tr.dir === "rtl";
+
+    useEffect(() => {
+        document.documentElement.dir = isRTL ? "rtl" : "ltr";
+    }, [isRTL]);
+
+    const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
         password: '',
         password_confirmation: '',
     });
 
+    const [showPassword, setShowPassword] = useState(false);
+    const [bannerError, setBannerError] = useState('');
+
+    // Build a user-friendly error banner
+    useEffect(() => {
+        if (errors && Object.keys(errors).length > 0) {
+            setBannerError(tr.errorGeneric);
+        } else {
+            setBannerError('');
+        }
+    }, [errors, tr]);
+
     const submit = (e) => {
         e.preventDefault();
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
-        });
+        setBannerError('');
+        post(route('register'));
+    };
+
+    const getFieldError = (key) => {
+        if (!errors[key]) return null;
+        return Array.isArray(errors[key]) ? errors[key][0] : errors[key];
     };
 
     return (
         <>
-            <Head title="Inscription - SmartPlanner" />
-            <div style={s.root}>
+            <Head title={tr.title} />
+            <style>{`
+                @media (max-width: 768px) {
+                    .sp-auth-root { flex-direction: column !important; }
+                    .sp-auth-left { width: 100% !important; min-height: auto !important; padding: 32px 24px !important; }
+                    .sp-auth-left > div:nth-child(2), .sp-auth-left > div:nth-child(3) { display: none !important; }
+                    .sp-auth-right { padding: 24px 16px !important; }
+                }
+            `}</style>
+            <div style={{ ...s.root, direction: isRTL ? "rtl" : "ltr" }} className="sp-auth-root">
 
-                {/* Left panel */}
-                <div style={s.left}>
+                {/* Left panel — branding */}
+                <div style={s.left} className="sp-auth-left">
                     <div style={s.leftInner}>
                         <div style={s.brand}>
                             <div style={s.brandIcon}>
@@ -32,18 +155,14 @@ export default function Register() {
                             <span style={s.brandName}>SmartPlanner</span>
                         </div>
 
-                        <h1 style={s.leftTitle}>Commencez à planifier gratuitement</h1>
-                        <p style={s.leftSub}>Créez votre compte et laissez l'IA optimiser votre temps d'étude dès aujourd'hui.</p>
+                        <h1 style={s.leftTitle}>{tr.brandTitle}</h1>
+                        <p style={s.leftSub}>{tr.brandSub}</p>
 
                         <div style={s.steps}>
-                            {[
-                                { num: '01', title: 'Créez votre compte', desc: 'Inscription gratuite en 30 secondes' },
-                                { num: '02', title: 'Ajoutez vos cours', desc: 'Entrez vos cours fixes et horaires' },
-                                { num: '03', title: 'Générez votre planning', desc: "L'IA crée 3 plannings personnalisés" },
-                            ].map((step, i) => (
-                                <div key={i} style={s.step}>
+                            {tr.steps.map((step, i) => (
+                                <div key={i} style={{ ...s.step, flexDirection: isRTL ? "row-reverse" : "row" }}>
                                     <div style={s.stepNum}>{step.num}</div>
-                                    <div>
+                                    <div style={{ textAlign: isRTL ? "right" : "left" }}>
                                         <div style={s.stepTitle}>{step.title}</div>
                                         <div style={s.stepDesc}>{step.desc}</div>
                                     </div>
@@ -55,86 +174,126 @@ export default function Register() {
                     <div style={s.leftBlob2} />
                 </div>
 
-                {/* Right panel */}
-                <div style={s.right}>
+                {/* Right panel — form */}
+                <div style={s.right} className="sp-auth-right">
                     <div style={s.formBox}>
 
                         <div style={s.formHeader}>
-                            <h2 style={s.formTitle}>Créer un compte 🎓</h2>
-                            <p style={s.formSub}>Rejoignez SmartPlanner — c'est gratuit !</p>
+                            <h2 style={s.formTitle}>{tr.formTitle}</h2>
+                            <p style={s.formSub}>{tr.formSub}</p>
                         </div>
 
-                        <form onSubmit={submit} style={s.form}>
+                        {/* Error banner */}
+                        {bannerError && (
+                            <div style={s.errorBanner} role="alert">
+                                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" style={{flexShrink: 0}}>
+                                    <circle cx="12" cy="12" r="10" fill="#FEE2E2" stroke="#EF4444" strokeWidth="1.5"/>
+                                    <path d="M12 8v4M12 16h.01" stroke="#EF4444" strokeWidth="2" strokeLinecap="round"/>
+                                </svg>
+                                <span style={s.errorBannerText}>{bannerError}</span>
+                            </div>
+                        )}
+
+                        <form onSubmit={submit} style={s.form} noValidate>
 
                             <div style={s.field}>
-                                <label style={s.label}>Nom complet</label>
+                                <label htmlFor="reg-name" style={s.label}>{tr.name}</label>
                                 <input
+                                    id="reg-name"
                                     type="text"
                                     value={data.name}
                                     onChange={e => setData('name', e.target.value)}
-                                    placeholder="Mohammed Ouarib"
-                                    style={{ ...s.input, ...(errors.name ? s.inputError : {}) }}
+                                    placeholder={tr.namePlaceholder}
+                                    style={{ ...s.input, ...(getFieldError('name') ? s.inputError : {}) }}
                                     autoFocus
+                                    autoComplete="name"
+                                    required
                                 />
-                                {errors.name && <span style={s.error}>{errors.name}</span>}
+                                {getFieldError('name') && <span style={s.error}>{getFieldError('name')}</span>}
                             </div>
 
                             <div style={s.field}>
-                                <label style={s.label}>Adresse email</label>
+                                <label htmlFor="reg-email" style={s.label}>{tr.email}</label>
                                 <input
+                                    id="reg-email"
                                     type="email"
                                     value={data.email}
                                     onChange={e => setData('email', e.target.value)}
-                                    placeholder="votre@email.com"
-                                    style={{ ...s.input, ...(errors.email ? s.inputError : {}) }}
+                                    placeholder={tr.emailPlaceholder}
+                                    style={{ ...s.input, ...(getFieldError('email') ? s.inputError : {}) }}
+                                    autoComplete="email"
+                                    required
                                 />
-                                {errors.email && <span style={s.error}>{errors.email}</span>}
+                                {getFieldError('email') && <span style={s.error}>{getFieldError('email')}</span>}
                             </div>
 
-                            <div style={s.row2}>
-                                <div style={s.field}>
-                                    <label style={s.label}>Mot de passe</label>
+                            <div style={s.field}>
+                                <label htmlFor="reg-password" style={s.label}>{tr.password}</label>
+                                <div style={s.passwordWrap}>
                                     <input
-                                        type="password"
+                                        id="reg-password"
+                                        type={showPassword ? "text" : "password"}
                                         value={data.password}
                                         onChange={e => setData('password', e.target.value)}
-                                        placeholder="••••••••"
-                                        style={{ ...s.input, ...(errors.password ? s.inputError : {}) }}
+                                        placeholder={tr.passwordPlaceholder}
+                                        style={{ ...s.input, ...(getFieldError('password') ? s.inputError : {}), paddingRight: '42px' }}
+                                        autoComplete="new-password"
+                                        required
                                     />
-                                    {errors.password && <span style={s.error}>{errors.password}</span>}
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={s.eyeBtn}
+                                        aria-label={showPassword ? tr.hidePassword : tr.showPassword}
+                                    >
+                                        {showPassword ? (
+                                            <svg width="18" height="18" fill="none" stroke="#9CA3AF" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                                                <line x1="1" y1="1" x2="23" y2="23" stroke="#9CA3AF" strokeWidth="1.8" strokeLinecap="round"/>
+                                            </svg>
+                                        ) : (
+                                            <svg width="18" height="18" fill="none" stroke="#9CA3AF" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        )}
+                                    </button>
                                 </div>
+                                {getFieldError('password') && <span style={s.error}>{getFieldError('password')}</span>}
+                            </div>
 
-                                <div style={s.field}>
-                                    <label style={s.label}>Confirmer</label>
-                                    <input
-                                        type="password"
-                                        value={data.password_confirmation}
-                                        onChange={e => setData('password_confirmation', e.target.value)}
-                                        placeholder="••••••••"
-                                        style={{ ...s.input, ...(errors.password_confirmation ? s.inputError : {}) }}
-                                    />
-                                    {errors.password_confirmation && <span style={s.error}>{errors.password_confirmation}</span>}
-                                </div>
+                            <div style={s.field}>
+                                <label htmlFor="reg-confirm" style={s.label}>{tr.confirmPassword}</label>
+                                <input
+                                    id="reg-confirm"
+                                    type={showPassword ? "text" : "password"}
+                                    value={data.password_confirmation}
+                                    onChange={e => setData('password_confirmation', e.target.value)}
+                                    placeholder={tr.confirmPassword}
+                                    style={{ ...s.input, ...(getFieldError('password_confirmation') ? s.inputError : {}) }}
+                                    autoComplete="new-password"
+                                    required
+                                />
+                                {getFieldError('password_confirmation') && <span style={s.error}>{getFieldError('password_confirmation')}</span>}
                             </div>
 
                             <button type="submit" disabled={processing} style={{ ...s.submitBtn, opacity: processing ? 0.7 : 1 }}>
                                 {processing ? (
-                                    <span style={s.btnLoading}><Spinner /> Création du compte...</span>
-                                ) : '🚀 Créer mon compte gratuit'}
+                                    <span style={s.btnLoading}><Spinner /> {tr.submitting}</span>
+                                ) : tr.submit}
                             </button>
 
                         </form>
 
                         <p style={s.switchText}>
-                            Déjà un compte ?{' '}
+                            {tr.hasAccount}{' '}
                             <Link href={route('login')} style={s.switchLink}>
-                                Se connecter
+                                {tr.loginLink}
                             </Link>
                         </p>
 
                     </div>
                 </div>
-
             </div>
         </>
     );
@@ -168,28 +327,49 @@ const s = {
     leftBlob2: { position: 'absolute', width: '200px', height: '200px', borderRadius: '50%', background: 'rgba(255,255,255,0.06)', bottom: '-60px', left: '-40px' },
     right: { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9FAFB', padding: '32px' },
     formBox: { width: '100%', maxWidth: '440px' },
-    formHeader: { marginBottom: '28px' },
+    formHeader: { marginBottom: '24px' },
     formTitle: { fontSize: '26px', fontWeight: 800, color: '#111827', margin: '0 0 8px', letterSpacing: '-0.02em' },
     formSub: { fontSize: '14px', color: '#6B7280', margin: 0 },
+    errorBanner: {
+        background: '#FEF2F2',
+        border: '1px solid #FECACA',
+        color: '#991B1B',
+        borderRadius: '10px',
+        padding: '12px 16px',
+        fontSize: '13px',
+        marginBottom: '20px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
+        lineHeight: 1.5,
+    },
+    errorBannerText: { flex: 1, fontWeight: 500 },
     form: { display: 'flex', flexDirection: 'column', gap: '16px' },
-    row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
     field: { display: 'flex', flexDirection: 'column', gap: '6px' },
     label: { fontSize: '13px', fontWeight: 600, color: '#374151' },
+    passwordWrap: { position: 'relative' },
+    eyeBtn: {
+        position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+        background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+    },
     input: {
         padding: '11px 14px', borderRadius: '10px',
         border: '1.5px solid #E5E7EB', fontSize: '14px',
         background: '#fff', color: '#111827', outline: 'none',
         fontFamily: "'DM Sans', sans-serif",
+        width: '100%', boxSizing: 'border-box',
     },
-    inputError: { borderColor: '#FCA5A5' },
+    inputError: { borderColor: '#EF4444' },
     error: { fontSize: '12px', color: '#EF4444', fontWeight: 500 },
     submitBtn: {
         padding: '13px', background: '#4F46E5', color: '#fff',
         border: 'none', borderRadius: '12px', fontSize: '14px',
         fontWeight: 700, cursor: 'pointer', marginTop: '4px',
         fontFamily: "'DM Sans', sans-serif",
+        width: '100%',
     },
     btnLoading: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' },
-    switchText: { textAlign: 'center', fontSize: '13px', color: '#6B7280', marginTop: '20px' },
-    switchLink: { color: '#4F46E5', fontWeight: 600, textDecoration: 'none' },
+    switchText: { textAlign: 'center', fontSize: '13px', color: '#6B7280', marginTop: '20px', lineHeight: 1.6 },
+    switchLink: { color: '#4F46E5', fontWeight: 600, textDecoration: 'none', cursor: 'pointer' },
 };

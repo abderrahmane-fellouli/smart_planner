@@ -41,8 +41,10 @@ export function ToastProvider({ children }) {
 // ─── Container ─────────────────────────────────────────────
 function ToastContainer({ toasts, onRemove }) {
     if (toasts.length === 0) return null;
+    // RTL languages should show toasts on the left side instead of right.
+    const isRTL = document.documentElement.dir === 'rtl';
     return (
-        <div style={s.container}>
+        <div style={{ ...s.container, [isRTL ? 'left' : 'right']: '24px', [isRTL ? 'right' : 'left']: 'auto' }}>
             {toasts.map(t => (
                 <ToastItem key={t.id} toast={t} onRemove={onRemove} />
             ))}
@@ -69,6 +71,7 @@ function ToastItem({ toast, onRemove }) {
         warning: { bg: "#FFFBEB", border: "#FDE68A", color: "#92400E", icon: "⚠️" },
     }[toast.type] ?? { bg: "#F9FAFB", border: "#E5E7EB", color: "#374151", icon: "💬" };
 
+    const isRTL = document.documentElement.dir === 'rtl';
     return (
         <div
             style={{
@@ -77,7 +80,7 @@ function ToastItem({ toast, onRemove }) {
                 border: `1px solid ${config.border}`,
                 color: config.color,
                 opacity: visible ? 1 : 0,
-                transform: visible ? "translateX(0)" : "translateX(120%)",
+                transform: visible ? "translateX(0)" : `translateX(${isRTL ? '-' : ''}120%)`,
             }}
         >
             <span style={s.icon}>{config.icon}</span>

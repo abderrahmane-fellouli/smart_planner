@@ -1,5 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import AppLayout from "./AppLayout";
+import { useTheme } from "./AppLayout";
 import { useState } from "react";
 
 const T = {
@@ -15,7 +16,7 @@ const T = {
         edit_prefs:"Modifier les préférences", export:"Exporter / imprimer",
         week:"Semaine", at:"à", dir:"ltr",
         tab_today:"Aujourd'hui", tab_tomorrow:"Demain", tab_week:"Cette semaine",
-        sessions:"sessions", no_sessions:"Aucune session",
+        sessions:"sessions", session:"session", no_sessions:"Aucune session",
         days_fr: {
             Lundi:"Lun", Mardi:"Mar", Mercredi:"Mer",
             Jeudi:"Jeu", Vendredi:"Ven", Samedi:"Sam"
@@ -33,7 +34,7 @@ const T = {
         edit_prefs:"Edit preferences", export:"Export / print",
         week:"Week", at:"at", dir:"ltr",
         tab_today:"Today", tab_tomorrow:"Tomorrow", tab_week:"This week",
-        sessions:"sessions", no_sessions:"No sessions",
+        sessions:"sessions", session:"session", no_sessions:"No sessions",
         days_fr: {
             Lundi:"Mon", Mardi:"Tue", Mercredi:"Wed",
             Jeudi:"Thu", Vendredi:"Fri", Samedi:"Sat"
@@ -51,9 +52,9 @@ const T = {
         edit_prefs:"تعديل التفضيلات", export:"تصدير / طباعة",
         week:"الأسبوع", at:"في", dir:"rtl",
         tab_today:"اليوم", tab_tomorrow:"غداً", tab_week:"هذا الأسبوع",
-        sessions:"جلسات", no_sessions:"لا توجد جلسات",
+        sessions:"جلسات", session:"جلسة", no_sessions:"لا توجد جلسات",
         days_fr: {
-            Lundi:"إث", Mardi:"ثلا", Mercredi:"أرب",
+            Lundi:"اثن", Mardi:"ثلا", Mercredi:"أرب",
             Jeudi:"خمي", Vendredi:"جمع", Samedi:"سبت"
         },
     },
@@ -73,7 +74,7 @@ function StatCard({ label, value, accent }) {
     return (
         <div style={s.statCard}>
             <span style={s.statLabel}>{label}</span>
-            <span style={{ ...s.statVal, color: accent || "#111827" }}>{value}</span>
+            <span style={{ ...s.statVal, color: accent || "var(--sp-text)" }}>{value}</span>
         </div>
     );
 }
@@ -105,12 +106,15 @@ export default function Dashboard({
     fixedEventsCount = 0,
     activeSchedule = null,
 }) {
+    const { dark } = useTheme();
     const lang = (() => { try { return localStorage.getItem("smartplanner_lang") || "fr"; } catch { return "fr"; } })();
     const tr = T[lang] || T.fr;
     const isRTL = tr.dir === "rtl";
 
     // Tab state: 'today' | 'tomorrow' | 'week'
     const [activeTab, setActiveTab] = useState("today");
+
+    // Dark mode is handled via CSS variables in the style object — no dk overrides needed
 
     const now     = new Date();
     const nowMin  = now.getHours() * 60 + now.getMinutes();
@@ -148,13 +152,10 @@ export default function Dashboard({
             <Head title={tr.title} />
             <div style={{ ...s.page, direction: isRTL ? "rtl" : "ltr" }}>
 
-                {flash.success && <div style={s.flash}>{flash.success}</div>}
-                {flash.error   && <div style={s.flashErr}>{flash.error}</div>}
-
                 {/* Header */}
                 <div style={{ ...s.header, flexDirection: isRTL ? "row-reverse" : "row" }}>
                     <div style={{ textAlign: isRTL ? "right" : "left" }}>
-                        <h1 style={s.greeting}>{greeting}, {user?.name?.split(" ")[0] || "..."} 👋</h1>
+                        <h1 style={s.greeting}>{greeting}, {user?.name || "..."} 👋</h1>
                         <p style={s.date}>{now.toLocaleDateString(locale, { weekday:"long", day:"numeric", month:"long", year:"numeric" })}</p>
                     </div>
                     {!activeSchedule && (
@@ -166,11 +167,11 @@ export default function Dashboard({
                 <div style={s.statsRow}>
                     <StatCard label={tr.tasks_week}  value={totalWeekSessions} />
                     <StatCard label={tr.fixed_tasks}  value={fixedEventsCount} />
-                    <StatCard label={tr.study_time}   value={`${activeSchedule?.schedule?.resume?.total_heures_semaine ?? 0}h`} accent="#16A34A" />
+                    <StatCard label={tr.study_time}   value={`${activeSchedule?.schedule?.resume?.total_heures_semaine ?? 0}h`} accent="var(--sp-success)" />
                     <StatCard label={tr.today_slots}  value={`${todaySessions.length} ${tr.slots}`} />
                 </div>
 
-                <div style={s.grid2}>
+                <div style={s.grid2} className="sp-grid-2col">
                     {/* ── Left: Schedule card ── */}
                     <div style={s.card}>
                         {/* Card header */}
@@ -196,11 +197,13 @@ export default function Dashboard({
                             {["today", "tomorrow", "week"].map(tab => (
                                 <button
                                     key={tab}
+                                    role="tab"
+                                    aria-selected={activeTab === tab}
                                     onClick={() => setActiveTab(tab)}
                                     style={{
                                         ...s.tab,
-                                        background: activeTab === tab ? "#4F46E5" : "#F3F4F6",
-                                        color:      activeTab === tab ? "#fff"    : "#6B7280",
+                                        background: activeTab === tab ? "var(--sp-accent)" : "var(--sp-subtleBg)",
+                                        color:      activeTab === tab ? "var(--sp-accentText)" : "var(--sp-textSecondary)",
                                     }}
                                 >
                                     {tab === "today"    ? tr.tab_today :
@@ -223,7 +226,7 @@ export default function Dashboard({
                                 ) : (
                                     <div style={s.sessionList}>
                                         {tabSessions.map((session, i) => (
-                                            <SessionRow key={i} session={session} isRTL={isRTL} />
+                                            <SessionRow key={i} session={session} isRTL={isRTL} dark={dark} />
                                         ))}
                                     </div>
                                 )}
@@ -236,7 +239,7 @@ export default function Dashboard({
                                 <p style={s.tabSubLabel}>
                                     {totalWeekSessions} {tr.sessions} {tr.tab_week.toLowerCase()}
                                 </p>
-                                <div style={s.weekGrid}>
+                                <div style={s.weekGrid} className="sp-week-grid">
                                     {Object.entries(weekSummary).map(([jour, count]) => {
                                         const isToday    = jour === todayName;
                                         const isTomorrow = jour === tomorrowName;
@@ -245,29 +248,29 @@ export default function Dashboard({
                                                 key={jour}
                                                 style={{
                                                     ...s.weekDayCard,
-                                                    background: isToday    ? "#4F46E5" :
-                                                                isTomorrow ? "#EEF2FF" : "#F9FAFB",
+                                                    background: isToday    ? "var(--sp-accent)" :
+                                                                isTomorrow ? "var(--sp-accentLight)" : "var(--sp-hoverBg)",
                                                     border: isToday    ? "none" :
-                                                            isTomorrow ? "1.5px solid #818CF8" : "1px solid #E5E7EB",
+                                                            isTomorrow ? "1.5px solid var(--sp-accent)" : "1px solid var(--sp-cardBorder)",
                                                 }}
                                             >
                                                 <span style={{
                                                     ...s.weekDayShort,
-                                                    color: isToday ? "#C7D2FE" : isTomorrow ? "#4F46E5" : "#9CA3AF"
+                                                    color: isToday ? "var(--sp-accentText)" : isTomorrow ? "var(--sp-accent)" : "var(--sp-textMuted)"
                                                 }}>
                                                     {tr.days_fr[jour] || jour.slice(0, 3)}
                                                 </span>
                                                 <span style={{
                                                     ...s.weekDayCount,
-                                                    color: isToday ? "#fff" : "#374151"
+                                                    color: isToday ? "var(--sp-accentText)" : "var(--sp-text)"
                                                 }}>
                                                     {count}
                                                 </span>
                                                 <span style={{
                                                     ...s.weekDayLabel,
-                                                    color: isToday ? "#C7D2FE" : "#9CA3AF"
+                                                    color: isToday ? "var(--sp-accentText)" : "var(--sp-textMuted)"
                                                 }}>
-                                                    {count === 1 ? "session" : tr.sessions}
+                                                    {count === 1 ? tr.session : tr.sessions}
                                                 </span>
 
                                                 {/* Sessions detail list per day */}
@@ -279,7 +282,7 @@ export default function Dashboard({
                                                             {daySessions.map((ds, idx) => (
                                                                 <div key={idx} style={{
                                                                     ...s.weekDaySession,
-                                                                    color: isToday ? "#E0E7FF" : "#6B7280",
+                                                                    color: isToday ? "var(--sp-accentText)" : "var(--sp-textSecondary)",
                                                                 }}>
                                                                     {formatTime(ds.debut)}–{formatTime(ds.fin)}
                                                                 </div>
@@ -314,7 +317,7 @@ export default function Dashboard({
 
                         {/* Quick actions */}
                         <div style={s.card}>
-                            <h2 style={{ ...s.cardTitle, textAlign: isRTL ? "right" : "left" }}>{tr.quick_actions}</h2>
+                                <h2 style={{ ...s.cardTitle, textAlign: isRTL ? "right" : "left" }}>{tr.quick_actions}</h2>
                             <div style={s.actions}>
                                 {[
                                     { href:"/fixed-events", icon:"➕", label:tr.add_task },
@@ -337,24 +340,33 @@ export default function Dashboard({
                         {/* Week mini summary (sidebar) */}
                         <div style={s.card}>
                             <h2 style={{ ...s.cardTitle, textAlign: isRTL ? "right" : "left", marginBottom:"10px" }}>{tr.week}</h2>
-                            <div style={s.weekMini}>
+                            <div style={s.weekMini} className="sp-week-mini">
                                 {Object.entries(weekSummary).map(([jour, count]) => {
                                     const isToday = jour === todayName;
                                     return (
                                         <div
                                             key={jour}
+                                            role="button"
+                                            tabIndex={0}
+                                            aria-label={`${tr.days_fr[jour] || jour}: ${count} ${count === 1 ? tr.session : tr.sessions}`}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                    e.preventDefault();
+                                                    setActiveTab("week");
+                                                }
+                                            }}
                                             style={{
                                                 ...s.weekDay,
-                                                background: isToday ? "#4F46E5" : "#F9FAFB",
-                                                border:     isToday ? "none" : "1px solid #E5E7EB",
+                                                background: isToday ? "var(--sp-accent)" : "var(--sp-hoverBg)",
+                                                border:     isToday ? "none" : "1px solid var(--sp-cardBorder)",
                                                 cursor: "pointer",
                                             }}
                                             onClick={() => setActiveTab("week")}
                                         >
-                                            <span style={{ ...s.weekShort, color: isToday ? "#C7D2FE" : "#9CA3AF" }}>
+                                            <span style={{ ...s.weekShort, color: isToday ? "var(--sp-accentText)" : "var(--sp-textMuted)" }}>
                                                 {tr.days_fr[jour] || jour.slice(0, 3)}
                                             </span>
-                                            <span style={{ ...s.weekCount, color: isToday ? "#fff" : "#374151" }}>
+                                            <span style={{ ...s.weekCount, color: isToday ? "var(--sp-accentText)" : "var(--sp-text)" }}>
                                                 {count}
                                             </span>
                                         </div>
@@ -376,68 +388,63 @@ export default function Dashboard({
 }
 
 const s = {
-    page:{ maxWidth:"1100px", margin:"0 auto", padding:"2rem 1.25rem 4rem", fontFamily:"'DM Sans',sans-serif" },
-    flash:{ background:"#ECFDF5", border:"1px solid #A7F3D0", color:"#065F46", borderRadius:"10px", padding:"11px 16px", fontSize:"13px", marginBottom:"1.5rem" },
-    flashErr:{ background:"#FEF2F2", border:"1px solid #FECACA", color:"#991B1B", borderRadius:"10px", padding:"11px 16px", fontSize:"13px", marginBottom:"1.5rem" },
+    page:{ maxWidth:"1100px", margin:"0 auto", padding:"2rem 1.25rem 4rem", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden" },
     header:{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem", marginBottom:"1.75rem" },
-    greeting:{ fontSize:"26px", fontWeight:800, color:"#b5b7bce4", margin:"0 0 4px", letterSpacing:"-0.02em" },
-    date:{ fontSize:"14px", color:"#9CA3AF", margin:0, textTransform:"capitalize" },
-    genBtn:{ display:"inline-flex", alignItems:"center", gap:"6px", padding:"10px 18px", background:"#4F46E5", color:"#fff", borderRadius:"10px", fontSize:"13px", fontWeight:600, textDecoration:"none" },
+    greeting:{ fontSize:"26px", fontWeight:800, color:"var(--sp-text)", margin:"0 0 4px", letterSpacing:"-0.02em" },
+    date:{ fontSize:"14px", color:"var(--sp-textMuted)", margin:0, textTransform:"capitalize" },
+    genBtn:{ display:"inline-flex", alignItems:"center", gap:"6px", padding:"10px 18px", background:"var(--sp-accent)", color:"var(--sp-accentText)", borderRadius:"10px", fontSize:"13px", fontWeight:600, textDecoration:"none" },
     statsRow:{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:"12px", marginBottom:"1.75rem" },
-    statCard:{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"12px", padding:"16px 18px", display:"flex", flexDirection:"column", gap:"4px" },
-    statLabel:{ fontSize:"11px", fontWeight:600, color:"#9CA3AF", textTransform:"uppercase", letterSpacing:"0.05em" },
-    statVal:{ fontSize:"24px", fontWeight:800, letterSpacing:"-0.02em" },
+    statCard:{ background:"var(--sp-card)", border:"1px solid var(--sp-cardBorder)", borderRadius:"12px", padding:"16px 18px", display:"flex", flexDirection:"column", gap:"4px" },
+    statLabel:{ fontSize:"11px", fontWeight:600, color:"var(--sp-textMuted)", textTransform:"uppercase", letterSpacing:"0.05em" },
+    statVal:{ fontSize:"24px", fontWeight:800, letterSpacing:"-0.02em", color:"var(--sp-text)" },
     grid2:{ display:"grid", gridTemplateColumns:"1fr 340px", gap:"16px", alignItems:"start" },
-    card:{ background:"#fff", border:"1px solid #E5E7EB", borderRadius:"14px", padding:"1.25rem 1.5rem", marginBottom:"12px" },
+    card:{ background:"var(--sp-card)", border:"1px solid var(--sp-cardBorder)", borderRadius:"14px", padding:"1.25rem 1.5rem", marginBottom:"12px" },
     cardHead:{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" },
-    cardTitle:{ fontSize:"15px", fontWeight:700, color:"#111827", margin:0 },
-    cardLink:{ fontSize:"12px", color:"#4F46E5", fontWeight:600, textDecoration:"none" },
+    cardTitle:{ fontSize:"15px", fontWeight:700, color:"var(--sp-text)", margin:0 },
+    cardLink:{ fontSize:"12px", color:"var(--sp-accent)", fontWeight:600, textDecoration:"none" },
 
-    // Tabs
     tabs:{ display:"flex", gap:"6px", marginBottom:"14px" },
     tab:{ padding:"6px 14px", borderRadius:"20px", fontSize:"12px", fontWeight:600, border:"none", cursor:"pointer", transition:"all 0.15s" },
-    tabSubLabel:{ fontSize:"12px", color:"#9CA3AF", fontWeight:500, marginBottom:"10px" },
+    tabSubLabel:{ fontSize:"12px", color:"var(--sp-textMuted)", fontWeight:500, marginBottom:"10px" },
 
-    // Session rows (today/tomorrow)
     sessionList:{ display:"flex", flexDirection:"column", gap:"8px" },
-    sessionRow:{ display:"flex", alignItems:"center", gap:"12px", padding:"10px 14px", background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:"10px" },
+    sessionRow:{ display:"flex", alignItems:"center", gap:"12px", padding:"10px 14px", background:"var(--sp-successBg)", border:"1px solid var(--sp-successBorder)", borderRadius:"10px" },
     sessionDot:{ width:"8px", height:"8px", borderRadius:"50%", background:"#22C55E", flexShrink:0 },
-    sessionTitle:{ fontSize:"13px", fontWeight:600, color:"#111827", margin:"0 0 2px" },
-    sessionTime:{ fontSize:"11px", color:"#6B7280", margin:0 },
+    sessionTitle:{ fontSize:"13px", fontWeight:600, color:"var(--sp-text)", margin:"0 0 2px" },
+    sessionTime:{ fontSize:"11px", color:"var(--sp-textSecondary)", margin:0 },
 
-    // Week grid (full detail)
     weekGrid:{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"8px" },
-    weekDayCard:{ borderRadius:"10px", padding:"10px 8px", display:"flex", flexDirection:"column", alignItems:"center", gap:"2px" },
+    weekDayCard:{ borderRadius:"10px", padding:"10px 8px", display:"flex", flexDirection:"column", alignItems:"center", gap:"2px", background:"var(--sp-hoverBg)", border:"1px solid var(--sp-cardBorder)" },
     weekDayShort:{ fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em" },
     weekDayCount:{ fontSize:"22px", fontWeight:800, letterSpacing:"-0.02em" },
     weekDayLabel:{ fontSize:"9px", fontWeight:500 },
     weekDaySessionList:{ marginTop:"6px", width:"100%", display:"flex", flexDirection:"column", gap:"2px" },
-    weekDaySession:{ fontSize:"9px", fontWeight:500, textAlign:"center", background:"rgba(0,0,0,0.05)", borderRadius:"4px", padding:"1px 4px" },
+    weekDaySession:{ fontSize:"9px", fontWeight:500, textAlign:"center", background:"var(--sp-subtleBg)", borderRadius:"4px", padding:"1px 4px", color:"var(--sp-textSecondary)" },
 
     emptyDay:{ textAlign:"center", padding:"1.5rem" },
-    emptyText:{ fontSize:"14px", color:"#9CA3AF", marginBottom:"12px" },
-    miniBtn:{ display:"inline-flex", padding:"8px 16px", background:"#EEF2FF", color:"#4F46E5", borderRadius:"8px", fontSize:"13px", fontWeight:600, textDecoration:"none" },
+    emptyText:{ fontSize:"14px", color:"var(--sp-textMuted)", marginBottom:"12px" },
+    miniBtn:{ display:"inline-flex", padding:"8px 16px", background:"var(--sp-accentLight)", color:"var(--sp-accent)", borderRadius:"8px", fontSize:"13px", fontWeight:600, textDecoration:"none" },
 
-    currentBanner:{ display:"flex", alignItems:"flex-start", gap:"12px", background:"#F0FDF4", border:"1px solid #BBF7D0", borderRadius:"10px", padding:"12px 14px", marginBottom:"1rem" },
+    currentBanner:{ display:"flex", alignItems:"flex-start", gap:"12px", background:"var(--sp-successBg)", border:"1px solid var(--sp-successBorder)", borderRadius:"10px", padding:"12px 14px", marginBottom:"1rem" },
     currentDot:{ width:"10px", height:"10px", borderRadius:"50%", background:"#22C55E", flexShrink:0, marginTop:"4px" },
-    currentLabel:{ fontSize:"10px", fontWeight:700, color:"#15803D", textTransform:"uppercase", letterSpacing:"0.06em", margin:"0 0 2px" },
-    currentTitle:{ fontSize:"15px", fontWeight:700, color:"#111827", margin:"0 0 2px" },
-    currentTime:{ fontSize:"12px", color:"#6B7280", margin:0 },
+    currentLabel:{ fontSize:"10px", fontWeight:700, color:"var(--sp-success)", textTransform:"uppercase", letterSpacing:"0.06em", margin:"0 0 2px" },
+    currentTitle:{ fontSize:"15px", fontWeight:700, color:"var(--sp-text)", margin:"0 0 2px" },
+    currentTime:{ fontSize:"12px", color:"var(--sp-textSecondary)", margin:0 },
 
     rightCol:{ display:"flex", flexDirection:"column" },
-    nextItem:{ display:"flex", alignItems:"center", gap:"12px", background:"#FAFAFA", borderRadius:"10px", padding:"12px 14px", marginTop:"8px" },
+    nextItem:{ display:"flex", alignItems:"center", gap:"12px", background:"var(--sp-hoverBg)", borderRadius:"10px", padding:"12px 14px", marginTop:"8px" },
     nextDot:{ width:"10px", height:"10px", borderRadius:"50%", flexShrink:0 },
-    nextTitle:{ fontSize:"14px", fontWeight:600, color:"#111827", margin:"0 0 2px" },
-    nextTime:{ fontSize:"12px", color:"#6B7280", margin:0 },
+    nextTitle:{ fontSize:"14px", fontWeight:600, color:"var(--sp-text)", margin:"0 0 2px" },
+    nextTime:{ fontSize:"12px", color:"var(--sp-textSecondary)", margin:0 },
 
     actions:{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"8px" },
-    actionBtn:{ display:"flex", alignItems:"center", gap:"10px", padding:"10px 12px", background:"#FAFAFA", border:"1px solid #F3F4F6", borderRadius:"10px", textDecoration:"none" },
+    actionBtn:{ display:"flex", alignItems:"center", gap:"10px", padding:"10px 12px", background:"var(--sp-hoverBg)", border:"1px solid var(--sp-cardBorder)", borderRadius:"10px", textDecoration:"none" },
     actionIcon:{ fontSize:"16px", flexShrink:0 },
-    actionLabel:{ flex:1, fontSize:"13px", fontWeight:500, color:"#374151" },
+    actionLabel:{ flex:1, fontSize:"13px", fontWeight:500, color:"var(--sp-text)" },
 
     weekMini:{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:"4px" },
-    weekDay:{ borderRadius:"8px", padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:"4px" },
+    weekDay:{ borderRadius:"8px", padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:"4px", background:"var(--sp-hoverBg)", border:"1px solid var(--sp-cardBorder)" },
     weekShort:{ fontSize:"8px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.04em" },
     weekCount:{ fontSize:"15px", fontWeight:800 },
-    weekDetailBtn:{ marginTop:"10px", width:"100%", padding:"7px", background:"#EEF2FF", color:"#4F46E5", border:"none", borderRadius:"8px", fontSize:"12px", fontWeight:600, cursor:"pointer" },
+    weekDetailBtn:{ marginTop:"10px", width:"100%", padding:"7px", background:"var(--sp-accentLight)", color:"var(--sp-accent)", border:"none", borderRadius:"8px", fontSize:"12px", fontWeight:600, cursor:"pointer" },
 };

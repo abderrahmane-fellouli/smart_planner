@@ -1,12 +1,13 @@
-import { Head, router } from "@inertiajs/react";
+import { Head, Link, router } from "@inertiajs/react";
 import AppLayout from "@/Pages/AppLayout";
+import { useTheme } from "@/Pages/AppLayout";
 import { useState } from "react";
 
 const T = {
   fr: {
     export: {
       title: "Exporter le planning",
-      subtitle: "Téléchargez votre planning en PDF ou Excel",
+      subtitle: "Téléchargez votre planning en PDF ou CSV",
       emptyTitle: "Aucun planning disponible",
       emptySub: "Générez d'abord un planning depuis la page \"Mon planning\"",
       emptyBtn: "Aller à Mon planning →",
@@ -26,19 +27,14 @@ const T = {
       exportPdf: "Exporter en PDF",
       pdfOpening: "Ouverture...",
       pdfDesc: "S'ouvre dans un nouvel onglet · Imprimable",
-      exportExcel: "Exporter en Excel",
-      excelDownloading: "Téléchargement...",
-      excelDesc: "Fichier .csv · Compatible Excel & LibreOffice",
       infoPdf: "PDF :",
-      infoExcel: "Excel :",
       infoText: "S'ouvre dans un nouvel onglet. Utilisez Ctrl+P ou le bouton \"Imprimer\" pour sauvegarder en PDF.",
-      infoExcelText: "Le fichier .csv se télécharge directement et s'ouvre dans Excel.",
     },
   },
   en: {
     export: {
       title: "Export Schedule",
-      subtitle: "Download your schedule as PDF or Excel",
+      subtitle: "Download your schedule as PDF or CSV",
       emptyTitle: "No schedule available",
       emptySub: "First generate a schedule from the \"My Schedule\" page",
       emptyBtn: "Go to My Schedule →",
@@ -58,19 +54,14 @@ const T = {
       exportPdf: "Export as PDF",
       pdfOpening: "Opening...",
       pdfDesc: "Opens in new tab · Printable",
-      exportExcel: "Export as Excel",
-      excelDownloading: "Downloading...",
-      excelDesc: ".csv file · Compatible with Excel & LibreOffice",
       infoPdf: "PDF:",
-      infoExcel: "Excel:",
       infoText: "Opens in a new tab. Use Ctrl+P or the Print button to save as PDF.",
-      infoExcelText: "The .csv file downloads directly and opens in Excel.",
     },
   },
   ar: {
     export: {
       title: "تصدير الجدول",
-      subtitle: "قم بتنزيل جدولك بصيغة PDF أو Excel",
+      subtitle: "قم بتنزيل جدولك بصيغة PDF أو CSV",
       emptyTitle: "لا يوجد جدول متاح",
       emptySub: "قم أولاً بإنشاء جدول من صفحة \"جدولي\"",
       emptyBtn: "الذهاب إلى جدولي →",
@@ -90,18 +81,14 @@ const T = {
       exportPdf: "تصدير بصيغة PDF",
       pdfOpening: "جاري الفتح...",
       pdfDesc: "يفتح في علامة تبويب جديدة · قابل للطباعة",
-      exportExcel: "تصدير بصيغة Excel",
-      excelDownloading: "جاري التنزيل...",
-      excelDesc: "ملف .csv · متوافق مع Excel و LibreOffice",
       infoPdf: "PDF:",
-      infoExcel: "Excel:",
       infoText: "يفتح في علامة تبويب جديدة. استخدم Ctrl+P أو زر الطباعة للحفظ بصيغة PDF.",
-      infoExcelText: "يتم تنزيل ملف .csv مباشرة ويفتح في Excel.",
     },
   },
 };
 
 export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents, user }) {
+  const { dark } = useTheme();
   let lang = "fr";
   if (typeof window !== "undefined") {
     lang = localStorage.getItem("smartplanner_lang") || "fr";
@@ -120,16 +107,22 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
 
   const handleExportPdf = () => {
     setLoading("pdf");
-    const params = selectedId ? `?schedule_id=${selectedId}` : "";
+    const params = `?lang=${lang}${selectedId ? `&schedule_id=${selectedId}` : ""}`;
     window.open(`/export/pdf${params}`, "_blank");
     setTimeout(() => setLoading(null), 1500);
   };
 
-  const handleExportExcel = () => {
-    setLoading("excel");
-    const params = selectedId ? `?schedule_id=${selectedId}` : "";
-    window.location.href = `/export/excel${params}`;
-    setTimeout(() => setLoading(null), 1500);
+  const btnHoverIn = (e) => {
+    const el = e.currentTarget;
+    if (!el.disabled) {
+      el.style.background = "#6366F1";
+      el.style.borderColor = "#6366F1";
+    }
+  };
+
+  const btnHoverOut = (e) => {
+    e.currentTarget.style.background = "var(--sp-subtleBg)";
+    e.currentTarget.style.borderColor = "var(--sp-cardBorder)";
   };
 
   const selectedSchedule = allSchedules?.find(s => s.id == selectedId) ?? activeSchedule;
@@ -151,10 +144,10 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
             <div style={s.emptyIcon}>📭</div>
             <p style={s.emptyTitle}>{tr.emptyTitle}</p>
             <p style={s.emptySub}>{tr.emptySub}</p>
-            <a href="/schedules" style={s.emptyBtn}>{tr.emptyBtn}</a>
+            <Link href="/schedules" style={s.emptyBtn}>{tr.emptyBtn}</Link>
           </div>
         ) : (
-          <div style={{ ...s.grid, flexDirection: isRTL ? "row-reverse" : "row" }}>
+          <div style={{ ...s.grid, flexDirection: isRTL ? "row-reverse" : "row" }} className="sp-export-grid" id="export-grid">
             {/* Left: Select planning */}
             <div style={s.card}>
               <h2 style={s.cardTitle}>{tr.step1_title}</h2>
@@ -166,17 +159,20 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                   return (
                     <div
                       key={plan.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setSelectedId(plan.id)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedId(plan.id); } }}
                       style={{
                         ...s.selectItem,
-                        border: isSelected ? `2px solid ${c.color}` : "2px solid #E5E7EB",
-                        background: isSelected ? c.bg : "#fff",
+                        border: isSelected ? `2px solid ${c.color}` : "2px solid var(--sp-cardBorder)",
+                        background: isSelected ? c.bg : "var(--sp-subtleBg)",
                         flexDirection: isRTL ? "row-reverse" : "row",
                       }}
                     >
                       <span style={s.selectIcon}>{c.icon}</span>
                       <div style={{ ...s.selectInfo, textAlign: isRTL ? "right" : "left" }}>
-                        <span style={{ ...s.selectLabel, color: isSelected ? c.color : "#374151" }}>
+                        <span style={{ ...s.selectLabel, color: isSelected ? c.color : "var(--sp-textSecondary)" }}>
                           {tr.planningIntensif && c.label} {/* c.label already translated */}
                           {plan.is_active && (
                             <span style={{ ...s.activeBadge, background: c.color }}>{tr.activeBadge}</span>
@@ -226,6 +222,8 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                   <button
                     onClick={handleExportPdf}
                     disabled={!selectedId && !activeSchedule}
+                    onMouseEnter={btnHoverIn}
+                    onMouseLeave={btnHoverOut}
                     style={{
                       ...s.exportBtn,
                       opacity: (!selectedId && !activeSchedule) ? 0.5 : 1,
@@ -244,32 +242,7 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                       </span>
                       <span style={s.exportBtnDesc}>{tr.pdfDesc}</span>
                     </div>
-                    <svg width="16" height="16" fill="none" stroke="#9CA3AF" strokeWidth="2" viewBox="0 0 24 24" style={{ transform: isRTL ? "rotate(180deg)" : "none" }}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
-                    </svg>
-                  </button>
-
-                  <button
-                    onClick={handleExportExcel}
-                    disabled={!selectedId && !activeSchedule}
-                    style={{
-                      ...s.exportBtn,
-                      opacity: (!selectedId && !activeSchedule) ? 0.5 : 1,
-                      flexDirection: isRTL ? "row-reverse" : "row",
-                    }}
-                  >
-                    <div style={{ ...s.exportBtnIcon, background: "#F0FDF4" }}>
-                      <svg width="28" height="28" fill="none" stroke="#16A34A" strokeWidth="1.8" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18M10 3v18M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/>
-                      </svg>
-                    </div>
-                    <div style={{ ...s.exportBtnInfo, textAlign: isRTL ? "right" : "left" }}>
-                      <span style={s.exportBtnTitle}>
-                        {loading === "excel" ? tr.excelDownloading : tr.exportExcel}
-                      </span>
-                      <span style={s.exportBtnDesc}>{tr.excelDesc}</span>
-                    </div>
-                    <svg width="16" height="16" fill="none" stroke="#9CA3AF" strokeWidth="2" viewBox="0 0 24 24" style={{ transform: isRTL ? "rotate(180deg)" : "none" }}>
+                    <svg width="16" height="16" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24" style={{ transform: isRTL ? "rotate(180deg)" : "none" }}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
                     </svg>
                   </button>
@@ -281,8 +254,7 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                   <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
                 </svg>
                 <div style={{ fontSize: "12px", color: "#4338CA", textAlign: isRTL ? "right" : "left" }}>
-                  <strong>{tr.infoPdf}</strong> {tr.infoText}<br/>
-                  <strong>{tr.infoExcel}</strong> {tr.infoExcelText}
+                  <strong>{tr.infoPdf}</strong> {tr.infoText}
                 </div>
               </div>
             </div>
@@ -294,35 +266,35 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
 }
 
 const s = {
-  page: { maxWidth: "960px", margin: "0 auto", padding: "32px 24px 60px", fontFamily: "'DM Sans', sans-serif" },
+  page: { maxWidth: "960px", margin: "0 auto", padding: "32px 24px 60px", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" },
   header: { marginBottom: "28px" },
-  title: { fontSize: "22px", fontWeight: 700, color: "#111827", margin: "0 0 4px" },
-  subtitle: { fontSize: "14px", color: "#6B7280", margin: 0 },
+  title: { fontSize: "22px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
+  subtitle: { fontSize: "14px", color: "var(--sp-textSecondary)", margin: 0 },
   grid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", alignItems: "start" },
-  card: { background: "#fff", border: "1px solid #E5E7EB", borderRadius: "14px", padding: "20px 22px", marginBottom: 0 },
-  cardTitle: { fontSize: "15px", fontWeight: 700, color: "#111827", margin: "0 0 4px" },
-  cardSub: { fontSize: "12px", color: "#9CA3AF", margin: "0 0 16px" },
+  card: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "14px", padding: "20px 22px", marginBottom: 0 },
+  cardTitle: { fontSize: "15px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
+  cardSub: { fontSize: "12px", color: "var(--sp-textMuted)", margin: "0 0 16px" },
   selectList: { display: "flex", flexDirection: "column", gap: "8px" },
   selectItem: { display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", cursor: "pointer", transition: "all 0.12s" },
   selectIcon: { fontSize: "20px", flexShrink: 0 },
   selectInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "2px" },
   selectLabel: { fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" },
-  selectDate: { fontSize: "11px", color: "#9CA3AF" },
+  selectDate: { fontSize: "11px", color: "var(--sp-textMuted)" },
   activeBadge: { fontSize: "10px", color: "#fff", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
-  previewRow: { display: "flex", gap: "0", marginTop: "12px", borderTop: "1px solid #F3F4F6", paddingTop: "12px" },
-  previewStat: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", borderRight: "1px solid #F3F4F6", padding: "0" },
-  previewVal: { fontSize: "18px", fontWeight: 800, color: "#111827" },
-  previewKey: { fontSize: "11px", color: "#9CA3AF" },
+  previewRow: { display: "flex", gap: "0", marginTop: "12px", borderTop: "1px solid var(--sp-cardBorder)", paddingTop: "12px" },
+  previewStat: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", borderRight: "1px solid var(--sp-cardBorder)", padding: "0" },
+  previewVal: { fontSize: "18px", fontWeight: 800, color: "var(--sp-text)" },
+  previewKey: { fontSize: "11px", color: "var(--sp-textMuted)" },
   exportBtns: { display: "flex", flexDirection: "column", gap: "10px", marginTop: "4px" },
-  exportBtn: { display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", background: "#FAFAFA", border: "1px solid #E5E7EB", borderRadius: "12px", cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.12s" },
+  exportBtn: { display: "flex", alignItems: "center", gap: "14px", padding: "14px 16px", background: "var(--sp-subtleBg)", border: "1px solid var(--sp-cardBorder)", borderRadius: "12px", cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.12s" },
   exportBtnIcon: { width: "52px", height: "52px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   exportBtnInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "3px" },
-  exportBtnTitle: { fontSize: "14px", fontWeight: 600, color: "#111827" },
-  exportBtnDesc: { fontSize: "11px", color: "#9CA3AF" },
-  infoBox: { display: "flex", gap: "10px", alignItems: "flex-start", background: "#EEF2FF", border: "1px solid #C7D2FE", borderRadius: "10px", padding: "12px 14px", marginTop: "12px" },
-  empty: { background: "#fff", border: "1px solid #E5E7EB", borderRadius: "16px", padding: "60px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" },
+  exportBtnTitle: { fontSize: "14px", fontWeight: 600, color: "var(--sp-text)" },
+  exportBtnDesc: { fontSize: "11px", color: "var(--sp-textMuted)" },
+  infoBox: { display: "flex", gap: "10px", alignItems: "flex-start", background: "var(--sp-accentLight)", border: "1px solid #C7D2FE", borderRadius: "10px", padding: "12px 14px", marginTop: "12px" },
+  empty: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "16px", padding: "60px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" },
   emptyIcon: { fontSize: "48px" },
-  emptyTitle: { fontSize: "16px", fontWeight: 600, color: "#111827", margin: 0 },
-  emptySub: { fontSize: "13px", color: "#9CA3AF", margin: 0 },
-  emptyBtn: { display: "inline-flex", padding: "10px 20px", background: "#4F46E5", color: "#fff", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none", marginTop: "4px" },
+  emptyTitle: { fontSize: "16px", fontWeight: 600, color: "var(--sp-text)", margin: 0 },
+  emptySub: { fontSize: "13px", color: "var(--sp-textMuted)", margin: 0 },
+  emptyBtn: { display: "inline-flex", padding: "10px 20px", background: "var(--sp-accent)", color: "var(--sp-accentText)", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none", marginTop: "4px" },
 };
