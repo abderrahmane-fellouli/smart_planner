@@ -349,13 +349,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
               </div>
 
               <label style={s.modalLabel}>{tr.newStartTime}</label>
-              <input
-                type="time"
-                style={s.modalInput}
-                value={moveModal.newTime}
-                onChange={e => setMoveModal({ ...moveModal, newTime: e.target.value })}
-                disabled={isMoving}
-              />
+              <TimeInput value={moveModal.newTime} onChange={v => setMoveModal({ ...moveModal, newTime: v })} disabled={isMoving} />
 
               <div style={s.modalFooter}>
                 <button style={s.modalCancelBtn}  onClick={() => setMoveModal(null)} disabled={isMoving}>{tr.cancel}</button>
@@ -371,7 +365,33 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
   );
 }
 
-function Spinner({ color = "#fff", size = 14 }) {
+function TimeInput({ value, onChange, disabled }) {
+  const [h, m] = (value || '09:00').split(':');
+  const hours = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
+  const minutes = ['00', '15', '30', '45'];
+  const baseStyle = {
+    flex: 1, padding: '9px 8px',
+    background: 'var(--sp-inputBg)',
+    border: '1px solid var(--sp-inputBorder)',
+    borderRadius: '8px', fontSize: '13px', color: 'var(--sp-text)',
+    outline: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
+    fontFamily: "'DM Sans',sans-serif", opacity: disabled ? 0.6 : 1,
+    appearance: 'none', WebkitAppearance: 'none',
+  };
+  return (
+    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', width: '100%', marginBottom: '20px' }}>
+      <select value={h} disabled={disabled} onChange={e => onChange(e.target.value + ':' + m)} style={baseStyle}>
+        {hours.map(hh => <option key={hh} value={hh}>{hh}</option>)}
+      </select>
+      <span style={{ fontWeight: 700, color: 'var(--sp-textMuted)' }}>:</span>
+      <select value={m} disabled={disabled} onChange={e => onChange(h + ':' + e.target.value)} style={baseStyle}>
+        {minutes.map(mm => <option key={mm} value={mm}>{mm}</option>)}
+      </select>
+    </div>
+  );
+}
+
+function Spinner({ color = "currentColor", size = 14 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5"
       style={{ animation: "spin 0.8s linear infinite", flexShrink: 0 }}>
@@ -416,7 +436,7 @@ const s = {
   cardIcon:        { fontSize: '22px' },
   cardLabel:       { fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' },
   cardDesc:        { fontSize: '12px', color: 'var(--sp-textMuted)', marginTop: '2px' },
-  activeBadge:     { fontSize: '10px', fontWeight: 700, color: '#fff', padding: '2px 8px', borderRadius: '20px' },
+  activeBadge:     { fontSize: '10px', fontWeight: 700, color: 'var(--sp-accentText)', padding: '2px 8px', borderRadius: '20px' },
   resumeRow:       { display: 'flex', borderTop: '1px solid var(--sp-cardBorder)', borderBottom: '1px solid var(--sp-cardBorder)' },
   resumeStat:      { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', borderRight: '1px solid var(--sp-cardBorder)' },
   resumeVal:       { fontSize: '16px', fontWeight: 700, color: 'var(--sp-text)' },
@@ -433,7 +453,7 @@ const s = {
   moveBtn:         { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', padding: '2px 4px', borderRadius: '4px', opacity: 0.55, flexShrink: 0 },
   noSession:       { fontSize: '11px', color: 'var(--sp-textMuted)' },
   cardFooter:      { padding: '14px 18px', borderTop: '1px solid var(--sp-cardBorder)', display: 'flex', alignItems: 'center', gap: '10px' },
-  activateBtn:     { flex: 1, padding: '9px', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
+  activateBtn:     { flex: 1, padding: '9px', color: 'var(--sp-accentText)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
   activeLabel:     { flex: 1, fontSize: '13px', fontWeight: 600, textAlign: 'center' },
   deleteBtn:       { padding: '9px 14px', background: 'none', border: '1px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' },
   modalOverlay:    { position: 'fixed', inset: 0, background: 'var(--sp-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },

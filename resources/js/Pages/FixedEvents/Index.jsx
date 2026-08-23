@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Pages/AppLayout';
 import { Head } from '@inertiajs/react';
@@ -7,20 +7,20 @@ const T = {
   fr: {
     fixedEvents: {
       title: "Cours fixes",
-      subtitle: "Ajoutez vos cours pour que l'IA génère votre planning",
-      statBadge: "{count} cours enregistrés",
+      subtitle: "Ajoutez vos cours pour que l'IA gÃ©nÃ¨re votre planning",
+      statBadge: "{count} cours enregistrÃ©s",
       addCourse: "Ajouter un cours",
-      subject: "Matière",
-      subjectPlaceholder: "Ex: Mathématiques",
+      subject: "MatiÃ¨re",
+      subjectPlaceholder: "Ex: MathÃ©matiques",
       day: "Jour",
       everyDay: "Tous les jours",
-      everyDayDesc: "Appliquer à tous les jours (lundi–samedi)",
-      startTime: "Heure début",
+      everyDayDesc: "Appliquer Ã  tous les jours (lundiâ€“samedi)",
+      startTime: "Heure dÃ©but",
       endTime: "Heure fin",
       addButton: "+ Ajouter le cours",
       adding: "Ajout en cours...",
       courseList: "Liste des cours",
-      emptyTitle: "Aucun cours ajouté",
+      emptyTitle: "Aucun cours ajoutÃ©",
       emptyDesc: "Ajoutez votre premier cours avec le formulaire",
       deleteConfirm: "Supprimer ce cours ?",
       days: {
@@ -43,7 +43,7 @@ const T = {
       subjectPlaceholder: "E.g., Mathematics",
       day: "Day",
       everyDay: "Every day",
-      everyDayDesc: "Apply to all days (Monday–Saturday)",
+      everyDayDesc: "Apply to all days (Mondayâ€“Saturday)",
       startTime: "Start time",
       endTime: "End time",
       addButton: "+ Add course",
@@ -64,34 +64,63 @@ const T = {
   },
   ar: {
     fixedEvents: {
-      title: "الدروس الثابتة",
-      subtitle: "أضف دروسك ليتمكن الذكاء الاصطناعي من إنشاء جدولك",
-      statBadge: "{count} درس محفوظ",
-      addCourse: "إضافة درس",
-      subject: "المادة",
-      subjectPlaceholder: "مثال: الرياضيات",
-      day: "اليوم",
-      everyDay: "كل يوم",
-      everyDayDesc: "تطبيق على كل الأيام (الاثنين–السبت)",
-      startTime: "وقت البدء",
-      endTime: "وقت الانتهاء",
-      addButton: "+ إضافة درس",
-      adding: "جاري الإضافة...",
-      courseList: "قائمة الدروس",
-      emptyTitle: "لا توجد دروس مضافة",
-      emptyDesc: "أضف درسك الأول باستخدام النموذج",
-      deleteConfirm: "هل تريد حذف هذا الدرس؟",
+      title: "Ø§Ù„Ø¯Ø±ÙˆØ³ Ø§Ù„Ø«Ø§Ø¨ØªØ©",
+      subtitle: "Ø£Ø¶Ù Ø¯Ø±ÙˆØ³Ùƒ Ù„ÙŠØªÙ…ÙƒÙ† Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù…Ù† Ø¥Ù†Ø´Ø§Ø¡ Ø¬Ø¯ÙˆÙ„Ùƒ",
+      statBadge: "{count} Ø¯Ø±Ø³ Ù…Ø­ÙÙˆØ¸",
+      addCourse: "Ø¥Ø¶Ø§ÙØ© Ø¯Ø±Ø³",
+      subject: "Ø§Ù„Ù…Ø§Ø¯Ø©",
+      subjectPlaceholder: "Ù…Ø«Ø§Ù„: Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª",
+      day: "Ø§Ù„ÙŠÙˆÙ…",
+      everyDay: "ÙƒÙ„ ÙŠÙˆÙ…",
+      everyDayDesc: "ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ ÙƒÙ„ Ø§Ù„Ø£ÙŠØ§Ù… (Ø§Ù„Ø§Ø«Ù†ÙŠÙ†â€“Ø§Ù„Ø³Ø¨Øª)",
+      startTime: "ÙˆÙ‚Øª Ø§Ù„Ø¨Ø¯Ø¡",
+      endTime: "ÙˆÙ‚Øª Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡",
+      addButton: "+ Ø¥Ø¶Ø§ÙØ© Ø¯Ø±Ø³",
+      adding: "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¥Ø¶Ø§ÙØ©...",
+      courseList: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¯Ø±ÙˆØ³",
+      emptyTitle: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¯Ø±ÙˆØ³ Ù…Ø¶Ø§ÙØ©",
+      emptyDesc: "Ø£Ø¶Ù Ø¯Ø±Ø³Ùƒ Ø§Ù„Ø£ÙˆÙ„ Ø¨Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„Ù†Ù…ÙˆØ°Ø¬",
+      deleteConfirm: "Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø¯Ø±Ø³ØŸ",
       days: {
-        monday: "الاثنين",
-        tuesday: "الثلاثاء",
-        wednesday: "الأربعاء",
-        thursday: "الخميس",
-        friday: "الجمعة",
-        saturday: "السبت",
+        monday: "Ø§Ù„Ø§Ø«Ù†ÙŠÙ†",
+        tuesday: "Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡",
+        wednesday: "Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡",
+        thursday: "Ø§Ù„Ø®Ù…ÙŠØ³",
+        friday: "Ø§Ù„Ø¬Ù…Ø¹Ø©",
+        saturday: "Ø§Ù„Ø³Ø¨Øª",
       },
     },
   },
 };
+
+
+function TimeInput({ value, onChange, id, hasError }) {
+  const [h, m] = (value || '09:00').split(':');
+  const hours = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
+  const minutes = ['00', '15', '30', '45'];
+  const baseStyle = {
+    flex: 1, padding: '9px 8px',
+    background: 'var(--sp-inputBg)',
+    border: '1px solid var(--sp-inputBorder)',
+    borderRadius: '8px',
+    fontSize: '13px', color: 'var(--sp-text)',
+    outline: 'none', cursor: 'pointer',
+    fontFamily: "'DM Sans',sans-serif",
+    appearance: 'none', WebkitAppearance: 'none',
+  };
+  const errStyle = hasError ? { borderColor: 'var(--sp-errorBorder)', background: 'var(--sp-errorBg)' } : {};
+  return (
+    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', width: '100%' }} id={id}>
+      <select value={h} onChange={e => onChange(e.target.value + ':' + m)} style={{...baseStyle, ...errStyle}}>
+        {hours.map(hh => <option key={hh} value={hh}>{hh}</option>)}
+      </select>
+      <span style={{ fontWeight: 700, color: 'var(--sp-textMuted)' }}>:</span>
+      <select value={m} onChange={e => onChange(h + ':' + e.target.value)} style={{...baseStyle, ...errStyle}}>
+        {minutes.map(mm => <option key={mm} value={mm}>{mm}</option>)}
+      </select>
+    </div>
+  );
+}
 
 export default function FixedEventsIndex({ fixedEvents }) {
   let lang = "fr";
@@ -197,7 +226,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 />
               </div>
 
-              {/* Every day toggle — uses role="checkbox" for keyboard accessibility */}
+              {/* Every day toggle â€” uses role="checkbox" for keyboard accessibility */}
               <div
                 role="checkbox"
                 aria-checked={data.is_recurring_daily}
@@ -213,7 +242,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
                   ...s.everyDayRow,
                   flexDirection: isRTL ? "row-reverse" : "row",
                   background: data.is_recurring_daily ? 'var(--sp-accentLight)' : 'var(--sp-hoverBg)',
-                  borderColor: data.is_recurring_daily ? '#C7D2FE' : 'var(--sp-cardBorder)',
+                  borderColor: data.is_recurring_daily ? 'var(--sp-accent)' : 'var(--sp-cardBorder)',
                   cursor: 'pointer',
                 }}
                 onClick={() => {
@@ -223,11 +252,11 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 <div style={s.checkboxWrap}>
                   <div style={{
                     ...s.checkbox,
-                    background: data.is_recurring_daily ? '#4F46E5' : '#fff',
-                    borderColor: data.is_recurring_daily ? '#4F46E5' : '#D1D5DB',
+                    background: data.is_recurring_daily ? 'var(--sp-accent)' : 'var(--sp-card)',
+                    borderColor: data.is_recurring_daily ? 'var(--sp-accent)' : 'var(--sp-inputBorder)',
                   }}>
                     {data.is_recurring_daily && (
-                      <svg width="12" height="12" fill="none" stroke="#fff" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <svg width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
                       </svg>
                     )}
@@ -239,7 +268,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 </div>
               </div>
 
-              {/* Day selector — hidden when every day is checked */}
+              {/* Day selector â€” hidden when every day is checked */}
               {!data.is_recurring_daily && (
                 <div style={s.field}>
                   <label style={s.label} htmlFor="fe-day">{tr.day}</label>
@@ -258,26 +287,12 @@ export default function FixedEventsIndex({ fixedEvents }) {
               <div style={s.fieldRow}>
                 <div style={s.field}>
                   <label style={s.label} htmlFor="fe-start">{tr.startTime}</label>
-                  <input
-                    id="fe-start"
-                    type="time"
-                    style={{ ...s.input, ...(errors.start_time ? s.inputError : {}) }}
-                    value={data.start_time}
-                    onChange={e => setData('start_time', e.target.value)}
-                    required
-                  />
+                  <TimeInput value={data.start_time} onChange={v => setData("start_time", v)} id="fe-start" hasError={!!errors.start_time} />
                   {errors.start_time && <span style={s.fieldError}>{errors.start_time}</span>}
                 </div>
                 <div style={s.field}>
                   <label style={s.label} htmlFor="fe-end">{tr.endTime}</label>
-                  <input
-                    id="fe-end"
-                    type="time"
-                    style={{ ...s.input, ...(errors.end_time ? s.inputError : {}) }}
-                    value={data.end_time}
-                    onChange={e => setData('end_time', e.target.value)}
-                    required
-                  />
+                  <TimeInput value={data.end_time} onChange={v => setData("end_time", v)} id="fe-end" hasError={!!errors.end_time} />
                   {errors.end_time && <span style={s.fieldError}>{errors.end_time}</span>}
                 </div>
               </div>
@@ -285,7 +300,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
               <button type="submit" style={s.submitBtn} disabled={processing}>
                 {processing ? (
                   <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
                       style={{ animation: "spin 0.8s linear infinite" }}>
                       <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style>
                       <path strokeLinecap="round" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
@@ -322,16 +337,16 @@ export default function FixedEventsIndex({ fixedEvents }) {
                     <div key={event.id} style={{ ...s.eventRow, flexDirection: isRTL ? "row-reverse" : "row" }}>
                       <div style={{
                         ...s.dayBadge,
-                        background: isDaily ? '#FEF3C7' : dc.bg,
-                        color: isDaily ? '#D97706' : dc.color,
+                        background: isDaily ? 'var(--sp-warningBg)' : dc.bg,
+                        color: isDaily ? 'var(--sp-warning)' : dc.color,
                       }}>
-                        {isDaily ? '☀' : (dayNameMap[dayName] || dayName || '').slice(0, 3)}
+                        {isDaily ? 'â˜€' : (dayNameMap[dayName] || dayName || '').slice(0, 3)}
                       </div>
                       <div style={{ ...s.eventInfo, textAlign: isRTL ? "right" : "left" }}>
                         <span style={s.eventTitle}>{event.title}</span>
                         <span style={s.eventTime}>
-                          {isDaily ? tr.everyDay + ' · ' : ''}
-                          {event.start_time?.slice(0, 5)} – {event.end_time?.slice(0, 5)}
+                          {isDaily ? tr.everyDay + ' Â· ' : ''}
+                          {event.start_time?.slice(0, 5)} â€“ {event.end_time?.slice(0, 5)}
                         </span>
                       </div>
                       <button onClick={() => handleDelete(event.id)} style={s.deleteBtn} title={tr.deleteConfirm}>
@@ -391,12 +406,9 @@ const s = {
     fontSize: '13px', color: 'var(--sp-text)', outline: 'none',
     width: '100%', boxSizing: 'border-box',
   },
-  inputError: { borderColor: '#FCA5A5', background: '#FEF2F2' },
-  fieldError: { fontSize: '12px', color: '#EF4444', fontWeight: 500 },
-  errorBanner: {
-    padding: '10px 14px', borderRadius: '8px', background: '#FEF2F2',
-    border: '1px solid #FECACA', color: '#991B1B', fontSize: '13px', fontWeight: 500,
-  },
+  inputError: { borderColor: 'var(--sp-errorBorder)', background: 'var(--sp-errorBg)' },
+  fieldError: { fontSize: '12px', color: 'var(--sp-error)', fontWeight: 500 },
+  errorBanner: { padding: '10px 14px', borderRadius: '8px', background: 'var(--sp-errorBg)', border: '1px solid var(--sp-errorBorder)', color: 'var(--sp-error)', fontSize: '13px', fontWeight: 500 },
   everyDayRow: {
     display: 'flex', alignItems: 'center', gap: '12px',
     padding: '12px 14px', borderRadius: '10px',
@@ -406,14 +418,13 @@ const s = {
   checkboxWrap: { flexShrink: 0 },
   checkbox: {
     width: '20px', height: '20px', borderRadius: '6px',
-    border: '2px solid #D1D5DB', display: 'flex',
+    border: '2px solid var(--sp-inputBorder)', display: 'flex',
     alignItems: 'center', justifyContent: 'center',
     transition: 'all 0.15s',
   },
   everyDayLabel: { fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
   everyDayDesc: { fontSize: '11px', color: 'var(--sp-textMuted)', marginTop: '1px' },
-  submitBtn: {
-    padding: '11px', background: '#4F46E5', color: '#fff',
+  submitBtn: { padding: '11px', background: 'var(--sp-accent)', color: 'var(--sp-accentText)',
     border: 'none', borderRadius: '10px',
     fontSize: '13px', fontWeight: 600, cursor: 'pointer',
     width: '100%',
@@ -434,10 +445,5 @@ const s = {
   eventInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' },
   eventTitle: { fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
   eventTime: { fontSize: '12px', color: 'var(--sp-textMuted)' },
-  deleteBtn: {
-    background: 'none', border: '1px solid #FCA5A5',
-    color: '#EF4444', borderRadius: '6px',
-    padding: '5px 8px', cursor: 'pointer',
-    display: 'flex', alignItems: 'center',
-  },
+  deleteBtn: { background: 'none', border: '1px solid var(--sp-errorBorder)', color: 'var(--sp-error)', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' },
 };

@@ -382,7 +382,7 @@ const s = {
   compareLabel: { flex: 1, fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" },
   compareVal: { fontSize: "13px", fontWeight: 700, color: "var(--sp-text)" },
   compareSub: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  activePill: { fontSize: "10px", color: "#fff", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
+  activePill: { fontSize: "10px", color: "var(--sp-accentText)", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
   progressBg: { height: "8px", background: "var(--sp-subtleBg)", borderRadius: "20px", overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: "20px", transition: "width 0.8s ease" },
   subjectList: { display: "flex", flexDirection: "column", gap: "12px" },

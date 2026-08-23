@@ -88,7 +88,7 @@ export default function Welcome({ canLogin, canRegister }) {
                                 { icon: "📅", title: "3 Types de planning", desc: "Choisissez entre Intensif (2h/session), Équilibré (1h/session) ou Léger (30min/session) selon votre énergie.", color: "#10B981", bg: "#ECFDF5" },
                                 { icon: "⚙️", title: "Préférences personnalisées", desc: "Définissez vos horaires de réveil, de coucher et votre moment préféré pour étudier (matin, journée, soir).", color: "#F59E0B", bg: "#FFFBEB" },
                                 { icon: "📊", title: "Tableau de bord", desc: "Suivez votre programme du jour, vos créneaux d'étude et vos statistiques hebdomadaires en un coup d'œil.", color: "#3B82F6", bg: "#EFF6FF" },
-                                { icon: "📤", title: "Export PDF & Excel", desc: "Téléchargez votre planning en PDF imprimable ou en fichier Excel compatible avec tous les tableurs.", color: "#EF4444", bg: "#FEF2F2" },
+                                { icon: "📤", title: "Export PDF", desc: "Téléchargez votre planning en PDF imprimable.", color: "#EF4444", bg: "#FEF2F2" },
                                 { icon: "📱", title: "Responsive", desc: "Accédez à votre planning depuis n'importe quel appareil : ordinateur, tablette ou smartphone.", color: "#8B5CF6", bg: "#F5F3FF" },
                             ].map((feat, i) => (
                                 <div key={i} style={s.featCard}>

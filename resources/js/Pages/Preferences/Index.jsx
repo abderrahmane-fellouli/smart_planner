@@ -118,7 +118,7 @@ export default function PreferencesIndex({ preferences }) {
             <div style={s.card}>
               <div style={{ ...s.cardHeader, flexDirection: isRTL ? "row-reverse" : "row" }}>
                 <div style={s.cardIcon}>
-                  <svg width="16" height="16" fill="none" stroke="#4F46E5" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" /><path strokeLinecap="round" d="M12 6v6l4 2" />
                   </svg>
                 </div>
@@ -130,23 +130,23 @@ export default function PreferencesIndex({ preferences }) {
                     <label style={s.label}>{tr.wake_up}</label>
                     <input
                       type="time"
-                      style={{ ...s.input, ...(errors.wake_up_time ? { borderColor: '#FCA5A5', background: '#FEF2F2' } : {}) }}
+                      style={{ ...s.input, ...(errors.wake_up_time ? { borderColor: 'var(--sp-errorBorder)', background: 'var(--sp-errorBg)' } : {}) }}
                       value={data.wake_up_time}
                       onChange={e => setData('wake_up_time', e.target.value)}
                       required
                     />
-                    {errors.wake_up_time && <span style={{ fontSize: '12px', color: '#EF4444', fontWeight: 500 }}>{errors.wake_up_time}</span>}
+                    {errors.wake_up_time && <span style={{ fontSize: '12px', color: 'var(--sp-error)', fontWeight: 500 }}>{errors.wake_up_time}</span>}
                   </div>
                   <div style={s.field}>
                     <label style={s.label}>{tr.sleep_time}</label>
                     <input
                       type="time"
-                      style={{ ...s.input, ...(errors.sleep_time ? { borderColor: '#FCA5A5', background: '#FEF2F2' } : {}) }}
+                      style={{ ...s.input, ...(errors.sleep_time ? { borderColor: 'var(--sp-errorBorder)', background: 'var(--sp-errorBg)' } : {}) }}
                       value={data.sleep_time}
                       onChange={e => setData('sleep_time', e.target.value)}
                       required
                     />
-                    {errors.sleep_time && <span style={{ fontSize: '12px', color: '#EF4444', fontWeight: 500 }}>{errors.sleep_time}</span>}
+                    {errors.sleep_time && <span style={{ fontSize: '12px', color: 'var(--sp-error)', fontWeight: 500 }}>{errors.sleep_time}</span>}
                   </div>
                 </div>
               </div>
@@ -156,7 +156,7 @@ export default function PreferencesIndex({ preferences }) {
             <div style={s.card}>
               <div style={{ ...s.cardHeader, flexDirection: isRTL ? "row-reverse" : "row" }}>
                 <div style={s.cardIcon}>
-                  <svg width="16" height="16" fill="none" stroke="#4F46E5" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
@@ -199,7 +199,7 @@ export default function PreferencesIndex({ preferences }) {
             <div style={s.card}>
               <div style={{ ...s.cardHeader, flexDirection: isRTL ? "row-reverse" : "row" }}>
                 <div style={s.cardIcon}>
-                  <svg width="16" height="16" fill="none" stroke="#4F46E5" strokeWidth="2" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
@@ -209,21 +209,21 @@ export default function PreferencesIndex({ preferences }) {
                 <div style={s.fieldRow}>
                   <div style={s.field}>
                     <label style={s.label}>{tr.hours_per_day}</label>
-                    <div style={{ ...s.numberWrapper, ...(errors.concentration_hours ? { borderColor: '#FCA5A5' } : {}) }}>
+                    <div style={{ ...s.numberWrapper, ...(errors.concentration_hours ? { borderColor: 'var(--sp-errorBorder)' } : {}) }}>
                       <button type="button" style={s.numBtn} onClick={() => setData('concentration_hours', Math.max(1, data.concentration_hours - 1))}>−</button>
                       <span style={s.numValue}>{data.concentration_hours}{tr.hour_unit}</span>
                       <button type="button" style={s.numBtn} onClick={() => setData('concentration_hours', Math.min(12, data.concentration_hours + 1))}>+</button>
                     </div>
-                    {errors.concentration_hours && <span style={{ fontSize: '12px', color: '#EF4444', fontWeight: 500 }}>{errors.concentration_hours}</span>}
+                    {errors.concentration_hours && <span style={{ fontSize: '12px', color: 'var(--sp-error)', fontWeight: 500 }}>{errors.concentration_hours}</span>}
                   </div>
                   <div style={s.field}>
                     <label style={s.label}>{tr.free_time}</label>
-                    <div style={{ ...s.numberWrapper, ...(errors.desired_free_time ? { borderColor: '#FCA5A5' } : {}) }}>
+                    <div style={{ ...s.numberWrapper, ...(errors.desired_free_time ? { borderColor: 'var(--sp-errorBorder)' } : {}) }}>
                       <button type="button" style={s.numBtn} onClick={() => setData('desired_free_time', Math.max(0, data.desired_free_time - 1))}>−</button>
                       <span style={s.numValue}>{data.desired_free_time}{tr.hour_unit}</span>
                       <button type="button" style={s.numBtn} onClick={() => setData('desired_free_time', Math.min(8, data.desired_free_time + 1))}>+</button>
                     </div>
-                    {errors.desired_free_time && <span style={{ fontSize: '12px', color: '#EF4444', fontWeight: 500 }}>{errors.desired_free_time}</span>}
+                    {errors.desired_free_time && <span style={{ fontSize: '12px', color: 'var(--sp-error)', fontWeight: 500 }}>{errors.desired_free_time}</span>}
                   </div>
                 </div>
               </div>
@@ -296,7 +296,7 @@ const s = {
   },
   radioDot: {
     width: '16px', height: '16px',
-    border: '2px solid #D1D5DB',
+    border: '2px solid var(--sp-inputBorder)',
     borderRadius: '50%',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     flexShrink: 0,

@@ -7,7 +7,7 @@ const T = {
   fr: {
     export: {
       title: "Exporter le planning",
-      subtitle: "Téléchargez votre planning en PDF ou CSV",
+      subtitle: "Téléchargez votre planning en PDF",
       emptyTitle: "Aucun planning disponible",
       emptySub: "Générez d'abord un planning depuis la page \"Mon planning\"",
       emptyBtn: "Aller à Mon planning →",
@@ -34,7 +34,7 @@ const T = {
   en: {
     export: {
       title: "Export Schedule",
-      subtitle: "Download your schedule as PDF or CSV",
+      subtitle: "Download your schedule as PDF",
       emptyTitle: "No schedule available",
       emptySub: "First generate a schedule from the \"My Schedule\" page",
       emptyBtn: "Go to My Schedule →",
@@ -61,7 +61,7 @@ const T = {
   ar: {
     export: {
       title: "تصدير الجدول",
-      subtitle: "قم بتنزيل جدولك بصيغة PDF أو CSV",
+      subtitle: "قم بتنزيل جدولك بصيغة PDF",
       emptyTitle: "لا يوجد جدول متاح",
       emptySub: "قم أولاً بإنشاء جدول من صفحة \"جدولي\"",
       emptyBtn: "الذهاب إلى جدولي →",
@@ -115,8 +115,8 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
   const btnHoverIn = (e) => {
     const el = e.currentTarget;
     if (!el.disabled) {
-      el.style.background = "#6366F1";
-      el.style.borderColor = "#6366F1";
+      el.style.background = "var(--sp-accentHover)";
+      el.style.borderColor = "var(--sp-accentHover)";
     }
   };
 
@@ -230,8 +230,8 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                       flexDirection: isRTL ? "row-reverse" : "row",
                     }}
                   >
-                    <div style={{ ...s.exportBtnIcon, background: "#FEF2F2" }}>
-                      <svg width="28" height="28" fill="none" stroke="#EF4444" strokeWidth="1.8" viewBox="0 0 24 24">
+                    <div style={{ ...s.exportBtnIcon, background: "var(--sp-errorBg)" }}>
+                      <svg width="28" height="28" fill="none" stroke="var(--sp-error)" strokeWidth="1.8" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6M9 17h4"/>
                       </svg>
@@ -250,10 +250,10 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
               </div>
 
               <div style={{ ...s.infoBox, flexDirection: isRTL ? "row-reverse" : "row" }}>
-                <svg width="16" height="16" fill="none" stroke="#6366F1" strokeWidth="2" viewBox="0 0 24 24">
+                <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
                 </svg>
-                <div style={{ fontSize: "12px", color: "#4338CA", textAlign: isRTL ? "right" : "left" }}>
+                <div style={{ fontSize: "12px", color: "var(--sp-accent)", textAlign: isRTL ? "right" : "left" }}>
                   <strong>{tr.infoPdf}</strong> {tr.infoText}
                 </div>
               </div>
@@ -280,7 +280,7 @@ const s = {
   selectInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "2px" },
   selectLabel: { fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" },
   selectDate: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  activeBadge: { fontSize: "10px", color: "#fff", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
+  activeBadge: { fontSize: "10px", color: "var(--sp-accentText)", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
   previewRow: { display: "flex", gap: "0", marginTop: "12px", borderTop: "1px solid var(--sp-cardBorder)", paddingTop: "12px" },
   previewStat: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", borderRight: "1px solid var(--sp-cardBorder)", padding: "0" },
   previewVal: { fontSize: "18px", fontWeight: 800, color: "var(--sp-text)" },
@@ -291,7 +291,7 @@ const s = {
   exportBtnInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "3px" },
   exportBtnTitle: { fontSize: "14px", fontWeight: 600, color: "var(--sp-text)" },
   exportBtnDesc: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  infoBox: { display: "flex", gap: "10px", alignItems: "flex-start", background: "var(--sp-accentLight)", border: "1px solid #C7D2FE", borderRadius: "10px", padding: "12px 14px", marginTop: "12px" },
+  infoBox: { display: "flex", gap: "10px", alignItems: "flex-start", background: "var(--sp-accentLight)", border: "1px solid var(--sp-accent)", borderRadius: "10px", padding: "12px 14px", marginTop: "12px" },
   empty: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "16px", padding: "60px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" },
   emptyIcon: { fontSize: "48px" },
   emptyTitle: { fontSize: "16px", fontWeight: 600, color: "var(--sp-text)", margin: 0 },

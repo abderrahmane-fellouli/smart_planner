@@ -61,11 +61,11 @@ const T = {
 };
 
 const TYPE_COLORS = {
-    fixed: { bg:"#EEF2FF", text:"#4338CA", dot:"#6366F1" },
-    study: { bg:"#F0FDF4", text:"#15803D", dot:"#22C55E" },
-    break: { bg:"#FFFBEB", text:"#92400E", dot:"#F59E0B" },
-    free:  { bg:"#F0F9FF", text:"#0369A1", dot:"#0EA5E9" },
-    sleep: { bg:"#F5F3FF", text:"#5B21B6", dot:"#8B5CF6" },
+    fixed: { bg:"var(--sp-accentLight)", text:"var(--sp-accent)", dot:"var(--sp-accent)" },
+    study: { bg:"var(--sp-successBg)", text:"var(--sp-success)", dot:"var(--sp-success)" },
+    break: { bg:"var(--sp-warningBg)", text:"var(--sp-warning)", dot:"var(--sp-warning)" },
+    free:  { bg:"var(--sp-accentLight)", text:"var(--sp-accent)", dot:"var(--sp-accent)" },
+    sleep: { bg:"var(--sp-accentLight)", text:"var(--sp-accent)", dot:"var(--sp-accent)" },
 };
 
 function formatTime(t) { return t ? t.slice(0, 5) : ""; }
@@ -177,7 +177,7 @@ export default function Dashboard({
                         {/* Card header */}
                         <div style={{ ...s.cardHead, flexDirection: isRTL ? "row-reverse" : "row" }}>
                             <h2 style={s.cardTitle}>{tr.today_schedule}</h2>
-                            <Link href="/schedules" style={s.cardLink}>{tr.see_all}</Link>
+                            <button onClick={() => setActiveTab("week")} style={{ ...s.cardLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{tr.see_all}</button>
                         </div>
 
                         {/* In-progress banner */}
@@ -306,7 +306,7 @@ export default function Dashboard({
                             <div style={s.card}>
                                 <h2 style={{ ...s.cardTitle, textAlign: isRTL ? "right" : "left" }}>{tr.next_slot}</h2>
                                 <div style={{ ...s.nextItem, flexDirection: isRTL ? "row-reverse" : "row" }}>
-                                    <div style={{ ...s.nextDot, background: "#22C55E" }} />
+                                    <div style={{ ...s.nextDot, background: "var(--sp-success)" }} />
                                     <div style={{ textAlign: isRTL ? "right" : "left" }}>
                                         <p style={s.nextTitle}>{nextSession.matiere}</p>
                                         <p style={s.nextTime}>{tr.at} {formatTime(nextSession.debut)}</p>
@@ -328,7 +328,7 @@ export default function Dashboard({
                                     <Link key={a.href} href={a.href} style={{ ...s.actionBtn, flexDirection: isRTL ? "row-reverse" : "row" }}>
                                         <span style={s.actionIcon}>{a.icon}</span>
                                         <span style={s.actionLabel}>{a.label}</span>
-                                        <svg width="14" height="14" fill="none" stroke="#D1D5DB" strokeWidth="2" viewBox="0 0 24 24"
+                                        <svg width="14" height="14" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24"
                                             style={{ transform: isRTL ? "rotate(180deg)" : "none", marginLeft: isRTL ? 0 : "auto", marginRight: isRTL ? "auto" : 0 }}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                         </svg>
@@ -409,7 +409,7 @@ const s = {
 
     sessionList:{ display:"flex", flexDirection:"column", gap:"8px" },
     sessionRow:{ display:"flex", alignItems:"center", gap:"12px", padding:"10px 14px", background:"var(--sp-successBg)", border:"1px solid var(--sp-successBorder)", borderRadius:"10px" },
-    sessionDot:{ width:"8px", height:"8px", borderRadius:"50%", background:"#22C55E", flexShrink:0 },
+    sessionDot:{ width:"8px", height:"8px", borderRadius:"50%", background:"var(--sp-success)", flexShrink:0 },
     sessionTitle:{ fontSize:"13px", fontWeight:600, color:"var(--sp-text)", margin:"0 0 2px" },
     sessionTime:{ fontSize:"11px", color:"var(--sp-textSecondary)", margin:0 },
 
@@ -426,7 +426,7 @@ const s = {
     miniBtn:{ display:"inline-flex", padding:"8px 16px", background:"var(--sp-accentLight)", color:"var(--sp-accent)", borderRadius:"8px", fontSize:"13px", fontWeight:600, textDecoration:"none" },
 
     currentBanner:{ display:"flex", alignItems:"flex-start", gap:"12px", background:"var(--sp-successBg)", border:"1px solid var(--sp-successBorder)", borderRadius:"10px", padding:"12px 14px", marginBottom:"1rem" },
-    currentDot:{ width:"10px", height:"10px", borderRadius:"50%", background:"#22C55E", flexShrink:0, marginTop:"4px" },
+    currentDot:{ width:"10px", height:"10px", borderRadius:"50%", background:"var(--sp-success)", flexShrink:0, marginTop:"4px" },
     currentLabel:{ fontSize:"10px", fontWeight:700, color:"var(--sp-success)", textTransform:"uppercase", letterSpacing:"0.06em", margin:"0 0 2px" },
     currentTitle:{ fontSize:"15px", fontWeight:700, color:"var(--sp-text)", margin:"0 0 2px" },
     currentTime:{ fontSize:"12px", color:"var(--sp-textSecondary)", margin:0 },
