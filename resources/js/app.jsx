@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { Ziggy } from './ziggy';
 import { route as ziggyRoute } from 'ziggy-js';
 
-window.route = (name, params, absolute) => ziggyRoute(name, params, absolute, Ziggy);
+window.route = (name, params, absolute = false) => ziggyRoute(name, params, absolute, Ziggy);
 
 const appName = import.meta.env.VITE_APP_NAME || 'SmartPlanner';
 
