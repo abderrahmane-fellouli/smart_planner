@@ -135,32 +135,39 @@ class ExportController extends Controller
         $rowsHtml = '';
         foreach ($jours as $jour) {
             $jourData = $details[$jour] ?? null;
-            if (!$jourData) continue;
-
             $coursHtml = '';
-            foreach (($jourData['cours_fixes'] ?? []) as $c) {
-                $title = e($c['title'] ?? '');
-                $start = e(substr($c['start_time'] ?? '', 0, 5));
-                $end   = e(substr($c['end_time']   ?? '', 0, 5));
-                $coursHtml .= "<span class='tag tag-cours'>📘 {$title} {$start}–{$end}</span>";
-            }
-
             $sessionsHtml = '';
-            foreach (($jourData['sessions_etude'] ?? []) as $sess) {
-                $matiere = e($sess['matiere'] ?? '');
-                $start   = e(substr($sess['debut'] ?? '', 0, 5));
-                $end     = e(substr($sess['fin']   ?? '', 0, 5));
-                $sessionsHtml .= "<span class='tag tag-study'>{$start}–{$end} · {$matiere}</span>";
+            $total = '0';
+
+            if ($jourData) {
+                foreach (($jourData['cours_fixes'] ?? []) as $c) {
+                    $title = e($c['title'] ?? '');
+                    $teacher = e($c['teacher'] ?? '');
+                    $start = e(substr($c['start_time'] ?? '', 0, 5));
+                    $end   = e(substr($c['end_time']   ?? '', 0, 5));
+                    $teacherPart = $teacher ? " · {$teacher}" : '';
+                    $coursHtml .= "<span class='tag tag-cours'>📘 {$title}{$teacherPart} {$start}–{$end}</span>";
+                }
+
+                foreach (($jourData['sessions_etude'] ?? []) as $sess) {
+                    $matiere = e($sess['matiere'] ?? '');
+                    $start   = e(substr($sess['debut'] ?? '', 0, 5));
+                    $end     = e(substr($sess['fin']   ?? '', 0, 5));
+                    $sessionsHtml .= "<span class='tag tag-study'>{$start}–{$end} · {$matiere}</span>";
+                }
+
+                $total = e($jourData['total_heures_etude'] ?? 0);
             }
 
-            $total = e($jourData['total_heures_etude'] ?? 0);
+            $coursHtml    = $coursHtml ?: '<span class="empty-day">—</span>';
+            $sessionsHtml = $sessionsHtml ?: '<span class="empty-day">—</span>';
 
             $rowsHtml .= "
             <tr>
                 <td class='day-cell'>{$jour}</td>
                 <td>{$coursHtml}</td>
                 <td>{$sessionsHtml}</td>
-                <td class='center'><strong>{$total}h</strong></td>
+                <td class='center total-cell'>{$total}h</td>
             </tr>";
         }
 
@@ -175,50 +182,80 @@ class ExportController extends Controller
 
         return <<<HTML
 <!DOCTYPE html>
-<html lang="{$lang}">
+<html lang="{$lang}" dir="ltr">
 <head>
 <meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>{$labels['app_name']} – {$typeLabel}</title>
 <style>
+  @page { size: A4; margin: 16mm 14mm; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: 'Segoe UI', Arial, sans-serif; background:#fff; color:#111827; font-size:13px; }
-  .page { max-width:900px; margin:0 auto; padding:32px; }
-  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; padding-bottom:20px; border-bottom:2px solid #F3F4F6; }
-  .logo { display:flex; align-items:center; gap:10px; }
-  .logo-icon { width:36px; height:36px; background:#4F46E5; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:18px; }
-  .logo-text { font-size:20px; font-weight:800; color:#111827; letter-spacing:-0.02em; }
-  .meta { text-align:right; font-size:12px; color:#6B7280; }
-  .meta strong { color:#111827; }
-  .type-badge { display:inline-block; background:{$typeColor}; color:#fff; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:16px; }
-  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px; }
-  .stat { background:#F9FAFB; border:1px solid #E5E7EB; border-radius:10px; padding:14px 16px; text-align:center; }
-  .stat-value { font-size:22px; font-weight:800; color:#111827; }
-  .stat-label { font-size:11px; color:#9CA3AF; margin-top:2px; }
-  table { width:100%; border-collapse:collapse; }
-  thead th { background:#F9FAFB; padding:10px 12px; text-align:left; font-size:11px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.05em; border-bottom:2px solid #E5E7EB; }
-  tbody tr { border-bottom:1px solid #F3F4F6; }
-  tbody tr:hover { background:#FAFAFA; }
-  td { padding:10px 12px; vertical-align:top; }
-  .day-cell { font-weight:700; color:#111827; white-space:nowrap; }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif; color:#1e293b; font-size:12.5px; line-height:1.5; background:#fff; }
+  .page { max-width:760px; margin:0 auto; padding:28px 24px; }
+
+  /* ── Header ── */
+  .header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; padding-bottom:18px; border-bottom:2.5px solid #e2e8f0; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .brand-icon { width:40px; height:40px; background:linear-gradient(135deg,#4F46E5,#6366F1); border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; box-shadow:0 2px 8px rgba(79,70,229,0.25); }
+  .brand-name { font-size:22px; font-weight:800; color:#0f172a; letter-spacing:-0.03em; }
+  .meta { text-align:right; font-size:11.5px; color:#64748b; line-height:1.6; }
+  .meta strong { color:#0f172a; font-weight:600; }
+
+  /* ── Type badge ── */
+  .type-badge { display:inline-block; background:{$typeColor}; color:#fff; padding:5px 16px; border-radius:20px; font-size:11.5px; font-weight:700; letter-spacing:0.02em; box-shadow:0 1px 4px rgba(0,0,0,0.12); }
+
+  /* ── Title ── */
+  .section-title { font-size:17px; font-weight:700; color:#0f172a; margin:16px 0 14px; }
+
+  /* ── Stats row ── */
+  .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:22px; }
+  .stat { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 12px; text-align:center; }
+  .stat-value { font-size:24px; font-weight:800; color:#0f172a; letter-spacing:-0.02em; }
+  .stat-label { font-size:10.5px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; font-weight:600; }
+
+  /* ── Schedule table ── */
+  table { width:100%; border-collapse:collapse; margin-top:4px; }
+  thead th { background:#f1f5f9; padding:10px 12px; text-align:left; font-size:10.5px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; border-bottom:2px solid #e2e8f0; }
+  tbody td { padding:12px; vertical-align:top; border-bottom:1px solid #f1f5f9; }
+  tbody tr:nth-child(even) { background:#fafbfc; }
+  .day-cell { font-weight:700; color:#0f172a; white-space:nowrap; font-size:13px; width:100px; }
   .center { text-align:center; }
-  .tag { display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; margin:2px 2px 2px 0; }
-  .tag-cours { background:#EEF2FF; color:#4338CA; }
-  .tag-study { background:#F0FDF4; color:#15803D; }
-  .footer { margin-top:28px; padding-top:16px; border-top:1px solid #F3F4F6; display:flex; justify-content:space-between; font-size:11px; color:#9CA3AF; }
-  @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } .no-print { display:none; } .page { padding:16px; } }
+  .total-cell { font-weight:800; color:#0f172a; font-size:13px; }
+
+  /* ── Tags ── */
+  .tag { display:inline-block; padding:4px 10px; border-radius:6px; font-size:11px; margin:2px 3px 2px 0; font-weight:500; line-height:1.4; }
+  .tag-cours { background:#EEF2FF; color:#4338CA; border:1px solid #C7D2FE; }
+  .tag-study { background:#F0FDF4; color:#15803D; border:1px solid #BBF7D0; }
+  .empty-day { color:#94a3b8; font-style:italic; font-size:11.5px; }
+
+  /* ── Footer ── */
+  .footer { margin-top:24px; padding-top:14px; border-top:1.5px solid #e2e8f0; display:flex; justify-content:space-between; font-size:10.5px; color:#94a3b8; }
+
+  @media print {
+    body { -webkit-print-color-adjust:exact; print-color-adjust:exact; background:#fff; }
+    .no-print { display:none !important; }
+    .page { padding:0; }
+    .stat { background:#f8fafc !important; }
+    .tag-cours { background:#EEF2FF !important; }
+    .tag-study { background:#F0FDF4 !important; }
+    thead th { background:#f1f5f9 !important; }
+  }
 </style>
 </head>
 <body>
 <div class="page">
-  <div class="no-print" style="text-align:right;margin-bottom:16px;">
-    <button onclick="window.print()" style="background:#4F46E5;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">
-      {$labels['print_save']}
+  <!-- Print button (hidden when printing) -->
+  <div class="no-print" style="text-align:right;margin-bottom:14px;">
+    <button onclick="window.print()" style="background:linear-gradient(135deg,#4F46E5,#6366F1);color:#fff;border:none;padding:11px 28px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(79,70,229,0.3);transition:transform 0.1s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='none'">
+      🖨️ {$labels['print_save']}
     </button>
   </div>
+
+  <!-- Header -->
   <div class="header">
-    <div class="logo">
-      <div class="logo-icon">⚡</div>
-      <span class="logo-text">{$labels['app_name']}</span>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <span class="brand-name">{$labels['app_name']}</span>
     </div>
     <div class="meta">
       <div><strong>{$userName}</strong></div>
@@ -226,17 +263,27 @@ class ExportController extends Controller
       <div>{$labels['generated_on']} {$genDate}</div>
     </div>
   </div>
-  <span class="type-badge">{$labels['schedule']} {$typeLabel}</span>
-  <h2 style="font-size:18px;font-weight:700;color:#111827;margin-bottom:16px;">{$labels['weekly_schedule']}</h2>
+
+  <!-- Schedule info -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+    <span class="type-badge">{$typeLabel}</span>
+  </div>
+  <h2 class="section-title">{$labels['weekly_schedule']}</h2>
+
+  <!-- Stats -->
   <div class="stats">
     <div class="stat"><div class="stat-value">{$totalH}h</div><div class="stat-label">{$labels['total_week']}</div></div>
     <div class="stat"><div class="stat-value">{$sessions}</div><div class="stat-label">{$labels['study_sessions']}</div></div>
     <div class="stat"><div class="stat-value">{$moyenne}h</div><div class="stat-label">{$labels['avg_per_day']}</div></div>
   </div>
+
+  <!-- Schedule table -->
   <table>
-    <thead><tr><th>{$labels['day']}</th><th>{$labels['fixed_courses']}</th><th>{$labels['study_sessions']}</th><th>{$labels['study_total']}</th></tr></thead>
+    <thead><tr><th>{$labels['day']}</th><th>{$labels['fixed_courses']}</th><th>{$labels['study_sessions']}</th><th style="text-align:center;">{$labels['study_total']}</th></tr></thead>
     <tbody>{$rowsHtml}</tbody>
   </table>
+
+  <!-- Footer -->
   <div class="footer">
     <span>{$labels['app_name']} – {$labels['tagline']}</span>
     <span>{$labels['exported_on']} {$genDate}</span>

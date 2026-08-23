@@ -17,9 +17,16 @@ const T = {
         week:"Semaine", at:"à", dir:"ltr",
         tab_today:"Aujourd'hui", tab_tomorrow:"Demain", tab_week:"Cette semaine",
         sessions:"sessions", session:"session", no_sessions:"Aucune session",
+        no_sessions_day:"Repos", total_day:"Total", hours:"h",
+        fixed_label:"Cours fixes", study_label:"Sessions d'étude",
+        weekly_digest:"Résumé hebdomadaire", digest_sub:"Vue complète de votre planning",
+        days_full: {
+            Lundi:"Lundi", Mardi:"Mardi", Mercredi:"Mercredi",
+            Jeudi:"Jeudi", Vendredi:"Vendredi", Samedi:"Samedi", Dimanche:"Dimanche"
+        },
         days_fr: {
             Lundi:"Lun", Mardi:"Mar", Mercredi:"Mer",
-            Jeudi:"Jeu", Vendredi:"Ven", Samedi:"Sam"
+            Jeudi:"Jeu", Vendredi:"Ven", Samedi:"Sam", Dimanche:"Dim"
         },
     },
     en: {
@@ -35,9 +42,16 @@ const T = {
         week:"Week", at:"at", dir:"ltr",
         tab_today:"Today", tab_tomorrow:"Tomorrow", tab_week:"This week",
         sessions:"sessions", session:"session", no_sessions:"No sessions",
+        no_sessions_day:"Rest day", total_day:"Total", hours:"h",
+        fixed_label:"Fixed courses", study_label:"Study sessions",
+        weekly_digest:"Weekly digest", digest_sub:"Full overview of your schedule",
+        days_full: {
+            Lundi:"Monday", Mardi:"Tuesday", Mercredi:"Wednesday",
+            Jeudi:"Thursday", Vendredi:"Friday", Samedi:"Saturday", Dimanche:"Sunday"
+        },
         days_fr: {
             Lundi:"Mon", Mardi:"Tue", Mercredi:"Wed",
-            Jeudi:"Thu", Vendredi:"Fri", Samedi:"Sat"
+            Jeudi:"Thu", Vendredi:"Fri", Samedi:"Sat", Dimanche:"Sun"
         },
     },
     ar: {
@@ -53,9 +67,16 @@ const T = {
         week:"الأسبوع", at:"في", dir:"rtl",
         tab_today:"اليوم", tab_tomorrow:"غداً", tab_week:"هذا الأسبوع",
         sessions:"جلسات", session:"جلسة", no_sessions:"لا توجد جلسات",
+        no_sessions_day:"يوم راحة", total_day:"المجموع", hours:"ساعة",
+        fixed_label:"الدروس الثابتة", study_label:"جلسات الدراسة",
+        weekly_digest:"ملخص أسبوعي", digest_sub:"نظرة عامة كاملة على جدولك",
+        days_full: {
+            Lundi:"الإثنين", Mardi:"الثلاثاء", Mercredi:"الأربعاء",
+            Jeudi:"الخميس", Vendredi:"الجمعة", Samedi:"السبت", Dimanche:"الأحد"
+        },
         days_fr: {
             Lundi:"اثن", Mardi:"ثلا", Mercredi:"أرب",
-            Jeudi:"خمي", Vendredi:"جمع", Samedi:"سبت"
+            Jeudi:"خمي", Vendredi:"جمع", Samedi:"سبت", Dimanche:"أحد"
         },
     },
 };
@@ -233,67 +254,81 @@ export default function Dashboard({
                             </div>
                         )}
 
-                        {/* ── Tab: Full week ── */}
+                        {/* ── Tab: Full week digest ── */}
                         {activeTab === "week" && (
                             <div>
                                 <p style={s.tabSubLabel}>
-                                    {totalWeekSessions} {tr.sessions} {tr.tab_week.toLowerCase()}
+                                    {totalWeekSessions} {tr.sessions} · {activeSchedule?.schedule?.resume?.total_heures_semaine ?? 0}{tr.hours}
                                 </p>
-                                <div style={s.weekGrid} className="sp-week-grid">
-                                    {Object.entries(weekSummary).map(([jour, count]) => {
-                                        const isToday    = jour === todayName;
-                                        const isTomorrow = jour === tomorrowName;
-                                        return (
-                                            <div
-                                                key={jour}
-                                                style={{
-                                                    ...s.weekDayCard,
-                                                    background: isToday    ? "var(--sp-accent)" :
-                                                                isTomorrow ? "var(--sp-accentLight)" : "var(--sp-hoverBg)",
-                                                    border: isToday    ? "none" :
-                                                            isTomorrow ? "1.5px solid var(--sp-accent)" : "1px solid var(--sp-cardBorder)",
-                                                }}
-                                            >
-                                                <span style={{
-                                                    ...s.weekDayShort,
-                                                    color: isToday ? "var(--sp-accentText)" : isTomorrow ? "var(--sp-accent)" : "var(--sp-textMuted)"
-                                                }}>
-                                                    {tr.days_fr[jour] || jour.slice(0, 3)}
-                                                </span>
-                                                <span style={{
-                                                    ...s.weekDayCount,
-                                                    color: isToday ? "var(--sp-accentText)" : "var(--sp-text)"
-                                                }}>
-                                                    {count}
-                                                </span>
-                                                <span style={{
-                                                    ...s.weekDayLabel,
-                                                    color: isToday ? "var(--sp-accentText)" : "var(--sp-textMuted)"
-                                                }}>
-                                                    {count === 1 ? tr.session : tr.sessions}
-                                                </span>
-
-                                                {/* Sessions detail list per day */}
-                                                {activeSchedule && count > 0 && (() => {
-                                                    const daySessions =
-                                                        activeSchedule.schedule?.details?.[jour]?.sessions_etude ?? [];
-                                                    return (
-                                                        <div style={s.weekDaySessionList}>
-                                                            {daySessions.map((ds, idx) => (
-                                                                <div key={idx} style={{
-                                                                    ...s.weekDaySession,
-                                                                    color: isToday ? "var(--sp-accentText)" : "var(--sp-textSecondary)",
-                                                                }}>
-                                                                    {formatTime(ds.debut)}–{formatTime(ds.fin)}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                {activeSchedule ? (
+                                    <div style={s.digestGrid} className="sp-digest-grid">
+                                        {['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'].map(jour => {
+                                            const isToday    = jour === todayName;
+                                            const isTomorrow = jour === tomorrowName;
+                                            const dayData    = activeSchedule.schedule?.details?.[jour] ?? null;
+                                            const coursFixes = dayData?.cours_fixes ?? [];
+                                            const sessions   = dayData?.sessions_etude ?? [];
+                                            const totalH     = dayData?.total_heures_etude ?? 0;
+                                            const isEmpty    = !dayData || (coursFixes.length === 0 && sessions.length === 0);
+                                            return (
+                                                <div
+                                                    key={jour}
+                                                    style={{
+                                                        ...s.digestDay,
+                                                        borderColor: isToday ? "var(--sp-accent)" : isTomorrow ? "var(--sp-accentLight)" : "var(--sp-cardBorder)",
+                                                        background: isToday ? "var(--sp-accentLight)" : "var(--sp-card)",
+                                                    }}
+                                                >
+                                                    <div style={{ ...s.digestDayHead, background: isToday ? "var(--sp-accent)" : isTomorrow ? "var(--sp-accentLight)" : "var(--sp-hoverBg)" }}>
+                                                        <span style={{ ...s.digestDayName, color: isToday ? "var(--sp-accentText)" : "var(--sp-text)" }}>
+                                                            {tr.days_full[jour] || jour}
+                                                        </span>
+                                                        {!isEmpty && (
+                                                            <span style={{ ...s.digestDayTotal, color: isToday ? "var(--sp-accentText)" : "var(--sp-accent)" }}>
+                                                                {totalH}{tr.hours}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div style={s.digestDayBody}>
+                                                        {isEmpty ? (
+                                                            <span style={s.digestEmpty}>{tr.no_sessions_day}</span>
+                                                        ) : (
+                                                            <>
+                                                                {coursFixes.length > 0 && (
+                                                                    <div style={s.digestSection}>
+                                                                        <span style={s.digestSectionLabel}>{tr.fixed_label}</span>
+                                                                        {coursFixes.map((c, i) => (
+                                                                            <div key={i} style={{ ...s.digestItem, background: "var(--sp-accentLight)", color: "var(--sp-accent)" }}>
+                                                                                <span>📘 {c.title}{c.teacher ? ` · ${c.teacher}` : ''}</span>
+                                                                                <span style={{ opacity:0.7, fontSize:"10px" }}>{formatTime(c.start_time)}–{formatTime(c.end_time)}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                                {sessions.length > 0 && (
+                                                                    <div style={s.digestSection}>
+                                                                        <span style={s.digestSectionLabel}>{tr.study_label}</span>
+                                                                        {sessions.map((sess, i) => (
+                                                                            <div key={i} style={{ ...s.digestItem, background: "var(--sp-successBg)", color: "var(--sp-success)" }}>
+                                                                                <span>📖 {sess.matiere}</span>
+                                                                                <span style={{ opacity:0.7, fontSize:"10px" }}>{formatTime(sess.debut)}–{formatTime(sess.fin)}</span>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div style={s.emptyDay}>
+                                        <p style={s.emptyText}>{tr.no_tasks}</p>
+                                        <Link href="/schedules" style={s.miniBtn}>{tr.generate}</Link>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -420,6 +455,17 @@ const s = {
     weekDayLabel:{ fontSize:"9px", fontWeight:500 },
     weekDaySessionList:{ marginTop:"6px", width:"100%", display:"flex", flexDirection:"column", gap:"2px" },
     weekDaySession:{ fontSize:"9px", fontWeight:500, textAlign:"center", background:"var(--sp-subtleBg)", borderRadius:"4px", padding:"1px 4px", color:"var(--sp-textSecondary)" },
+
+    digestGrid:{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(130px, 1fr))", gap:"8px" },
+    digestDay:{ borderRadius:"10px", border:"1px solid var(--sp-cardBorder)", overflow:"hidden", display:"flex", flexDirection:"column" },
+    digestDayHead:{ padding:"8px 10px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:"4px" },
+    digestDayName:{ fontSize:"11px", fontWeight:700, textTransform:"capitalize" },
+    digestDayTotal:{ fontSize:"10px", fontWeight:700 },
+    digestDayBody:{ padding:"6px 8px 8px", display:"flex", flexDirection:"column", gap:"4px", flex:1 },
+    digestEmpty:{ fontSize:"10px", color:"var(--sp-textMuted)", textAlign:"center", padding:"8px 0" },
+    digestSection:{ display:"flex", flexDirection:"column", gap:"3px" },
+    digestSectionLabel:{ fontSize:"8px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.06em", color:"var(--sp-textMuted)", marginBottom:"1px" },
+    digestItem:{ display:"flex", justifyContent:"space-between", alignItems:"center", borderRadius:"5px", padding:"3px 5px", fontSize:"9px", fontWeight:500 },
 
     emptyDay:{ textAlign:"center", padding:"1.5rem" },
     emptyText:{ fontSize:"14px", color:"var(--sp-textMuted)", marginBottom:"12px" },

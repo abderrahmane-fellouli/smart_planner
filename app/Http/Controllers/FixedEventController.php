@@ -64,6 +64,8 @@ class FixedEventController extends Controller
         FixedEvent::create([
             'user_id'            => auth()->id(),
             'title'              => $request->title,
+            'teacher'            => $request->input('teacher'),
+            'description'        => $request->input('description'),
             'is_recurring_daily' => $request->boolean('is_recurring_daily'),
             'day_of_week'        => $dayOfWeek,
             'start_time'         => $request->start_time,
