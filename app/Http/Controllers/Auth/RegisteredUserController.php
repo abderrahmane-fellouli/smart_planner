@@ -31,16 +31,46 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        ]);
+        // Accept both new structured fields and legacy "name" for backward compatibility.
+        // Tests and API clients may still send the legacy "name" field.
+        $hasStructured = $request->has('first_name') || $request->has('last_name');
+
+        if ($hasStructured) {
+            $validated = $request->validate([
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'third_name' => 'nullable|string|max:255',
+                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ]);
+            $name = trim(implode(' ', array_filter([
+                $validated['first_name'],
+                $validated['third_name'] ?? null,
+                $validated['last_name'],
+            ])));
+            $firstName = $validated['first_name'];
+            $lastName = $validated['last_name'];
+            $thirdName = $validated['third_name'] ?? null;
+        } else {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
+                'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            ]);
+            $name = $validated['name'];
+            $parts = explode(' ', $name);
+            $firstName = $parts[0] ?? $name;
+            $lastName = count($parts) > 1 ? end($parts) : '';
+            $thirdName = count($parts) > 2 ? implode(' ', array_slice($parts, 1, -1)) : null;
+        }
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $name,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'third_name' => $thirdName,
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
         ]);
 
         event(new Registered($user));

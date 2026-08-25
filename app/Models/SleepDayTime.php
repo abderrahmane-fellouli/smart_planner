@@ -4,17 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Preference extends Model
+class SleepDayTime extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'wake_up_time', 'sleep_time', 'study_preference',
-        'concentration_hours', 'desired_free_time', 'priorities', 'theme'
+        'user_id',
+        'type',
+        'day_of_week',
+        'time',
     ];
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

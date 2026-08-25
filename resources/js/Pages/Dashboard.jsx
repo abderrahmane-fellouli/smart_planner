@@ -1,6 +1,6 @@
 import { Head, Link } from "@inertiajs/react";
 import AppLayout from "./AppLayout";
-import { useTheme } from "./AppLayout";
+import { useTheme, useLang } from "./AppLayout";
 import { useState } from "react";
 
 const T = {
@@ -19,7 +19,9 @@ const T = {
         sessions:"sessions", session:"session", no_sessions:"Aucune session",
         no_sessions_day:"Repos", total_day:"Total", hours:"h",
         fixed_label:"Cours fixes", study_label:"Sessions d'étude",
+        daily_task:"Tâche du jour", all_done:"Tout terminé !", no_tasks_yet:"Aucune tâche", more_items:"+{{n}} de plus",
         weekly_digest:"Résumé hebdomadaire", digest_sub:"Vue complète de votre planning",
+        todos:"Tâches du jour", todos_sub:"{{completed}}/{{total}} terminées", see_todos:"Voir les tâches →",
         days_full: {
             Lundi:"Lundi", Mardi:"Mardi", Mercredi:"Mercredi",
             Jeudi:"Jeudi", Vendredi:"Vendredi", Samedi:"Samedi", Dimanche:"Dimanche"
@@ -44,7 +46,9 @@ const T = {
         sessions:"sessions", session:"session", no_sessions:"No sessions",
         no_sessions_day:"Rest day", total_day:"Total", hours:"h",
         fixed_label:"Fixed courses", study_label:"Study sessions",
+        daily_task:"Daily Task", all_done:"All done!", no_tasks_yet:"No tasks yet", more_items:"+{{n}} more",
         weekly_digest:"Weekly digest", digest_sub:"Full overview of your schedule",
+        todos:"Daily Tasks", todos_sub:"{{completed}}/{{total}} done", see_todos:"See tasks →",
         days_full: {
             Lundi:"Monday", Mardi:"Tuesday", Mercredi:"Wednesday",
             Jeudi:"Thursday", Vendredi:"Friday", Samedi:"Saturday", Dimanche:"Sunday"
@@ -69,7 +73,9 @@ const T = {
         sessions:"جلسات", session:"جلسة", no_sessions:"لا توجد جلسات",
         no_sessions_day:"يوم راحة", total_day:"المجموع", hours:"ساعة",
         fixed_label:"الدروس الثابتة", study_label:"جلسات الدراسة",
+        daily_task:"مهام اليوم", all_done:"اكتمل كل شيء!", no_tasks_yet:"لا توجد مهام", more_items:"+{{n}} إضافية",
         weekly_digest:"ملخص أسبوعي", digest_sub:"نظرة عامة كاملة على جدولك",
+        todos:"مهام اليوم", todos_sub:"{{completed}}/{{total}} منجزة", see_todos:"عرض المهام →",
         days_full: {
             Lundi:"الإثنين", Mardi:"الثلاثاء", Mercredi:"الأربعاء",
             Jeudi:"الخميس", Vendredi:"الجمعة", Samedi:"السبت", Dimanche:"الأحد"
@@ -103,9 +109,9 @@ function StatCard({ label, value, accent }) {
 // Single session row used in today/tomorrow list
 function SessionRow({ session, isRTL }) {
     return (
-        <div style={{ ...s.sessionRow, flexDirection: isRTL ? "row-reverse" : "row" }}>
+        <div style={s.sessionRow}>
             <div style={s.sessionDot} />
-            <div style={{ flex: 1, textAlign: isRTL ? "right" : "left" }}>
+            <div style={{ flex: 1, textAlign: "start" }}>
                 <p style={s.sessionTitle}>📖 {session.matiere}</p>
                 <p style={s.sessionTime}>{formatTime(session.debut)} – {formatTime(session.fin)} · {session.duree} min</p>
             </div>
@@ -126,9 +132,11 @@ export default function Dashboard({
     tomorrowName = null,
     fixedEventsCount = 0,
     activeSchedule = null,
+    todoStats = { total: 0, completed: 0, pending: 0 },
+    pendingTodos = [],
 }) {
     const { dark } = useTheme();
-    const lang = (() => { try { return localStorage.getItem("smartplanner_lang") || "fr"; } catch { return "fr"; } })();
+    const { lang } = useLang();
     const tr = T[lang] || T.fr;
     const isRTL = tr.dir === "rtl";
 
@@ -142,9 +150,6 @@ export default function Dashboard({
     const hour    = now.getHours();
     const greeting = hour < 12 ? tr.greeting_am : hour < 18 ? tr.greeting_pm : tr.greeting_eve;
     const locale   = lang === "ar" ? "ar-MA" : lang === "en" ? "en-US" : "fr-FR";
-
-    // Total study minutes from todaySessions + tomorrowSessions for the week stat
-    const totalStudyMinutes = Object.values(weekSummary).reduce((a, b) => a + b, 0);
 
     // Current/next from todaySessions
     const currentSession = todaySessions.find(s => {
@@ -171,12 +176,12 @@ export default function Dashboard({
     return (
         <AppLayout>
             <Head title={tr.title} />
-            <div style={{ ...s.page, direction: isRTL ? "rtl" : "ltr" }}>
+            <div style={s.page}>
 
                 {/* Header */}
-                <div style={{ ...s.header, flexDirection: isRTL ? "row-reverse" : "row" }}>
-                    <div style={{ textAlign: isRTL ? "right" : "left" }}>
-                        <h1 style={s.greeting}>{greeting}, {user?.name || "..."} 👋</h1>
+                <div style={s.header}>
+                    <div style={{ textAlign: "start" }}>
+                        <h1 style={s.greeting}>{greeting}, {user?.display_name || user?.name || "..."} 👋</h1>
                         <p style={s.date}>{now.toLocaleDateString(locale, { weekday:"long", day:"numeric", month:"long", year:"numeric" })}</p>
                     </div>
                     {!activeSchedule && (
@@ -196,7 +201,7 @@ export default function Dashboard({
                     {/* ── Left: Schedule card ── */}
                     <div style={s.card}>
                         {/* Card header */}
-                        <div style={{ ...s.cardHead, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                        <div style={s.cardHead}>
                             <h2 style={s.cardTitle}>{tr.today_schedule}</h2>
                             <button onClick={() => setActiveTab("week")} style={{ ...s.cardLink, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{tr.see_all}</button>
                         </div>
@@ -205,7 +210,7 @@ export default function Dashboard({
                         {currentSession && (
                             <div style={s.currentBanner}>
                                 <div style={s.currentDot} />
-                                <div style={{ textAlign: isRTL ? "right" : "left" }}>
+                                <div style={{ textAlign: "start" }}>
                                     <p style={s.currentLabel}>{tr.in_progress}</p>
                                     <p style={s.currentTitle}>{currentSession.matiere}</p>
                                     <p style={s.currentTime}>{tr.until} {formatTime(currentSession.fin)}</p>
@@ -214,7 +219,7 @@ export default function Dashboard({
                         )}
 
                         {/* Tabs: Today / Tomorrow / Week */}
-                        <div style={{ ...s.tabs, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                        <div style={s.tabs}>
                             {["today", "tomorrow", "week"].map(tab => (
                                 <button
                                     key={tab}
@@ -300,7 +305,7 @@ export default function Dashboard({
                                                                         {coursFixes.map((c, i) => (
                                                                             <div key={i} style={{ ...s.digestItem, background: "var(--sp-accentLight)", color: "var(--sp-accent)" }}>
                                                                                 <span>📘 {c.title}{c.teacher ? ` · ${c.teacher}` : ''}</span>
-                                                                                <span style={{ opacity:0.7, fontSize:"10px" }}>{formatTime(c.start_time)}–{formatTime(c.end_time)}</span>
+                                                                                <span style={{ opacity:0.7, fontSize:"var(--sp-text-xs)" }}>{formatTime(c.start_time)}–{formatTime(c.end_time)}</span>
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -311,7 +316,7 @@ export default function Dashboard({
                                                                         {sessions.map((sess, i) => (
                                                                             <div key={i} style={{ ...s.digestItem, background: "var(--sp-successBg)", color: "var(--sp-success)" }}>
                                                                                 <span>📖 {sess.matiere}</span>
-                                                                                <span style={{ opacity:0.7, fontSize:"10px" }}>{formatTime(sess.debut)}–{formatTime(sess.fin)}</span>
+                                                                                <span style={{ opacity:0.7, fontSize:"var(--sp-text-xs)" }}>{formatTime(sess.debut)}–{formatTime(sess.fin)}</span>
                                                                             </div>
                                                                         ))}
                                                                     </div>
@@ -339,10 +344,10 @@ export default function Dashboard({
                         {/* Next slot */}
                         {nextSession && (
                             <div style={s.card}>
-                                <h2 style={{ ...s.cardTitle, textAlign: isRTL ? "right" : "left" }}>{tr.next_slot}</h2>
-                                <div style={{ ...s.nextItem, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                                <h2 style={{ ...s.cardTitle, textAlign: "start" }}>{tr.next_slot}</h2>
+                                <div style={s.nextItem}>
                                     <div style={{ ...s.nextDot, background: "var(--sp-success)" }} />
-                                    <div style={{ textAlign: isRTL ? "right" : "left" }}>
+                                    <div style={{ textAlign: "start" }}>
                                         <p style={s.nextTitle}>{nextSession.matiere}</p>
                                         <p style={s.nextTime}>{tr.at} {formatTime(nextSession.debut)}</p>
                                     </div>
@@ -352,7 +357,7 @@ export default function Dashboard({
 
                         {/* Quick actions */}
                         <div style={s.card}>
-                                <h2 style={{ ...s.cardTitle, textAlign: isRTL ? "right" : "left" }}>{tr.quick_actions}</h2>
+                                <h2 style={{ ...s.cardTitle, textAlign: "start" }}>{tr.quick_actions}</h2>
                             <div style={s.actions}>
                                 {[
                                     { href:"/fixed-events", icon:"➕", label:tr.add_task },
@@ -360,11 +365,11 @@ export default function Dashboard({
                                     { href:"/preferences",  icon:"⚙️", label:tr.edit_prefs },
                                     { href:"/export",       icon:"📤", label:tr.export },
                                 ].map(a => (
-                                    <Link key={a.href} href={a.href} style={{ ...s.actionBtn, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                                    <Link key={a.href} href={a.href} style={s.actionBtn}>
                                         <span style={s.actionIcon}>{a.icon}</span>
                                         <span style={s.actionLabel}>{a.label}</span>
                                         <svg width="14" height="14" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24"
-                                            style={{ transform: isRTL ? "rotate(180deg)" : "none", marginLeft: isRTL ? 0 : "auto", marginRight: isRTL ? "auto" : 0 }}>
+                                            style={{ transform: isRTL ? "rotate(180deg)" : "none", marginInlineStart: "auto", marginInlineEnd: 0 }}>
                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                         </svg>
                                     </Link>
@@ -372,9 +377,51 @@ export default function Dashboard({
                             </div>
                         </div>
 
+                        {/* Daily todo widget */}
+                        <Link href="/todos" style={{ ...s.card, textDecoration: "none", display: "block" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                                <h2 style={{ ...s.cardTitle, textAlign: "start", margin: 0 }}>{tr.todos}</h2>
+                                <span style={{ fontSize: "var(--sp-text-xs)", color: "var(--sp-accent)", fontWeight: 600 }}>{tr.see_todos}</span>
+                            </div>
+                            <p style={{ fontSize: "var(--sp-text-xs)", color: "var(--sp-textSecondary)", margin: "0 0 10px" }}>
+                                {tr.todos_sub.replace("{{completed}}", todoStats.completed).replace("{{total}}", todoStats.total)}
+                            </p>
+                            {todoStats.total > 0 && (
+                                <div style={{ height: 4, borderRadius: 2, background: "var(--sp-subtleBg)", overflow: "hidden", marginBottom: 10 }}>
+                                    <div style={{ height: "100%", borderRadius: 2, background: "var(--sp-success)", width: `${todoStats.total > 0 ? Math.round((todoStats.completed / todoStats.total) * 100) : 0}%`, transition: "width 0.3s" }} />
+                                </div>
+                            )}
+                            {pendingTodos.length > 0 ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                                    {pendingTodos.slice(0, 4).map(t => (
+                                        <div key={t.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: "var(--sp-text-xs)", color: "var(--sp-textSecondary)" }}>
+                                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: t.is_scheduled ? "var(--sp-accent)" : "var(--sp-stroke)", flexShrink: 0 }} />
+                                            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.title}</span>
+                                            {t.is_scheduled && (
+                                                <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 9, background: "rgba(var(--sp-accent-rgb, 99,102,241), 0.1)", color: "var(--sp-accent)", fontWeight: 600, flexShrink: 0 }}>
+                                                    {tr.daily_task}
+                                                </span>
+                                            )}
+                                        </div>
+                                    ))}
+                                    {todoStats.pending > 4 && (
+                                        <span style={{ fontSize: "var(--sp-text-xs)", color: "var(--sp-textMuted)" }}>{tr.more_items.replace("{{n}}", todoStats.pending - 4)}</span>
+                                    )}
+                                </div>
+                            ) : todoStats.total > 0 ? (
+                                <p style={{ fontSize: "var(--sp-text-xs)", color: "var(--sp-success)", fontWeight: 600 }}>
+                                    {"\u2713"} {tr.all_done}
+                                </p>
+                            ) : (
+                                <p style={{ fontSize: "var(--sp-text-xs)", color: "var(--sp-textMuted)" }}>
+                                    {tr.no_tasks_yet}
+                                </p>
+                            )}
+                        </Link>
+
                         {/* Week mini summary (sidebar) */}
                         <div style={s.card}>
-                            <h2 style={{ ...s.cardTitle, textAlign: isRTL ? "right" : "left", marginBottom:"10px" }}>{tr.week}</h2>
+                            <h2 style={{ ...s.cardTitle, textAlign: "start", marginBottom:"10px" }}>{tr.week}</h2>
                             <div style={s.weekMini} className="sp-week-mini">
                                 {Object.entries(weekSummary).map(([jour, count]) => {
                                     const isToday = jour === todayName;
@@ -423,74 +470,74 @@ export default function Dashboard({
 }
 
 const s = {
-    page:{ maxWidth:"1100px", margin:"0 auto", padding:"2rem 1.25rem 4rem", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden" },
-    header:{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem", marginBottom:"1.75rem" },
-    greeting:{ fontSize:"26px", fontWeight:800, color:"var(--sp-text)", margin:"0 0 4px", letterSpacing:"-0.02em" },
-    date:{ fontSize:"14px", color:"var(--sp-textMuted)", margin:0, textTransform:"capitalize" },
-    genBtn:{ display:"inline-flex", alignItems:"center", gap:"6px", padding:"10px 18px", background:"var(--sp-accent)", color:"var(--sp-accentText)", borderRadius:"10px", fontSize:"13px", fontWeight:600, textDecoration:"none" },
+    page:{ maxWidth:"1040px", margin:"0 auto", padding:"32px 24px 60px", fontFamily:"'DM Sans',sans-serif", overflowX:"hidden" },
+    header:{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", flexWrap:"wrap", gap:"1rem", marginBottom:"1.25rem" },
+    greeting:{ fontSize:"var(--sp-text-3xl)", fontWeight:800, color:"var(--sp-text)", margin:"0 0 4px", letterSpacing:"-0.02em" },
+    date:{ fontSize:"var(--sp-text-lg)", color:"var(--sp-textMuted)", margin:0, textTransform:"capitalize" },
+    genBtn:{ display:"inline-flex", alignItems:"center", gap:"6px", padding:"10px 18px", background:"var(--sp-accent)", color:"var(--sp-accentText)", borderRadius:"10px", fontSize:"var(--sp-text-base)", fontWeight:600, textDecoration:"none" },
     statsRow:{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:"12px", marginBottom:"1.75rem" },
     statCard:{ background:"var(--sp-card)", border:"1px solid var(--sp-cardBorder)", borderRadius:"12px", padding:"16px 18px", display:"flex", flexDirection:"column", gap:"4px" },
-    statLabel:{ fontSize:"11px", fontWeight:600, color:"var(--sp-textMuted)", textTransform:"uppercase", letterSpacing:"0.05em" },
-    statVal:{ fontSize:"24px", fontWeight:800, letterSpacing:"-0.02em", color:"var(--sp-text)" },
-    grid2:{ display:"grid", gridTemplateColumns:"1fr 340px", gap:"16px", alignItems:"start" },
+    statLabel:{ fontSize:"var(--sp-text-xs)", fontWeight:600, color:"var(--sp-textMuted)", textTransform:"uppercase", letterSpacing:"0.05em" },
+    statVal:{ fontSize:"var(--sp-text-3xl)", fontWeight:800, letterSpacing:"-0.02em", color:"var(--sp-text)" },
+    grid2:{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(min(340px, 100%), 1fr))", gap:"12px", alignItems:"start" },
     card:{ background:"var(--sp-card)", border:"1px solid var(--sp-cardBorder)", borderRadius:"14px", padding:"1.25rem 1.5rem", marginBottom:"12px" },
     cardHead:{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" },
-    cardTitle:{ fontSize:"15px", fontWeight:700, color:"var(--sp-text)", margin:0 },
-    cardLink:{ fontSize:"12px", color:"var(--sp-accent)", fontWeight:600, textDecoration:"none" },
+    cardTitle:{ fontSize:"var(--sp-text-lg)", fontWeight:700, color:"var(--sp-text)", margin:0 },
+    cardLink:{ fontSize:"var(--sp-text-sm)", color:"var(--sp-accent)", fontWeight:600, textDecoration:"none" },
 
     tabs:{ display:"flex", gap:"6px", marginBottom:"14px" },
-    tab:{ padding:"6px 14px", borderRadius:"20px", fontSize:"12px", fontWeight:600, border:"none", cursor:"pointer", transition:"all 0.15s" },
-    tabSubLabel:{ fontSize:"12px", color:"var(--sp-textMuted)", fontWeight:500, marginBottom:"10px" },
+    tab:{ padding:"6px 14px", borderRadius:"20px", fontSize:"var(--sp-text-sm)", fontWeight:600, border:"none", cursor:"pointer", transition:"all 0.15s" },
+    tabSubLabel:{ fontSize:"var(--sp-text-sm)", color:"var(--sp-textMuted)", fontWeight:500, marginBottom:"10px" },
 
     sessionList:{ display:"flex", flexDirection:"column", gap:"8px" },
     sessionRow:{ display:"flex", alignItems:"center", gap:"12px", padding:"10px 14px", background:"var(--sp-successBg)", border:"1px solid var(--sp-successBorder)", borderRadius:"10px" },
     sessionDot:{ width:"8px", height:"8px", borderRadius:"50%", background:"var(--sp-success)", flexShrink:0 },
-    sessionTitle:{ fontSize:"13px", fontWeight:600, color:"var(--sp-text)", margin:"0 0 2px" },
-    sessionTime:{ fontSize:"11px", color:"var(--sp-textSecondary)", margin:0 },
+    sessionTitle:{ fontSize:"var(--sp-text-base)", fontWeight:600, color:"var(--sp-text)", margin:"0 0 2px" },
+    sessionTime:{ fontSize:"var(--sp-text-xs)", color:"var(--sp-textSecondary)", margin:0 },
 
     weekGrid:{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"8px" },
     weekDayCard:{ borderRadius:"10px", padding:"10px 8px", display:"flex", flexDirection:"column", alignItems:"center", gap:"2px", background:"var(--sp-hoverBg)", border:"1px solid var(--sp-cardBorder)" },
-    weekDayShort:{ fontSize:"9px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em" },
-    weekDayCount:{ fontSize:"22px", fontWeight:800, letterSpacing:"-0.02em" },
-    weekDayLabel:{ fontSize:"9px", fontWeight:500 },
+    weekDayShort:{ fontSize:"var(--sp-text-xs)", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.05em" },
+    weekDayCount:{ fontSize:"var(--sp-text-2xl)", fontWeight:800, letterSpacing:"-0.02em" },
+    weekDayLabel:{ fontSize:"var(--sp-text-xs)", fontWeight:500 },
     weekDaySessionList:{ marginTop:"6px", width:"100%", display:"flex", flexDirection:"column", gap:"2px" },
-    weekDaySession:{ fontSize:"9px", fontWeight:500, textAlign:"center", background:"var(--sp-subtleBg)", borderRadius:"4px", padding:"1px 4px", color:"var(--sp-textSecondary)" },
+    weekDaySession:{ fontSize:"var(--sp-text-xs)", fontWeight:500, textAlign:"center", background:"var(--sp-subtleBg)", borderRadius:"4px", padding:"1px 4px", color:"var(--sp-textSecondary)" },
 
     digestGrid:{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(130px, 1fr))", gap:"8px" },
     digestDay:{ borderRadius:"10px", border:"1px solid var(--sp-cardBorder)", overflow:"hidden", display:"flex", flexDirection:"column" },
     digestDayHead:{ padding:"8px 10px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:"4px" },
-    digestDayName:{ fontSize:"11px", fontWeight:700, textTransform:"capitalize" },
-    digestDayTotal:{ fontSize:"10px", fontWeight:700 },
+    digestDayName:{ fontSize:"var(--sp-text-xs)", fontWeight:700, textTransform:"capitalize" },
+    digestDayTotal:{ fontSize:"var(--sp-text-xs)", fontWeight:700 },
     digestDayBody:{ padding:"6px 8px 8px", display:"flex", flexDirection:"column", gap:"4px", flex:1 },
-    digestEmpty:{ fontSize:"10px", color:"var(--sp-textMuted)", textAlign:"center", padding:"8px 0" },
+    digestEmpty:{ fontSize:"var(--sp-text-xs)", color:"var(--sp-textMuted)", textAlign:"center", padding:"8px 0" },
     digestSection:{ display:"flex", flexDirection:"column", gap:"3px" },
-    digestSectionLabel:{ fontSize:"8px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.06em", color:"var(--sp-textMuted)", marginBottom:"1px" },
-    digestItem:{ display:"flex", justifyContent:"space-between", alignItems:"center", borderRadius:"5px", padding:"3px 5px", fontSize:"9px", fontWeight:500 },
+    digestSectionLabel:{ fontSize:"var(--sp-text-xs)", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.06em", color:"var(--sp-textMuted)", marginBottom:"1px" },
+    digestItem:{ display:"flex", justifyContent:"space-between", alignItems:"center", borderRadius:"5px", padding:"3px 5px", fontSize:"var(--sp-text-xs)", fontWeight:500 },
 
     emptyDay:{ textAlign:"center", padding:"1.5rem" },
-    emptyText:{ fontSize:"14px", color:"var(--sp-textMuted)", marginBottom:"12px" },
-    miniBtn:{ display:"inline-flex", padding:"8px 16px", background:"var(--sp-accentLight)", color:"var(--sp-accent)", borderRadius:"8px", fontSize:"13px", fontWeight:600, textDecoration:"none" },
+    emptyText:{ fontSize:"var(--sp-text-lg)", color:"var(--sp-textMuted)", marginBottom:"12px" },
+    miniBtn:{ display:"inline-flex", padding:"8px 16px", background:"var(--sp-accentLight)", color:"var(--sp-accent)", borderRadius:"8px", fontSize:"var(--sp-text-base)", fontWeight:600, textDecoration:"none" },
 
     currentBanner:{ display:"flex", alignItems:"flex-start", gap:"12px", background:"var(--sp-successBg)", border:"1px solid var(--sp-successBorder)", borderRadius:"10px", padding:"12px 14px", marginBottom:"1rem" },
     currentDot:{ width:"10px", height:"10px", borderRadius:"50%", background:"var(--sp-success)", flexShrink:0, marginTop:"4px" },
-    currentLabel:{ fontSize:"10px", fontWeight:700, color:"var(--sp-success)", textTransform:"uppercase", letterSpacing:"0.06em", margin:"0 0 2px" },
-    currentTitle:{ fontSize:"15px", fontWeight:700, color:"var(--sp-text)", margin:"0 0 2px" },
-    currentTime:{ fontSize:"12px", color:"var(--sp-textSecondary)", margin:0 },
+    currentLabel:{ fontSize:"var(--sp-text-xs)", fontWeight:700, color:"var(--sp-success)", textTransform:"uppercase", letterSpacing:"0.06em", margin:"0 0 2px" },
+    currentTitle:{ fontSize:"var(--sp-text-lg)", fontWeight:700, color:"var(--sp-text)", margin:"0 0 2px" },
+    currentTime:{ fontSize:"var(--sp-text-sm)", color:"var(--sp-textSecondary)", margin:0 },
 
     rightCol:{ display:"flex", flexDirection:"column" },
     nextItem:{ display:"flex", alignItems:"center", gap:"12px", background:"var(--sp-hoverBg)", borderRadius:"10px", padding:"12px 14px", marginTop:"8px" },
     nextDot:{ width:"10px", height:"10px", borderRadius:"50%", flexShrink:0 },
-    nextTitle:{ fontSize:"14px", fontWeight:600, color:"var(--sp-text)", margin:"0 0 2px" },
-    nextTime:{ fontSize:"12px", color:"var(--sp-textSecondary)", margin:0 },
+    nextTitle:{ fontSize:"var(--sp-text-lg)", fontWeight:600, color:"var(--sp-text)", margin:"0 0 2px" },
+    nextTime:{ fontSize:"var(--sp-text-sm)", color:"var(--sp-textSecondary)", margin:0 },
 
     actions:{ display:"flex", flexDirection:"column", gap:"6px", marginTop:"8px" },
     actionBtn:{ display:"flex", alignItems:"center", gap:"10px", padding:"10px 12px", background:"var(--sp-hoverBg)", border:"1px solid var(--sp-cardBorder)", borderRadius:"10px", textDecoration:"none" },
-    actionIcon:{ fontSize:"16px", flexShrink:0 },
-    actionLabel:{ flex:1, fontSize:"13px", fontWeight:500, color:"var(--sp-text)" },
+    actionIcon:{ fontSize:"var(--sp-text-xl)", flexShrink:0 },
+    actionLabel:{ flex:1, fontSize:"var(--sp-text-base)", fontWeight:500, color:"var(--sp-text)" },
 
-    weekMini:{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:"4px" },
+    weekMini:{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:"4px" },
     weekDay:{ borderRadius:"8px", padding:"8px 4px", display:"flex", flexDirection:"column", alignItems:"center", gap:"4px", background:"var(--sp-hoverBg)", border:"1px solid var(--sp-cardBorder)" },
-    weekShort:{ fontSize:"8px", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.04em" },
-    weekCount:{ fontSize:"15px", fontWeight:800 },
-    weekDetailBtn:{ marginTop:"10px", width:"100%", padding:"7px", background:"var(--sp-accentLight)", color:"var(--sp-accent)", border:"none", borderRadius:"8px", fontSize:"12px", fontWeight:600, cursor:"pointer" },
+    weekShort:{ fontSize:"var(--sp-text-xs)", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.04em" },
+    weekCount:{ fontSize:"var(--sp-text-lg)", fontWeight:800 },
+    weekDetailBtn:{ marginTop:"10px", width:"100%", padding:"7px", background:"var(--sp-accentLight)", color:"var(--sp-accent)", border:"none", borderRadius:"8px", fontSize:"var(--sp-text-sm)", fontWeight:600, cursor:"pointer" },
 };

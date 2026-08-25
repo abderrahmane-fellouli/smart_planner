@@ -164,9 +164,9 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
   };
 
   const typeConfig = {
-    intensif:  { label: tr.typeIntensif,  color: '#EF4444', bg: '#FEF2F2', icon: '🔥', desc: tr.descIntensif  },
-    equilibre: { label: tr.typeEquilibre, color: '#10B981', bg: '#ECFDF5', icon: '⚖️', desc: tr.descEquilibre },
-    leger:     { label: tr.typeLeger,     color: '#3B82F6', bg: '#EFF6FF', icon: '🍃', desc: tr.descLeger     },
+    intensif:  { label: tr.typeIntensif,  color: 'var(--sp-type-intensif-fg)', bg: 'var(--sp-type-intensif)', icon: '🔥', desc: tr.descIntensif  },
+    equilibre: { label: tr.typeEquilibre, color: 'var(--sp-type-equilibre-fg)', bg: 'var(--sp-type-equilibre)', icon: '⚖️', desc: tr.descEquilibre },
+    leger:     { label: tr.typeLeger,     color: 'var(--sp-type-leger-fg)', bg: 'var(--sp-type-leger)', icon: '🍃', desc: tr.descLeger     },
   };
 
   // French keys match what PHP stores — display labels come from translation
@@ -184,11 +184,11 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
   return (
     <AppLayout>
       <Head title={tr.title} />
-      <div style={{ ...s.page, direction: isRTL ? "rtl" : "ltr" }}>
+      <div style={s.page}>
 
         {/* Header */}
-        <div style={{ ...s.header, flexDirection: isRTL ? "row-reverse" : "row" }}>
-          <div style={{ textAlign: isRTL ? "right" : "left" }}>
+        <div style={s.header}>
+          <div style={{ textAlign: "start" }}>
             <h1 style={s.title}>{tr.title}</h1>
             <p style={s.subtitle}>{tr.subtitle}</p>
           </div>
@@ -201,9 +201,9 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
 
         {/* Loading banner */}
         {processing && (
-          <div style={{ ...s.loadingBanner, flexDirection: isRTL ? "row-reverse" : "row" }}>
+          <div style={s.loadingBanner}>
             <Spinner color="var(--sp-accent)" />
-            <div style={{ textAlign: isRTL ? "right" : "left" }}>
+            <div style={{ textAlign: "start" }}>
               <p style={s.loadingTitle}>{tr.loadingTitle}</p>
               <p style={s.loadingSub}>{tr.loadingSub}</p>
             </div>
@@ -235,7 +235,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
 
                   {/* Top */}
                   <div style={{ ...s.cardTop, background: cfg.bg }}>
-                    <div style={{ ...s.cardTopLeft, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                    <div style={s.cardTopLeft}>
                       <span style={s.cardIcon}>{cfg.icon}</span>
                       <div>
                         <div style={{ ...s.cardLabel, color: cfg.color }}>
@@ -268,7 +268,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
                   {/* Expandable detail */}
                   <div style={s.cardBody}>
                     <button
-                      style={{ ...s.expandBtn, flexDirection: isRTL ? "row-reverse" : "row" }}
+                      style={s.expandBtn}
                       // FIX 1: Toggle only this card; clicking a second card closes the first automatically
                       onClick={() => setExpanded(isExpanded ? null : plan.id)}
                     >
@@ -321,7 +321,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
                   </div>
 
                   {/* Footer */}
-                  <div style={{ ...s.cardFooter, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                  <div style={s.cardFooter}>
                     {!isActive
                       ? <button onClick={() => handleActivate(plan.id)} style={{ ...s.activateBtn, background: cfg.color }}>{tr.activate}</button>
                       : <span style={{ ...s.activeLabel, color: cfg.color }}>{tr.activeLabel}</span>
@@ -373,7 +373,7 @@ function TimeInput({ value, onChange, disabled }) {
     flex: 1, padding: '9px 8px',
     background: 'var(--sp-inputBg)',
     border: '1px solid var(--sp-inputBorder)',
-    borderRadius: '8px', fontSize: '13px', color: 'var(--sp-text)',
+    borderRadius: '8px', fontSize: 'var(--sp-text-base)', color: 'var(--sp-text)',
     outline: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
     fontFamily: "'DM Sans',sans-serif", opacity: disabled ? 0.6 : 1,
     appearance: 'none', WebkitAppearance: 'none',
@@ -417,55 +417,55 @@ function ChevronIcon({ rotated }) {
 }
 
 const s = {
-  page:            { padding: '32px', maxWidth: '1100px', overflowX: 'hidden' },
-  header:          { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' },
-  title:           { fontSize: '22px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
-  subtitle:        { fontSize: '14px', color: 'var(--sp-textSecondary)', margin: 0 },
-  generateBtn:     { display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: 'var(--sp-accent)', color: 'var(--sp-accentText)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
+  page:            { maxWidth: '1040px', margin: '0 auto', padding: '32px 24px 60px', overflowX: 'hidden' },
+  header:          { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' },
+  title:           { fontSize: 'var(--sp-text-2xl)', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
+  subtitle:        { fontSize: 'var(--sp-text-lg)', color: 'var(--sp-textSecondary)', margin: 0 },
+  generateBtn:     { display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 20px', background: 'var(--sp-accent)', color: 'var(--sp-accentText)', border: 'none', borderRadius: '10px', fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer' },
   loadingBanner:   { display: 'flex', alignItems: 'center', gap: '14px', background: 'var(--sp-accentLight)', border: '1px solid var(--sp-cardBorder)', borderRadius: '12px', padding: '16px 20px', marginBottom: '24px' },
-  loadingTitle:    { fontSize: '14px', fontWeight: 600, color: 'var(--sp-accent)', margin: '0 0 2px' },
-  loadingSub:      { fontSize: '12px', color: 'var(--sp-accent)', margin: 0 },
+  loadingTitle:    { fontSize: 'var(--sp-text-lg)', fontWeight: 600, color: 'var(--sp-accent)', margin: '0 0 2px' },
+  loadingSub:      { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-accent)', margin: 0 },
   emptyCard:       { background: 'var(--sp-card)', border: '1px solid var(--sp-cardBorder)', borderRadius: '16px', padding: '60px 32px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
   emptyIcon:       { fontSize: '48px' },
-  emptyTitle:      { fontSize: '16px', fontWeight: 600, color: 'var(--sp-text)', margin: 0 },
-  emptyText:       { fontSize: '13px', color: 'var(--sp-textMuted)', margin: 0, maxWidth: '320px' },
-  grid:            { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', alignItems: 'flex-start' },
+  emptyTitle:      { fontSize: 'var(--sp-text-xl)', fontWeight: 600, color: 'var(--sp-text)', margin: 0 },
+  emptyText:       { fontSize: 'var(--sp-text-base)', color: 'var(--sp-textMuted)', margin: 0, maxWidth: '320px' },
+  grid:            { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '12px', alignItems: 'flex-start' },
   card:            { background: 'var(--sp-card)', border: '1px solid var(--sp-cardBorder)', borderRadius: '14px', overflow: 'hidden', display: 'flex', flexDirection: 'column' },
   cardTop:         { padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
   cardTopLeft:     { display: 'flex', alignItems: 'center', gap: '10px' },
-  cardIcon:        { fontSize: '22px' },
-  cardLabel:       { fontSize: '14px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' },
-  cardDesc:        { fontSize: '12px', color: 'var(--sp-textMuted)', marginTop: '2px' },
-  activeBadge:     { fontSize: '10px', fontWeight: 700, color: 'var(--sp-accentText)', padding: '2px 8px', borderRadius: '20px' },
+  cardIcon:        { fontSize: 'var(--sp-text-2xl)' },
+  cardLabel:       { fontSize: 'var(--sp-text-lg)', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' },
+  cardDesc:        { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textMuted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  activeBadge:     { fontSize: 'var(--sp-text-xs)', fontWeight: 700, color: 'var(--sp-accentText)', padding: '2px 8px', borderRadius: '20px' },
   resumeRow:       { display: 'flex', borderTop: '1px solid var(--sp-cardBorder)', borderBottom: '1px solid var(--sp-cardBorder)' },
-  resumeStat:      { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', borderRight: '1px solid var(--sp-cardBorder)' },
-  resumeVal:       { fontSize: '16px', fontWeight: 700, color: 'var(--sp-text)' },
-  resumeKey:       { fontSize: '11px', color: 'var(--sp-textMuted)' },
+  resumeStat:      { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '10px 0', borderInlineEnd: '1px solid var(--sp-cardBorder)' },
+  resumeVal:       { fontSize: 'var(--sp-text-xl)', fontWeight: 700, color: 'var(--sp-text)' },
+  resumeKey:       { fontSize: 'var(--sp-text-xs)', color: 'var(--sp-textMuted)' },
   cardBody:        { padding: '14px 18px', flex: 1 },
-  expandBtn:       { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', padding: '7px 12px', fontSize: '12px', color: 'var(--sp-textSecondary)', cursor: 'pointer', width: '100%', justifyContent: 'center' },
+  expandBtn:       { display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', padding: '7px 12px', fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textSecondary)', cursor: 'pointer', width: '100%', justifyContent: 'center' },
   dayList:         { marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' },
   dayRow:          { display: 'flex', gap: '10px', alignItems: 'flex-start' },
-  dayName:         { fontSize: '12px', fontWeight: 700, color: 'var(--sp-textSecondary)', minWidth: '64px', paddingTop: '4px' },
+  dayName:         { fontSize: 'var(--sp-text-sm)', fontWeight: 700, color: 'var(--sp-textSecondary)', minWidth: '64px', paddingTop: '4px' },
   dayContent:      { display: 'flex', flexDirection: 'column', gap: '4px', flex: 1 },
-  coursTag:        { fontSize: '11px', background: 'var(--sp-subtleBg)', color: 'var(--sp-textSecondary)', padding: '3px 8px', borderRadius: '6px' },
+  coursTag:        { fontSize: 'var(--sp-text-xs)', background: 'var(--sp-subtleBg)', color: 'var(--sp-textSecondary)', padding: '3px 8px', borderRadius: '6px' },
   sessionRow:      { display: 'flex', alignItems: 'center', gap: '4px' },
-  sessionTag:      { fontSize: '11px', padding: '3px 8px', borderRadius: '6px', fontWeight: 500, flex: 1 },
-  moveBtn:         { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', padding: '2px 4px', borderRadius: '4px', opacity: 0.55, flexShrink: 0 },
-  noSession:       { fontSize: '11px', color: 'var(--sp-textMuted)' },
+  sessionTag:      { fontSize: 'var(--sp-text-xs)', padding: '3px 8px', borderRadius: '6px', fontWeight: 500, flex: 1, minWidth: 0 },
+  moveBtn:         { background: 'none', border: 'none', cursor: 'pointer', fontSize: 'var(--sp-text-sm)', padding: '2px 4px', borderRadius: '4px', opacity: 0.55, flexShrink: 0 },
+  noSession:       { fontSize: 'var(--sp-text-xs)', color: 'var(--sp-textMuted)' },
   cardFooter:      { padding: '14px 18px', borderTop: '1px solid var(--sp-cardBorder)', display: 'flex', alignItems: 'center', gap: '10px' },
-  activateBtn:     { flex: 1, padding: '9px', color: 'var(--sp-accentText)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
-  activeLabel:     { flex: 1, fontSize: '13px', fontWeight: 600, textAlign: 'center' },
-  deleteBtn:       { padding: '9px 14px', background: 'none', border: '1px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', borderRadius: '8px', fontSize: '12px', cursor: 'pointer' },
+  activateBtn:     { flex: 1, padding: '9px', color: 'var(--sp-accentText)', border: 'none', borderRadius: '8px', fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer' },
+  activeLabel:     { flex: 1, minWidth: 0, fontSize: 'var(--sp-text-base)', fontWeight: 600, textAlign: 'center' },
+  deleteBtn:       { padding: '9px 14px', background: 'none', border: '1px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', borderRadius: '8px', fontSize: 'var(--sp-text-sm)', cursor: 'pointer' },
   modalOverlay:    { position: 'fixed', inset: 0, background: 'var(--sp-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 },
-  modalBox:        { background: 'var(--sp-card)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '380px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' },
-  modalTitle:      { fontSize: '16px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
-  modalSub:        { fontSize: '13px', color: 'var(--sp-textSecondary)', margin: '0 0 18px' },
+  modalBox:        { background: 'var(--sp-card)', borderRadius: '16px', padding: '28px', width: '100%', maxWidth: '380px', margin: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.18)' },
+  modalTitle:      { fontSize: 'var(--sp-text-xl)', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
+  modalSub:        { fontSize: 'var(--sp-text-base)', color: 'var(--sp-textSecondary)', margin: '0 0 18px' },
   modalSessionInfo:{ background: 'var(--sp-subtleBg)', border: '1px solid var(--sp-inputBorder)', borderRadius: '10px', padding: '12px 14px', marginBottom: '18px', display: 'flex', flexDirection: 'column', gap: '4px' },
-  modalSessionName:{ fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
-  modalSessionTime:{ fontSize: '12px', color: 'var(--sp-textSecondary)' },
-  modalLabel:      { display: 'block', fontSize: '12px', fontWeight: 600, color: 'var(--sp-textSecondary)', marginBottom: '6px' },
-  modalInput:      { width: '100%', padding: '10px 12px', background: 'var(--sp-inputBg)', border: '1px solid var(--sp-inputBorder)', borderRadius: '8px', fontSize: '14px', color: 'var(--sp-text)', boxSizing: 'border-box', marginBottom: '20px' },
+  modalSessionName:{ fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-text)' },
+  modalSessionTime:{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textSecondary)' },
+  modalLabel:      { display: 'block', fontSize: 'var(--sp-text-sm)', fontWeight: 600, color: 'var(--sp-textSecondary)', marginBottom: '6px' },
+  modalInput:      { width: '100%', padding: '10px 12px', background: 'var(--sp-inputBg)', border: '1px solid var(--sp-inputBorder)', borderRadius: '8px', fontSize: 'var(--sp-text-lg)', color: 'var(--sp-text)', boxSizing: 'border-box', marginBottom: '20px' },
   modalFooter:     { display: 'flex', gap: '10px' },
-  modalCancelBtn:  { flex: 1, padding: '10px', background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', fontSize: '13px', color: 'var(--sp-textSecondary)', cursor: 'pointer' },
-  modalConfirmBtn: { flex: 1, padding: '10px', background: 'var(--sp-accent)', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--sp-accentText)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
+  modalCancelBtn:  { flex: 1, padding: '10px', background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', fontSize: 'var(--sp-text-base)', color: 'var(--sp-textSecondary)', cursor: 'pointer' },
+  modalConfirmBtn: { flex: 1, padding: '10px', background: 'var(--sp-accent)', border: 'none', borderRadius: '8px', fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-accentText)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' },
 };

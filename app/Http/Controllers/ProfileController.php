@@ -29,13 +29,35 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        if ($request->hasFile('photo')) {
+            if ($user->profile_photo_path) {
+                \Storage::disk('public')->delete($user->profile_photo_path);
+            }
+            $validated['profile_photo_path'] = $request->file('photo')->store('profile-photos', 'public');
         }
 
-        $request->user()->save();
+        unset($validated['photo']);
+
+        // Support both new structured fields and legacy "name" field.
+        if (!empty($validated['first_name']) || !empty($validated['last_name'])) {
+            $validated['name'] = trim(implode(' ', array_filter([
+                $validated['first_name'] ?? null,
+                $validated['third_name'] ?? null,
+                $validated['last_name'] ?? null,
+            ]))) ?: $user->name;
+        }
+        // If only "name" was sent (legacy), use it directly.
+
+        $user->fill($validated);
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit');
     }
@@ -59,5 +81,21 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Remove the user's profile photo.
+     */
+    public function destroyPhoto(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->profile_photo_path && \Storage::disk('public')->exists($user->profile_photo_path)) {
+            \Storage::disk('public')->delete($user->profile_photo_path);
+        }
+
+        $user->update(['profile_photo_path' => null]);
+
+        return Redirect::route('profile.edit');
     }
 }

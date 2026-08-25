@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { Ziggy } from './ziggy';
 import { route as ziggyRoute } from 'ziggy-js';
+import { ToastProvider } from './Components/Toast';
 
 window.route = (name, params, absolute = false) => ziggyRoute(name, params, absolute, Ziggy);
 
@@ -20,7 +21,11 @@ createInertiaApp({
         ),
     setup({ el, App, props }) {
         const root = createRoot(el);
-        root.render(<App {...props} />);
+        root.render(
+            <ToastProvider>
+                <App {...props} />
+            </ToastProvider>
+        );
     },
     progress: {
         color: '#4F46E5',
