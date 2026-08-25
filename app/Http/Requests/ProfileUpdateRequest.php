@@ -16,8 +16,9 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'name' => ['required', 'string', 'max:255'],
+        // Accept either legacy "name" or new structured fields.
+        // We use sometimes rules so both formats are valid.
+        $base = [
             'email' => [
                 'required',
                 'string',
@@ -26,6 +27,18 @@ class ProfileUpdateRequest extends FormRequest
                 'max:255',
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
+            'photo' => ['nullable', 'image', 'max:2048'],
+            'first_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['nullable', 'string', 'max:255'],
+            'third_name' => ['nullable', 'string', 'max:255'],
+            'pseudonym' => ['nullable', 'string', 'max:255'],
         ];
+
+        // If legacy "name" is sent, validate it; otherwise require structured fields.
+        if ($this->input('name') !== null) {
+            $base['name'] = ['required', 'string', 'max:255'];
+        }
+
+        return $base;
     }
 }

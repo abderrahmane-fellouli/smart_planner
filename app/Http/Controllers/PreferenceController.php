@@ -15,6 +15,28 @@ class PreferenceController extends Controller
     }
 
     /**
+     * Lightweight theme-only update.
+     *
+     * The theme selector in Preferences needs to persist the chosen theme
+     * immediately — not wait for the full "Save preferences" form submit.
+     * This endpoint accepts just the theme name, validates it, and saves
+     * it without flash messages or redirects.
+     */
+    public function updateTheme(Request $request)
+    {
+        $validated = $request->validate([
+            'theme' => 'required|string|in:default,softBlush,coolBlue,lavenderTeal',
+        ]);
+
+        Preference::updateOrCreate(
+            ['user_id' => auth()->id()],
+            ['theme' => $validated['theme']]
+        );
+
+        return response()->json(['ok' => true, 'theme' => $validated['theme']]);
+    }
+
+    /**
      * Save or update user study preferences.
      *
      * Uses updateOrCreate with user_id as the unique key — this means
@@ -29,6 +51,7 @@ class PreferenceController extends Controller
             'study_preference'      => 'required|string|in:morning,normal,night,any',
             'concentration_hours'   => 'required|integer|min:1|max:12',
             'desired_free_time'     => 'required|integer|min:0|max:8',
+            'theme'                 => 'nullable|string|in:default,softBlush,coolBlue,lavenderTeal',
         ], [], [
             'wake_up_time'        => trans('preferences.wake_up'),
             'sleep_time'          => trans('preferences.sleep_time'),
@@ -45,6 +68,7 @@ class PreferenceController extends Controller
                 'study_preference'    => $validated['study_preference'],
                 'concentration_hours' => $validated['concentration_hours'],
                 'desired_free_time'   => $validated['desired_free_time'],
+                'theme'               => $validated['theme'] ?? 'default',
             ]
         );
 

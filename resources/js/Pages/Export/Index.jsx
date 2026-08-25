@@ -91,9 +91,9 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
   const [loading, setLoading] = useState(null);
 
   const typeConfig = {
-    intensif:  { label: tr.planningIntensif,   color: "#EF4444", bg: "#FEF2F2", icon: "🔥" },
-    equilibre: { label: tr.planningEquilibre,  color: "#10B981", bg: "#ECFDF5", icon: "⚖️" },
-    leger:     { label: tr.planningLeger,      color: "#3B82F6", bg: "#EFF6FF", icon: "🍃" },
+    intensif:  { label: tr.planningIntensif,   color: "var(--sp-type-intensif-fg)", bg: "var(--sp-type-intensif)", icon: "🔥" },
+    equilibre: { label: tr.planningEquilibre,  color: "var(--sp-type-equilibre-fg)", bg: "var(--sp-type-equilibre)", icon: "⚖️" },
+    leger:     { label: tr.planningLeger,      color: "var(--sp-type-leger-fg)", bg: "var(--sp-type-leger)", icon: "🍃" },
   };
 
   const handleExportPdf = () => {
@@ -110,10 +110,10 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
   return (
     <AppLayout>
       <Head title={tr.title} />
-      <div style={{ ...s.page, direction: isRTL ? "rtl" : "ltr" }}>
+      <div style={s.page}>
 
         {/* Header */}
-        <div style={{ textAlign: isRTL ? "right" : "left" }}>
+        <div style={{ textAlign: "start" }}>
           <h1 style={s.title}>{tr.title}</h1>
           <p style={s.subtitle}>{tr.subtitle}</p>
         </div>
@@ -147,11 +147,10 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                         ...s.selectItem,
                         border: isSelected ? `2px solid ${c.color}` : "2px solid var(--sp-cardBorder)",
                         background: isSelected ? c.bg : "var(--sp-subtleBg)",
-                        flexDirection: isRTL ? "row-reverse" : "row",
                       }}
                     >
                       <span style={s.selectIcon}>{c.icon}</span>
-                      <div style={{ ...s.selectInfo, textAlign: isRTL ? "right" : "left" }}>
+                      <div style={{ ...s.selectInfo, textAlign: "start" }}>
                         <span style={{ ...s.selectLabel, color: isSelected ? c.color : "var(--sp-textSecondary)" }}>
                           {c.label}
                           {plan.is_active && (
@@ -183,11 +182,11 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                       <span style={s.previewVal}>{resume.total_heures_semaine}h</span>
                       <span style={s.previewKey}>{tr.perWeek}</span>
                     </div>
-                    <div style={{ ...s.previewStat, borderLeft: "1px solid var(--sp-cardBorder)" }}>
+                    <div style={{ ...s.previewStat, borderInlineStart: "1px solid var(--sp-cardBorder)" }}>
                       <span style={s.previewVal}>{resume.sessions_totales}</span>
                       <span style={s.previewKey}>{tr.sessions}</span>
                     </div>
-                    <div style={{ ...s.previewStat, borderLeft: "1px solid var(--sp-cardBorder)" }}>
+                    <div style={{ ...s.previewStat, borderInlineStart: "1px solid var(--sp-cardBorder)" }}>
                       <span style={s.previewVal}>{resume.moyenne_par_jour}h</span>
                       <span style={s.previewKey}>{tr.avgPerDay}</span>
                     </div>
@@ -200,7 +199,6 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                   style={{
                     ...s.exportBtn,
                     opacity: (!selectedId && !activeSchedule) ? 0.5 : 1,
-                    flexDirection: isRTL ? "row-reverse" : "row",
                   }}
                   onMouseEnter={e => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = "var(--sp-accentHover)"; e.currentTarget.style.borderColor = "var(--sp-accentHover)"; } }}
                   onMouseLeave={e => { e.currentTarget.style.background = "var(--sp-subtleBg)"; e.currentTarget.style.borderColor = "var(--sp-cardBorder)"; }}
@@ -211,22 +209,22 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                       <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6M9 17h4"/>
                     </svg>
                   </div>
-                  <div style={{ ...s.exportBtnInfo, textAlign: isRTL ? "right" : "left" }}>
+                  <div style={{ ...s.exportBtnInfo, textAlign: "start" }}>
                     <span style={s.exportBtnTitle}>
                       {loading === "pdf" ? tr.pdfOpening : tr.exportPdf}
                     </span>
                     <span style={s.exportBtnDesc}>{tr.pdfDesc}</span>
                   </div>
-                  <svg width="16" height="16" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24" style={{ transform: isRTL ? "rotate(180deg)" : "none" }}>
+                  <svg width="16" height="16" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
                   </svg>
                 </button>
 
-                <div style={{ ...s.infoBox, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                <div style={s.infoBox}>
                   <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10"/><path strokeLinecap="round" d="M12 8v4m0 4h.01"/>
                   </svg>
-                  <div style={{ fontSize: "12px", color: "var(--sp-accent)", textAlign: isRTL ? "right" : "left" }}>
+                  <div style={{ fontSize: "var(--sp-text-sm)", color: "var(--sp-accent)", textAlign: "start" }}>
                     {tr.infoText}
                   </div>
                 </div>
@@ -241,32 +239,32 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
 
 const s = {
   page: { maxWidth: "640px", margin: "0 auto", padding: "32px 24px 60px", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" },
-  title: { fontSize: "22px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
-  subtitle: { fontSize: "14px", color: "var(--sp-textSecondary)", margin: "0 0 28px" },
+  title: { fontSize: "var(--sp-text-2xl)", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
+  subtitle: { fontSize: "var(--sp-text-lg)", color: "var(--sp-textSecondary)", margin: "0 0 28px" },
   content: { display: "flex", flexDirection: "column", gap: "16px" },
   card: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "14px", padding: "20px 22px" },
-  cardTitle: { fontSize: "15px", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
-  cardSub: { fontSize: "12px", color: "var(--sp-textMuted)", margin: "0 0 14px" },
+  cardTitle: { fontSize: "var(--sp-text-lg)", fontWeight: 700, color: "var(--sp-text)", margin: "0 0 4px" },
+  cardSub: { fontSize: "var(--sp-text-sm)", color: "var(--sp-textMuted)", margin: "0 0 14px" },
   selectList: { display: "flex", flexDirection: "column", gap: "8px" },
   selectItem: { display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", cursor: "pointer", transition: "all 0.12s" },
-  selectIcon: { fontSize: "20px", flexShrink: 0 },
-  selectInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "2px" },
-  selectLabel: { fontSize: "13px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" },
-  selectDate: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  activeBadge: { fontSize: "10px", color: "#fff", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
+  selectIcon: { fontSize: "var(--sp-text-2xl)", flexShrink: 0 },
+  selectInfo: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "2px" },
+  selectLabel: { fontSize: "var(--sp-text-base)", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" },
+  selectDate: { fontSize: "var(--sp-text-xs)", color: "var(--sp-textMuted)" },
+  activeBadge: { fontSize: "var(--sp-text-xs)", color: "#fff", padding: "1px 7px", borderRadius: "20px", fontWeight: 700 },
   previewRow: { display: "flex", marginTop: "12px", borderTop: "1px solid var(--sp-cardBorder)", paddingTop: "12px" },
   previewStat: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", padding: "0" },
-  previewVal: { fontSize: "18px", fontWeight: 800, color: "var(--sp-text)" },
-  previewKey: { fontSize: "11px", color: "var(--sp-textMuted)" },
-  exportBtn: { display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", background: "var(--sp-subtleBg)", border: "1px solid var(--sp-cardBorder)", borderRadius: "12px", cursor: "pointer", textAlign: "left", width: "100%", transition: "all 0.12s" },
+  previewVal: { fontSize: "var(--sp-text-xl)", fontWeight: 800, color: "var(--sp-text)" },
+  previewKey: { fontSize: "var(--sp-text-xs)", color: "var(--sp-textMuted)" },
+  exportBtn: { display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", background: "var(--sp-subtleBg)", border: "1px solid var(--sp-cardBorder)", borderRadius: "12px", cursor: "pointer", textAlign: "start", width: "100%", transition: "all 0.12s" },
   exportBtnIcon: { width: "52px", height: "52px", borderRadius: "12px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
-  exportBtnInfo: { flex: 1, display: "flex", flexDirection: "column", gap: "3px" },
-  exportBtnTitle: { fontSize: "14px", fontWeight: 600, color: "var(--sp-text)" },
-  exportBtnDesc: { fontSize: "11px", color: "var(--sp-textMuted)" },
+  exportBtnInfo: { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: "3px" },
+  exportBtnTitle: { fontSize: "var(--sp-text-lg)", fontWeight: 600, color: "var(--sp-text)" },
+  exportBtnDesc: { fontSize: "var(--sp-text-xs)", color: "var(--sp-textMuted)" },
   infoBox: { display: "flex", gap: "10px", alignItems: "flex-start", background: "var(--sp-accentLight)", border: "1px solid var(--sp-accent)", borderRadius: "10px", padding: "12px 14px" },
   empty: { background: "var(--sp-card)", border: "1px solid var(--sp-cardBorder)", borderRadius: "16px", padding: "60px 32px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" },
   emptyIcon: { fontSize: "48px" },
-  emptyTitle: { fontSize: "16px", fontWeight: 600, color: "var(--sp-text)", margin: 0 },
-  emptySub: { fontSize: "13px", color: "var(--sp-textMuted)", margin: 0 },
-  emptyBtn: { display: "inline-flex", padding: "10px 20px", background: "var(--sp-accent)", color: "var(--sp-accentText)", borderRadius: "8px", fontSize: "13px", fontWeight: 600, textDecoration: "none", marginTop: "4px" },
+  emptyTitle: { fontSize: "var(--sp-text-xl)", fontWeight: 600, color: "var(--sp-text)", margin: 0 },
+  emptySub: { fontSize: "var(--sp-text-base)", color: "var(--sp-textMuted)", margin: 0 },
+  emptyBtn: { display: "inline-flex", padding: "10px 20px", background: "var(--sp-accent)", color: "var(--sp-accentText)", borderRadius: "8px", fontSize: "var(--sp-text-base)", fontWeight: 600, textDecoration: "none", marginTop: "4px" },
 };

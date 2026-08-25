@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\FixedEvent;
 use App\Models\Preference;
+use App\Models\SleepSchedule;
 use App\Models\OptimizedSchedule;
+use App\Models\TodoItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -62,7 +64,7 @@ class ScheduleGeneratorController extends Controller
         $jours = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
         foreach ($jours as $jour) {
             $dayEvents = $this->getEventsForDay($fixedEvents, $jour);
-            $slots = $this->calculateFreeSlots($dayEvents, $prefs);
+            $slots = $this->calculateFreeSlots($dayEvents, $prefs, $jour);
             foreach ($slots as $slot) {
                 $totalFreeMinutes += $this->toMinutes($slot['end']) - $this->toMinutes($slot['start']);
             }
@@ -135,8 +137,9 @@ class ScheduleGeneratorController extends Controller
         // any     → the algorithm chooses freely: chronological order,
         //           standard session duration/breaks from the type config above
         $studyPref = $prefs?->study_preference ?? 'normal';
-        $wakeUpTime = $prefs?->wake_up_time ?? '08:00:00';
-        $sleepTime  = $prefs?->sleep_time ?? '22:00:00';
+
+        // Resolve per-day wake/sleep times (per-day schedule takes priority)
+        $sleepSchedule = SleepSchedule::where('user_id', auth()->id())->first();
 
         $jours = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
         $schedule = [];
@@ -146,7 +149,7 @@ class ScheduleGeneratorController extends Controller
             // Get ALL fixed events for this day, including recurring daily ones.
             // Recurring events (is_recurring_daily=true) appear on every weekday.
             $jourFixed = $this->getEventsForDay($fixedEvents, $jour);
-            $freeSlots = $this->calculateFreeSlots($jourFixed, $prefs);
+            $freeSlots = $this->calculateFreeSlots($jourFixed, $prefs, $jour);
 
             // Sort slots based on study preference
             $freeSlots = $this->sortSlotsByPreference($freeSlots, $studyPref);
@@ -170,6 +173,79 @@ class ScheduleGeneratorController extends Controller
             // Kept separate from $occupiedRanges because a pause is required between
             // consecutive study sessions, not between a study session and a fixed event.
             $studyRanges = [];
+
+            // ─────────────────────────────────────────────────────────────
+            // USER-SCHEDULED DAILY TASKS FIRST.
+            // A daily task the user explicitly pinned to a day/time expresses
+            // intent, so it claims its slot BEFORE auto-generated study
+            // sessions fill the remaining free time. Without this ordering,
+            // generic sessions could steal the requested time and push the
+            // user's task away from when they asked for it.
+            // Users with no scheduled tasks skip this entirely (no-op),
+            // keeping legacy behaviour untouched.
+            // ─────────────────────────────────────────────────────────────
+            $dayWake  = null;
+            $daySleep = null;
+            if ($sleepSchedule) {
+                $dayWake  = $this->toMinutes($sleepSchedule->getWakeTimeForDay($jour) . ':00');
+                $daySleep = $this->toMinutes($sleepSchedule->getBedtimeForDay($jour) . ':00');
+            } else {
+                $dayWake  = $this->toMinutes($prefs?->wake_up_time ?? '08:00:00');
+                $daySleep = $this->toMinutes($prefs?->sleep_time ?? '22:00:00');
+            }
+            if ($dayWake >= $daySleep) {
+                $dayWake  = 420;
+                $daySleep = 1380;
+            }
+
+            $scheduledTodos = TodoItem::where('user_id', auth()->id())
+                ->where('is_scheduled', true)
+                ->where('scheduled_day', $jour)
+                ->whereNotNull('scheduled_time')
+                ->whereNotNull('scheduled_duration')
+                ->orderBy('scheduled_time')
+                ->get();
+
+            foreach ($scheduledTodos as $todo) {
+                $todoStartMin  = $this->toMinutes($todo->scheduled_time);
+                $todoDuration  = (int) $todo->scheduled_duration;
+                $todoEndMin    = $todoStartMin + $todoDuration;
+
+                // Clamp into the awake window: never start before wake time,
+                // never run past bedtime.
+                if ($todoStartMin < $dayWake) {
+                    $todoStartMin = $dayWake;
+                    $todoEndMin   = $todoStartMin + $todoDuration;
+                }
+                if ($todoEndMin > $daySleep) {
+                    continue;
+                }
+
+                // Respect the requested time; if occupied, slide later in
+                // 15-minute steps rather than dropping the task.
+                $attemptStart = $todoStartMin;
+                while ($attemptStart + $todoDuration <= $daySleep) {
+                    $attemptEnd = $attemptStart + $todoDuration;
+                    if (!$this->rangesOverlap($attemptStart, $attemptEnd, $occupiedRanges)) {
+                        $placedStart = $attemptStart;
+                        $placedEnd   = $attemptEnd;
+                        $studySessions[] = [
+                            'debut'   => $this->minutesToTime($placedStart),
+                            'fin'     => $this->minutesToTime($placedEnd),
+                            'duree'   => $todoDuration,
+                            'matiere' => $todo->title,
+                        ];
+                        // Occupied blocks auto-sessions from overlapping the task;
+                        // studyRanges gives the task the same break protection
+                        // regular study sessions get.
+                        $occupiedRanges[] = ['start' => $placedStart, 'end' => $placedEnd];
+                        $studyRanges[]    = ['start' => $placedStart, 'end' => $placedEnd];
+                        $totalMinutes += $todoDuration;
+                        break;
+                    }
+                    $attemptStart += 15;
+                }
+            }
 
             foreach ($freeSlots as $slot) {
                 if ($sessionsCount >= $cfg['maxSessions']) break;
@@ -273,10 +349,22 @@ class ScheduleGeneratorController extends Controller
      * 3. Sort and merge overlapping events
      * 4. The gaps between merged events are the free slots
      */
-    private function calculateFreeSlots($fixedEvents, $prefs)
+    private function calculateFreeSlots($fixedEvents, $prefs, $jour = null)
     {
-        $wakeUpTime = $prefs?->wake_up_time ?? '08:00:00';
-        $sleepTime  = $prefs?->sleep_time ?? '22:00:00';
+        // Per-day sleep schedule takes priority over global preferences.
+        // This allows users to have different wake/sleep times on weekends vs weekdays.
+        $sleepSchedule = null;
+        if ($jour) {
+            $sleepSchedule = SleepSchedule::where('user_id', auth()->id())->first();
+        }
+
+        if ($sleepSchedule) {
+            $wakeUpTime = $sleepSchedule->getWakeTimeForDay($jour) . ':00';
+            $sleepTime  = $sleepSchedule->getBedtimeForDay($jour) . ':00';
+        } else {
+            $wakeUpTime = $prefs?->wake_up_time ?? '08:00:00';
+            $sleepTime  = $prefs?->sleep_time ?? '22:00:00';
+        }
 
         $wake  = $this->toMinutes($wakeUpTime);
         $sleep = $this->toMinutes($sleepTime);
@@ -439,8 +527,15 @@ class ScheduleGeneratorController extends Controller
         // The wake/sleep fallback (07:00-23:00) handles the edge case where
         // the user configured wake_up >= sleep_time (misconfigured preferences).
         $prefs = Preference::where('user_id', auth()->id())->first();
-        $wakeMinutes  = $this->toMinutes($prefs?->wake_up_time ?? '08:00:00');
-        $sleepMinutes = $this->toMinutes($prefs?->sleep_time ?? '22:00:00');
+        $sleepSchedule = SleepSchedule::where('user_id', auth()->id())->first();
+
+        if ($sleepSchedule) {
+            $wakeMinutes  = $this->toMinutes($sleepSchedule->getWakeTimeForDay($jour) . ':00');
+            $sleepMinutes = $this->toMinutes($sleepSchedule->getBedtimeForDay($jour) . ':00');
+        } else {
+            $wakeMinutes  = $this->toMinutes($prefs?->wake_up_time ?? '08:00:00');
+            $sleepMinutes = $this->toMinutes($prefs?->sleep_time ?? '22:00:00');
+        }
         if ($wakeMinutes >= $sleepMinutes) {
             $wakeMinutes  = 420; // 07:00
             $sleepMinutes = 1380; // 23:00

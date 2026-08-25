@@ -65,11 +65,11 @@ function ToastItem({ toast, onRemove }) {
     }, []);
 
     const config = {
-        success: { bg: "#ECFDF5", border: "#6EE7B7", color: "#065F46", icon: "✅" },
-        error:   { bg: "#FEF2F2", border: "#FECACA", color: "#991B1B", icon: "❌" },
-        info:    { bg: "#EFF6FF", border: "#BFDBFE", color: "#1E40AF", icon: "ℹ️" },
-        warning: { bg: "#FFFBEB", border: "#FDE68A", color: "#92400E", icon: "⚠️" },
-    }[toast.type] ?? { bg: "#F9FAFB", border: "#E5E7EB", color: "#374151", icon: "💬" };
+        success: { bg: "var(--sp-successBg)", border: "var(--sp-successBorder)", color: "var(--sp-success)", icon: "✅" },
+        error:   { bg: "var(--sp-dangerBg)", border: "var(--sp-dangerBorder)", color: "var(--sp-danger)", icon: "❌" },
+        info:    { bg: "var(--sp-subtleBg)", border: "var(--sp-cardBorder)", color: "var(--sp-accent)", icon: "ℹ️" },
+        warning: { bg: "var(--sp-warningBg)", border: "var(--sp-warningBorder)", color: "var(--sp-warning)", icon: "⚠️" },
+    }[toast.type] ?? { bg: "var(--sp-subtleBg)", border: "var(--sp-cardBorder)", color: "var(--sp-text)", icon: "💬" };
 
     const isRTL = document.documentElement.dir === 'rtl';
     return (
@@ -109,7 +109,7 @@ const s = {
         padding: "12px 16px",
         borderRadius: "12px",
         boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
-        fontSize: "13px",
+        fontSize: "var(--sp-text-base)",
         fontWeight: 500,
         minWidth: "280px",
         maxWidth: "380px",
@@ -117,13 +117,13 @@ const s = {
         pointerEvents: "all",
         fontFamily: "'DM Sans', sans-serif",
     },
-    icon: { fontSize: "16px", flexShrink: 0 },
+    icon: { fontSize: "var(--sp-text-xl)", flexShrink: 0 },
     msg:  { flex: 1, lineHeight: 1.4 },
     close: {
         background: "none",
         border: "none",
         cursor: "pointer",
-        fontSize: "12px",
+        fontSize: "var(--sp-text-sm)",
         opacity: 0.5,
         padding: "0 2px",
         flexShrink: 0,

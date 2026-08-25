@@ -2,6 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Global font ── */
+body, input, button, select, textarea {
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* ── Responsive type scale ── */
+:root {
+    --sp-text-xs: clamp(0.75rem, 0.65rem + 0.18vw, 0.75rem);
+    --sp-text-sm: clamp(0.8125rem, 0.78rem + 0.15vw, 0.8125rem);
+    --sp-text-base: clamp(0.875rem, 0.84rem + 0.18vw, 0.875rem);
+    --sp-text-md: clamp(0.9375rem, 0.88rem + 0.28vw, 1rem);
+    --sp-text-lg: clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
+    --sp-text-xl: clamp(1.1875rem, 1.05rem + 0.68vw, 1.375rem);
+    --sp-text-2xl: clamp(1.375rem, 1.125rem + 1.25vw, 1.75rem);
+    --sp-text-3xl: clamp(1.75rem, 1.3rem + 2.25vw, 2.5rem);
+
+    /* Spacing scale */
+    --sp-space-1: 0.25rem;
+    --sp-space-2: 0.5rem;
+    --sp-space-3: 0.75rem;
+    --sp-space-4: 1rem;
+    --sp-space-5: 1.25rem;
+    --sp-space-6: 1.5rem;
+    --sp-space-8: 2rem;
+    --sp-space-10: 2.5rem;
+    --sp-space-12: 3rem;
+}
+
 /* ── Theme CSS Variables (light defaults, dark overrides) ── */
 :root {
     --sp-body: #F9FAFB;
@@ -130,13 +158,12 @@
     .sp-schedule-grid { grid-template-columns: 1fr !important; }
     .sp-export-grid { grid-template-columns: 1fr !important; }
     .sp-auth-root { flex-direction: column !important; }
-    .sp-auth-left { width: 100% !important; min-height: auto !important; padding: 32px 24px !important; }
-    .sp-auth-left .features, .sp-auth-left .steps { display: none !important; }
-    .sp-auth-left .brand { display: none !important; }
-    .sp-auth-left h1 { font-size: 22px !important; }
-    .sp-auth-left p { display: none !important; }
+    .sp-auth-left { width: 100% !important; min-height: auto !important; padding: 28px 20px !important; }
+    .sp-auth-left .sp-left-features, .sp-auth-left .sp-left-title, .sp-auth-left .sp-left-sub { display: none !important; }
+    .sp-auth-right { padding: 24px 16px !important; }
     .sp-week-grid { grid-template-columns: repeat(2, 1fr) !important; }
-    .sp-week-mini { grid-template-columns: repeat(3, 1fr) !important; }
+    .sp-week-mini { grid-template-columns: repeat(4, 1fr) !important; }
+    .sp-field-row { grid-template-columns: 1fr !important; }
 }
 
 @media (min-width: 769px) {
@@ -156,4 +183,12 @@
 @media (max-width: 480px) {
     .sp-kpi-row { grid-template-columns: repeat(2, 1fr) !important; }
     .sp-week-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .sp-profile-card { padding: 16px !important; }
+}
+
+/* Profile page responsive grid */
+@media (max-width: 768px) {
+    .sp-profile-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
 }

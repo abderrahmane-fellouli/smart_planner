@@ -1,5 +1,6 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
 import AppLayout from '@/Pages/AppLayout';
+import { useLang } from '@/Pages/AppLayout';
 import { useState, useRef } from 'react';
 
 const T = {
@@ -12,7 +13,13 @@ const T = {
       profileUpdated: "✅ Profil mis à jour avec succès !",
       passwordUpdated: "✅ Mot de passe mis à jour !",
       changePhoto: "Changer la photo",
-      fullName: "Nom complet",
+      removePhoto: "Supprimer",
+      removePhotoConfirm: "Supprimer la photo de profil ?",
+      firstName: "Prénom",
+      lastName: "Nom de famille",
+      thirdName: "Troisième nom (optionnel)",
+      pseudonym: "Pseudonyme (optionnel)",
+      pseudonymHint: "Sera utilisé dans la salute du tableau de bord",
       email: "Adresse email",
       emailNotVerified: "⚠️ Votre adresse email n'est pas vérifiée.",
       saveChanges: "Sauvegarder les modifications",
@@ -42,7 +49,13 @@ const T = {
       profileUpdated: "✅ Profile updated successfully!",
       passwordUpdated: "✅ Password updated!",
       changePhoto: "Change photo",
-      fullName: "Full name",
+      removePhoto: "Remove",
+      removePhotoConfirm: "Remove profile photo?",
+      firstName: "First name",
+      lastName: "Family name",
+      thirdName: "Third name (optional)",
+      pseudonym: "Pseudonym (optional)",
+      pseudonymHint: "Used in the dashboard greeting",
       email: "Email address",
       emailNotVerified: "⚠️ Your email address is not verified.",
       saveChanges: "Save changes",
@@ -72,7 +85,13 @@ const T = {
       profileUpdated: "✅ تم تحديث الملف الشخصي بنجاح!",
       passwordUpdated: "✅ تم تحديث كلمة المرور!",
       changePhoto: "تغيير الصورة",
-      fullName: "الاسم الكامل",
+      removePhoto: "إزالة",
+      removePhotoConfirm: "إزالة الصورة الشخصية؟",
+      firstName: "الاسم الأول",
+      lastName: "اسم العائلة",
+      thirdName: "الاسم الثالث (اختياري)",
+      pseudonym: "الاسم المستعار (اختياري)",
+      pseudonymHint: "يُستخدم في تحية لوحة التحكم",
       email: "البريد الإلكتروني",
       emailNotVerified: "⚠️ بريدك الإلكتروني غير مؤكد.",
       saveChanges: "حفظ التغييرات",
@@ -100,13 +119,8 @@ export default function Edit({ mustVerifyEmail, status }) {
   const user = auth.user;
 
   // Language detection
-  let lang = "fr";
-  if (typeof window !== "undefined") {
-    lang = localStorage.getItem("smartplanner_lang") || "fr";
-  }
+  const { lang } = useLang();
   const tr = T[lang]?.profile || T.fr.profile;
-  const isRTL = lang === "ar";
-
   // Status message mapping
   let displayStatus = null;
   if (status === 'profile-updated') displayStatus = tr.profileUpdated;
@@ -118,7 +132,10 @@ export default function Edit({ mustVerifyEmail, status }) {
 
   // Forms
   const profileForm = useForm({
-    name:  user.name,
+    first_name: user.first_name || '',
+    last_name: user.last_name || '',
+    third_name: user.third_name || '',
+    pseudonym: user.pseudonym || '',
     email: user.email,
     photo: null,
   });
@@ -159,25 +176,23 @@ export default function Edit({ mustVerifyEmail, status }) {
     deleteForm.delete(route('profile.destroy'));
   };
 
-  const initials = user.name?.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'U';
+  const nameForInitials = user.display_name || user.name || '';
+  const initials = nameForInitials.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2) || 'U';
   const avatarSrc = photoPreview || user.profile_photo_url || null;
-
-  // Helper for RTL-aware styles
-  const rtlStyle = (base, rtlOverrides) => isRTL ? { ...base, ...rtlOverrides } : base;
 
   return (
     <AppLayout>
       <Head title={tr.title} />
-      <div style={{ ...s.page, direction: isRTL ? "rtl" : "ltr" }}>
+      <div style={s.page}>
 
         {/* Header */}
-        <div style={rtlStyle(s.header, { textAlign: 'right' })}>
+        <div style={s.header}>
           <h1 style={s.title}>{tr.title}</h1>
           <p style={s.subtitle}>{tr.subtitle}</p>
         </div>
 
         {/* Profile card */}
-        <div style={s.card}>
+        <div style={s.card} className="sp-profile-card">
           <h2 style={s.cardTitle}>{tr.profileInfo}</h2>
           <p style={s.cardSub}>{tr.profileSub}</p>
 
@@ -185,10 +200,10 @@ export default function Edit({ mustVerifyEmail, status }) {
             <div style={s.successMsg}>{displayStatus}</div>
           )}
 
-          <form onSubmit={submitProfile} style={s.form}>
+          <form onSubmit={submitProfile} style={s.form} encType="multipart/form-data">
 
             {/* Avatar */}
-            <div style={rtlStyle(s.avatarSection, { flexDirection: 'row-reverse' })}>
+            <div style={s.avatarSection}>
               <div style={s.avatarWrap}>
                 {avatarSrc ? (
                   <img src={avatarSrc} alt="Avatar" style={s.avatarImg} />
@@ -211,50 +226,104 @@ export default function Edit({ mustVerifyEmail, status }) {
                 onChange={handlePhotoChange}
                 style={{ display: 'none' }}
               />
-              <div style={{ textAlign: isRTL ? 'right' : 'left' }}>
-                <p style={s.avatarName}>{user.name}</p>
+              <div style={{ textAlign: "start" }}>
+                <p style={s.avatarName}>{user.display_name || user.name}</p>
                 <p style={s.avatarEmail}>{user.email}</p>
-                <button
-                  type="button"
-                  onClick={() => photoRef.current?.click()}
-                  style={s.changePhotoBtn}
-                >
-                  {tr.changePhoto}
-                </button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => photoRef.current?.click()}
+                    style={s.changePhotoBtn}
+                  >
+                    {tr.changePhoto}
+                  </button>
+                  {(photoPreview || user.profile_photo_url) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (confirm(tr.removePhotoConfirm || 'Remove profile photo?')) {
+                          router.delete(route('profile.photo.destroy'), {
+                            onSuccess: () => setPhotoPreview(null),
+                          });
+                        }
+                      }}
+                      style={{ ...s.changePhotoBtn, color: 'var(--sp-error)', borderColor: 'var(--sp-errorBorder)' }}
+                    >
+                      {tr.removePhoto || 'Remove'}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Fields */}
-            <div style={s.row2}>
+            <div style={s.row2} className="sp-profile-grid-2">
               <div style={s.field}>
-                <label style={s.label} htmlFor="profile-name">{tr.fullName}</label>
+                <label style={s.label} htmlFor="profile-first-name">{tr.firstName}</label>
                 <input
-                  id="profile-name"
+                  id="profile-first-name"
                   type="text"
-                  value={profileForm.data.name}
-                  onChange={e => profileForm.setData('name', e.target.value)}
-                  style={{ ...s.input, ...(profileForm.errors.name ? s.inputError : {}) }}
+                  value={profileForm.data.first_name}
+                  onChange={e => profileForm.setData('first_name', e.target.value)}
+                  style={{ ...s.input, ...(profileForm.errors.first_name ? s.inputError : {}) }}
                 />
-                {profileForm.errors.name && <span style={s.error} role="alert">{profileForm.errors.name}</span>}
+                {profileForm.errors.first_name && <span style={s.error} role="alert">{profileForm.errors.first_name}</span>}
               </div>
               <div style={s.field}>
-                <label style={s.label} htmlFor="profile-email">{tr.email}</label>
+                <label style={s.label} htmlFor="profile-last-name">{tr.lastName}</label>
                 <input
-                  id="profile-email"
-                  type="email"
-                  value={profileForm.data.email}
-                  onChange={e => profileForm.setData('email', e.target.value)}
-                  style={{ ...s.input, ...(profileForm.errors.email ? s.inputError : {}) }}
+                  id="profile-last-name"
+                  type="text"
+                  value={profileForm.data.last_name}
+                  onChange={e => profileForm.setData('last_name', e.target.value)}
+                  style={{ ...s.input, ...(profileForm.errors.last_name ? s.inputError : {}) }}
                 />
-                {profileForm.errors.email && <span style={s.error} role="alert">{profileForm.errors.email}</span>}
+                {profileForm.errors.last_name && <span style={s.error} role="alert">{profileForm.errors.last_name}</span>}
               </div>
+            </div>
+
+            <div style={s.field}>
+              <label style={s.label} htmlFor="profile-third-name">{tr.thirdName}</label>
+              <input
+                id="profile-third-name"
+                type="text"
+                value={profileForm.data.third_name}
+                onChange={e => profileForm.setData('third_name', e.target.value)}
+                style={{ ...s.input, ...(profileForm.errors.third_name ? s.inputError : {}) }}
+              />
+              {profileForm.errors.third_name && <span style={s.error} role="alert">{profileForm.errors.third_name}</span>}
+            </div>
+
+            <div style={s.field}>
+              <label style={s.label} htmlFor="profile-pseudonym">{tr.pseudonym}</label>
+              <input
+                id="profile-pseudonym"
+                type="text"
+                value={profileForm.data.pseudonym}
+                onChange={e => profileForm.setData('pseudonym', e.target.value)}
+                style={{ ...s.input, ...(profileForm.errors.pseudonym ? s.inputError : {}) }}
+              />
+              {profileForm.errors.pseudonym && <span style={s.error} role="alert">{profileForm.errors.pseudonym}</span>}
+              <span style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textMuted)' }}>{tr.pseudonymHint}</span>
+            </div>
+
+            <div style={s.field}>
+              <label style={s.label} htmlFor="profile-email">{tr.email}</label>
+              <input
+                id="profile-email"
+                type="email"
+                value={profileForm.data.email}
+                onChange={e => profileForm.setData('email', e.target.value)}
+                style={{ ...s.input, ...(profileForm.errors.email ? s.inputError : {}) }}
+              />
+              {profileForm.errors.email && <span style={s.error} role="alert">{profileForm.errors.email}</span>}
             </div>
 
             {mustVerifyEmail && user.email_verified_at === null && (
               <div style={s.warningMsg}>{tr.emailNotVerified}</div>
             )}
 
-            <div style={rtlStyle(s.formFooter, { justifyContent: 'flex-start' })}>
+            <div style={s.formFooter}>
               <button type="submit" disabled={profileForm.processing} style={s.saveBtn}>
                 {profileForm.processing ? tr.saving : tr.saveChanges}
               </button>
@@ -263,7 +332,7 @@ export default function Edit({ mustVerifyEmail, status }) {
         </div>
 
         {/* Password card */}
-        <div style={s.card}>
+        <div style={s.card} className="sp-profile-card">
           <h2 style={s.cardTitle}>{tr.passwordSection}</h2>
           <p style={s.cardSub}>{tr.passwordSub}</p>
 
@@ -285,7 +354,7 @@ export default function Edit({ mustVerifyEmail, status }) {
               {passwordForm.errors.current_password && <span style={s.error} role="alert">{passwordForm.errors.current_password}</span>}
             </div>
 
-            <div style={s.row2}>
+            <div style={s.row2} className="sp-profile-grid-2">
               <div style={s.field}>
                 <label style={s.label} htmlFor="new-password">{tr.newPassword}</label>
                 <input
@@ -312,7 +381,7 @@ export default function Edit({ mustVerifyEmail, status }) {
               </div>
             </div>
 
-            <div style={rtlStyle(s.formFooter, { justifyContent: 'flex-start' })}>
+            <div style={s.formFooter}>
               <button type="submit" disabled={passwordForm.processing} style={s.saveBtn}>
                 {passwordForm.processing ? tr.updating : tr.updatePassword}
               </button>
@@ -321,7 +390,7 @@ export default function Edit({ mustVerifyEmail, status }) {
         </div>
 
         {/* Danger zone */}
-        <div style={{ ...s.card, border: '1px solid var(--sp-dangerBorder)', background: 'var(--sp-dangerBg)' }}>
+        <div style={{ ...s.card, border: '1px solid var(--sp-dangerBorder)', background: 'var(--sp-dangerBg)' }} className="sp-profile-card">
           <h2 style={{ ...s.cardTitle, color: 'var(--sp-danger)' }}>{tr.dangerZone}</h2>
           <p style={s.cardSub}>{tr.dangerSub}</p>
 
@@ -343,7 +412,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                 />
                 {deleteForm.errors.password && <span style={s.error} role="alert">{deleteForm.errors.password}</span>}
               </div>
-              <div style={{ ...s.row2, gap: '10px' }}>
+              <div style={{ ...s.row2, gap: '10px' }} className="sp-profile-grid-2">
                 <button type="button" onClick={() => setShowDelete(false)} style={s.cancelBtn}>
                   {tr.cancel}
                 </button>
@@ -363,39 +432,39 @@ export default function Edit({ mustVerifyEmail, status }) {
 // Styles (same as original, direction‑sensitive fields already handled)
 const s = {
   page: { maxWidth: '720px', margin: '0 auto', padding: '32px 24px 60px', fontFamily: "'DM Sans', sans-serif", display: 'flex', flexDirection: 'column', gap: '20px', overflowX: 'hidden' },
-  header: { marginBottom: '4px' },
-  title: { fontSize: '22px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
-  subtitle: { fontSize: '14px', color: 'var(--sp-textSecondary)', margin: 0 },
+  header: { marginBottom: '4px', textAlign: 'start' },
+  title: { fontSize: 'var(--sp-text-2xl)', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
+  subtitle: { fontSize: 'var(--sp-text-lg)', color: 'var(--sp-textSecondary)', margin: 0 },
 
   card: { background: 'var(--sp-card)', border: '1px solid var(--sp-cardBorder)', borderRadius: '16px', padding: '24px 28px' },
-  cardTitle: { fontSize: '16px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
-  cardSub: { fontSize: '13px', color: 'var(--sp-textMuted)', margin: '0 0 20px' },
+  cardTitle: { fontSize: 'var(--sp-text-xl)', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
+  cardSub: { fontSize: 'var(--sp-text-base)', color: 'var(--sp-textMuted)', margin: '0 0 20px' },
 
-  successMsg: { background: 'var(--sp-successBg)', border: '1px solid var(--sp-successBorder)', color: 'var(--sp-success)', borderRadius: '10px', padding: '10px 14px', fontSize: '13px', marginBottom: '16px' },
-  warningMsg: { background: 'var(--sp-warningBg)', border: '1px solid var(--sp-warningBorder)', color: 'var(--sp-warning)', borderRadius: '10px', padding: '10px 14px', fontSize: '13px' },
+  successMsg: { background: 'var(--sp-successBg)', border: '1px solid var(--sp-successBorder)', color: 'var(--sp-success)', borderRadius: '10px', padding: '10px 14px', fontSize: 'var(--sp-text-base)', marginBottom: '16px' },
+  warningMsg: { background: 'var(--sp-warningBg)', border: '1px solid var(--sp-warningBorder)', color: 'var(--sp-warning)', borderRadius: '10px', padding: '10px 14px', fontSize: 'var(--sp-text-base)' },
 
   // Avatar
-  avatarSection: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', padding: '16px', background: 'var(--sp-hoverBg)', borderRadius: '12px' },
+  avatarSection: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', padding: '16px', background: 'var(--sp-hoverBg)', borderRadius: '12px', flexWrap: 'wrap' },
   avatarWrap: { position: 'relative', flexShrink: 0 },
   avatarImg: { width: '72px', height: '72px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--sp-cardBorder)' },
-  avatarFallback: { width: '72px', height: '72px', borderRadius: '50%', background: 'var(--sp-accentLight)', color: 'var(--sp-accent)', fontSize: '22px', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid var(--sp-cardBorder)' },
-  avatarEditBtn: { position: 'absolute', bottom: 0, right: 0, width: '24px', height: '24px', borderRadius: '50%', background: 'var(--sp-accent)', border: '2px solid var(--sp-card)', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  avatarName: { fontSize: '15px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 2px' },
-  avatarEmail: { fontSize: '13px', color: 'var(--sp-textSecondary)', margin: '0 0 10px' },
-  changePhotoBtn: { background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', padding: '6px 14px', fontSize: '12px', color: 'var(--sp-text)', cursor: 'pointer', fontWeight: 500 },
+  avatarFallback: { width: '72px', height: '72px', borderRadius: '50%', background: 'var(--sp-accentLight)', color: 'var(--sp-accent)', fontSize: 'var(--sp-text-2xl)', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '3px solid var(--sp-cardBorder)' },
+  avatarEditBtn: { position: 'absolute', bottom: 0, insetInlineEnd: 0, width: '24px', height: '24px', borderRadius: '50%', background: 'var(--sp-accent)', border: '2px solid var(--sp-card)', cursor: 'pointer', fontSize: 'var(--sp-text-xs)', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+  avatarName: { fontSize: 'var(--sp-text-lg)', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 2px' },
+  avatarEmail: { fontSize: 'var(--sp-text-base)', color: 'var(--sp-textSecondary)', margin: '0 0 10px' },
+  changePhotoBtn: { background: 'none', border: '1px solid var(--sp-cardBorder)', borderRadius: '8px', padding: '6px 14px', fontSize: 'var(--sp-text-sm)', color: 'var(--sp-text)', cursor: 'pointer', fontWeight: 500 },
 
   form: { display: 'flex', flexDirection: 'column', gap: '16px' },
   row2: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
-  field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
-  input: { padding: '11px 14px', borderRadius: '10px', border: '1.5px solid var(--sp-inputBorder)', fontSize: '14px', background: 'var(--sp-inputBg)', color: 'var(--sp-text)', outline: 'none', fontFamily: "'DM Sans', sans-serif" },
+  field: { display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0, width: '100%', boxSizing: 'border-box' },
+  label: { fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-text)' },
+  input: { padding: '11px 14px', borderRadius: '10px', border: '1.5px solid var(--sp-inputBorder)', fontSize: 'var(--sp-text-lg)', background: 'var(--sp-inputBg)', color: 'var(--sp-text)', outline: 'none', fontFamily: "'DM Sans', sans-serif" },
   inputError: { borderColor: 'var(--sp-dangerBorder)' },
-  error: { fontSize: '12px', color: 'var(--sp-danger)', fontWeight: 500 },
+  error: { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-danger)', fontWeight: 500 },
 
   formFooter: { display: 'flex', justifyContent: 'flex-end', paddingTop: '4px' },
-  saveBtn: { padding: '10px 24px', background: 'var(--sp-accent)', color: 'var(--sp-accentText)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
+  saveBtn: { padding: '10px 24px', background: 'var(--sp-accent)', color: 'var(--sp-accentText)', border: 'none', borderRadius: '10px', fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" },
 
-  deleteBtn: { padding: '10px 20px', background: 'none', border: '1px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' },
-  cancelBtn: { flex: 1, padding: '10px', background: 'var(--sp-subtleBg)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: 'var(--sp-text)' },
-  confirmDeleteBtn: { flex: 1, padding: '10px', background: 'var(--sp-danger)', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', color: 'var(--sp-accentText)' },
+  deleteBtn: { padding: '10px 20px', background: 'none', border: '1px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', borderRadius: '10px', fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer' },
+  cancelBtn: { flex: 1, padding: '10px', background: 'var(--sp-subtleBg)', border: 'none', borderRadius: '10px', fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer', color: 'var(--sp-text)' },
+  confirmDeleteBtn: { flex: 1, padding: '10px', background: 'var(--sp-danger)', border: 'none', borderRadius: '10px', fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer', color: 'var(--sp-accentText)' },
 };

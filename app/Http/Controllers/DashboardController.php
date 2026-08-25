@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FixedEvent;
 use App\Models\OptimizedSchedule;
+use App\Models\TodoItem;
 use Carbon\Carbon;
 use Inertia\Inertia;
 
@@ -54,6 +55,15 @@ class DashboardController extends Controller
             }
         }
 
+        // Todo stats for dashboard widget
+        $todoTotal = TodoItem::where('user_id', $user->id)->count();
+        $todoCompleted = TodoItem::where('user_id', $user->id)->completed()->count();
+        $pendingTodos = TodoItem::where('user_id', $user->id)
+            ->pending()
+            ->orderBy('sort_order')
+            ->limit(5)
+            ->get();
+
         return Inertia::render('Dashboard', [
             'user'             => $user,
             'activeSchedule'   => $activeSchedule,
@@ -63,6 +73,12 @@ class DashboardController extends Controller
             'weekSummary'      => $weekSummary,
             'todayName'        => $todayName,
             'tomorrowName'     => $tomorrowName,
+            'todoStats'        => [
+                'total'     => $todoTotal,
+                'completed' => $todoCompleted,
+                'pending'   => $todoTotal - $todoCompleted,
+            ],
+            'pendingTodos'     => $pendingTodos,
         ]);
     }
 }

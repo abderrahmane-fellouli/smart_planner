@@ -10,8 +10,8 @@ class Preference extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'wake_up_time', 'sleep_time', 'study_preference', 
-        'concentration_hours', 'desired_free_time', 'priorities'
+        'user_id', 'wake_up_time', 'sleep_time', 'study_preference',
+        'concentration_hours', 'desired_free_time', 'priorities', 'theme'
     ];
 
     public function user()

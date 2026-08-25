@@ -3,6 +3,7 @@
 use App\Models\FixedEvent;
 use App\Models\OptimizedSchedule;
 use App\Models\Preference;
+use App\Models\TodoItem;
 use App\Models\User;
 
 /*
@@ -1304,4 +1305,250 @@ test('schedule generation supports Dimanche (day 7) fixed events', function () {
     $equilibre = OptimizedSchedule::where('user_id', $user->id)->where('type', 'equilibre')->first();
     $dimancheFixed = collect($equilibre->schedule['details']['Dimanche']['cours_fixes']);
     expect($dimancheFixed->pluck('title'))->toContain('Sunday Special');
+});
+
+// ─────────────────────────────────────────────────
+// 8. DAILY TASKS (TodoItem) INTEGRATION IN SCHEDULES
+// ─────────────────────────────────────────────────
+
+test('daily tasks are included in schedule as study sessions', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Preference::create([
+        'user_id' => $user->id,
+        'wake_up_time' => '07:00',
+        'sleep_time' => '23:00',
+        'study_preference' => 'normal',
+        'concentration_hours' => 3,
+        'desired_free_time' => 2,
+    ]);
+
+    FixedEvent::create([
+        'user_id' => $user->id,
+        'title' => 'Mathématiques',
+        'day_of_week' => 'Lundi',
+        'start_time' => '08:00:00',
+        'end_time' => '09:00:00',
+    ]);
+
+    TodoItem::create([
+        'user_id' => $user->id,
+        'title' => 'Révision Ch.3',
+        'completed' => false,
+        'priority' => 3,
+        'is_scheduled' => true,
+        'scheduled_day' => 'Lundi',
+        'scheduled_time' => '09:00',
+        'scheduled_duration' => 60,
+    ]);
+
+    $this->post('/schedules/generate')->assertRedirect();
+
+    $equilibre = OptimizedSchedule::where('user_id', $user->id)->where('type', 'equilibre')->first();
+    $lundiSessions = $equilibre->schedule['details']['Lundi']['sessions_etude'];
+
+    $todoSession = collect($lundiSessions)->first(fn($s) => $s['matiere'] === 'Révision Ch.3');
+    expect($todoSession)->not->toBeNull();
+    expect($todoSession['debut'])->toBe('09:00');
+    expect($todoSession['fin'])->toBe('10:00');
+    expect($todoSession['duree'])->toBe(60);
+});
+
+test('daily tasks do not overlap with fixed events', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Preference::create([
+        'user_id' => $user->id,
+        'wake_up_time' => '07:00',
+        'sleep_time' => '23:00',
+        'study_preference' => 'normal',
+        'concentration_hours' => 3,
+        'desired_free_time' => 2,
+    ]);
+
+    FixedEvent::create([
+        'user_id' => $user->id,
+        'title' => 'Mathématiques',
+        'day_of_week' => 'Lundi',
+        'start_time' => '09:00:00',
+        'end_time' => '11:00:00',
+    ]);
+
+    TodoItem::create([
+        'user_id' => $user->id,
+        'title' => 'Devoir maison',
+        'completed' => false,
+        'priority' => 3,
+        'is_scheduled' => true,
+        'scheduled_day' => 'Lundi',
+        'scheduled_time' => '09:00',
+        'scheduled_duration' => 60,
+    ]);
+
+    $this->post('/schedules/generate')->assertRedirect();
+
+    $equilibre = OptimizedSchedule::where('user_id', $user->id)->where('type', 'equilibre')->first();
+    $lundiSessions = $equilibre->schedule['details']['Lundi']['sessions_etude'];
+
+    $todoSession = collect($lundiSessions)->first(fn($s) => $s['matiere'] === 'Devoir maison');
+    if ($todoSession) {
+        $sessionStart = strtotime($todoSession['debut']);
+        $sessionEnd   = strtotime($todoSession['fin']);
+        $fixedStart   = strtotime('09:00');
+        $fixedEnd     = strtotime('11:00');
+
+        $overlaps = $sessionStart < $fixedEnd && $sessionEnd > $fixedStart;
+        expect($overlaps)->toBeFalse();
+    }
+});
+
+test('daily tasks respect wake/sleep boundaries', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Preference::create([
+        'user_id' => $user->id,
+        'wake_up_time' => '07:00',
+        'sleep_time' => '23:00',
+        'study_preference' => 'normal',
+        'concentration_hours' => 3,
+        'desired_free_time' => 2,
+    ]);
+
+    FixedEvent::create([
+        'user_id' => $user->id,
+        'title' => 'Anglais',
+        'day_of_week' => 'Lundi',
+        'start_time' => '10:00:00',
+        'end_time' => '12:00:00',
+    ]);
+
+    TodoItem::create([
+        'user_id' => $user->id,
+        'title' => 'Matin tôt',
+        'completed' => false,
+        'priority' => 3,
+        'is_scheduled' => true,
+        'scheduled_day' => 'Lundi',
+        'scheduled_time' => '06:00',
+        'scheduled_duration' => 60,
+    ]);
+
+    $this->post('/schedules/generate')->assertRedirect();
+
+    $equilibre = OptimizedSchedule::where('user_id', $user->id)->where('type', 'equilibre')->first();
+    $lundiSessions = $equilibre->schedule['details']['Lundi']['sessions_etude'];
+
+    $todoSession = collect($lundiSessions)->first(fn($s) => $s['matiere'] === 'Matin tôt');
+    if ($todoSession) {
+        expect($todoSession['debut'])->toBeGreaterThanOrEqual('07:00');
+    }
+});
+
+test('non-scheduled todos are not included in schedule', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Preference::create([
+        'user_id' => $user->id,
+        'wake_up_time' => '07:00',
+        'sleep_time' => '23:00',
+        'study_preference' => 'normal',
+        'concentration_hours' => 3,
+        'desired_free_time' => 2,
+    ]);
+
+    FixedEvent::create([
+        'user_id' => $user->id,
+        'title' => 'Physique',
+        'day_of_week' => 'Lundi',
+        'start_time' => '10:00:00',
+        'end_time' => '12:00:00',
+    ]);
+
+    TodoItem::create([
+        'user_id' => $user->id,
+        'title' => 'Courses personnelles',
+        'completed' => false,
+        'priority' => 3,
+        'is_scheduled' => false,
+    ]);
+
+    $this->post('/schedules/generate')->assertRedirect();
+
+    $schedules = OptimizedSchedule::where('user_id', $user->id)->get();
+    foreach ($schedules as $schedule) {
+        foreach ($schedule->schedule['details'] as $day => $data) {
+            foreach ($data['sessions_etude'] as $session) {
+                expect($session['matiere'])->not->toBe('Courses personnelles');
+            }
+        }
+    }
+});
+
+test('multiple daily tasks on same day are all included', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Preference::create([
+        'user_id' => $user->id,
+        'wake_up_time' => '07:00',
+        'sleep_time' => '23:00',
+        'study_preference' => 'normal',
+        'concentration_hours' => 3,
+        'desired_free_time' => 2,
+    ]);
+
+    FixedEvent::create([
+        'user_id' => $user->id,
+        'title' => 'Chimie',
+        'day_of_week' => 'Lundi',
+        'start_time' => '12:00:00',
+        'end_time' => '13:00:00',
+    ]);
+
+    TodoItem::create([
+        'user_id' => $user->id,
+        'title' => 'Tâche A',
+        'completed' => false,
+        'priority' => 3,
+        'is_scheduled' => true,
+        'scheduled_day' => 'Lundi',
+        'scheduled_time' => '08:00',
+        'scheduled_duration' => 60,
+    ]);
+
+    TodoItem::create([
+        'user_id' => $user->id,
+        'title' => 'Tâche B',
+        'completed' => false,
+        'priority' => 3,
+        'is_scheduled' => true,
+        'scheduled_day' => 'Lundi',
+        'scheduled_time' => '10:00',
+        'scheduled_duration' => 60,
+    ]);
+
+    TodoItem::create([
+        'user_id' => $user->id,
+        'title' => 'Tâche C',
+        'completed' => false,
+        'priority' => 3,
+        'is_scheduled' => true,
+        'scheduled_day' => 'Lundi',
+        'scheduled_time' => '14:00',
+        'scheduled_duration' => 60,
+    ]);
+
+    $this->post('/schedules/generate')->assertRedirect();
+
+    $equilibre = OptimizedSchedule::where('user_id', $user->id)->where('type', 'equilibre')->first();
+    $lundiSessions = $equilibre->schedule['details']['Lundi']['sessions_etude'];
+    $matieres = collect($lundiSessions)->pluck('matiere')->toArray();
+
+    expect($matieres)->toContain('Tâche A');
+    expect($matieres)->toContain('Tâche B');
+    expect($matieres)->toContain('Tâche C');
 });

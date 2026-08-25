@@ -386,3 +386,111 @@ test('user cannot delete another users fixed event', function () {
     $this->actingAs($attacker)->delete("/fixed-events/{$event->id}")->assertNotFound();
     $this->assertDatabaseHas('fixed_events', ['id' => $event->id]);
 });
+
+// ── Regression: TodoItem belongs to correct user ──
+
+test('user cannot see another users todos', function () {
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+
+    $this->actingAs($user1)->post('/todos', ['title' => 'User1 Todo']);
+    $this->actingAs($user2)->post('/todos', ['title' => 'User2 Todo']);
+
+    $response = $this->actingAs($user1)->get('/todos');
+    $response->assertStatus(200);
+    $content = $response->getContent();
+    $this->assertStringContainsString('User1 Todo', $content);
+    $this->assertStringNotContainsString('User2 Todo', $content);
+});
+
+test('user cannot delete another users todo', function () {
+    $user1 = User::factory()->create();
+    $user2 = User::factory()->create();
+
+    $this->actingAs($user1)->post('/todos', ['title' => 'User1 Todo']);
+    $this->actingAs($user2)->post('/todos', ['title' => 'User2 Todo']);
+
+    $todo = \App\Models\TodoItem::where('user_id', $user2->id)->first();
+    $this->actingAs($user1)->delete("/todos/{$todo->id}")->assertNotFound();
+    $this->assertDatabaseHas('todo_items', ['id' => $todo->id]);
+});
+
+// ── Regression: Preference update does not lose theme ──
+
+test('updating preferences preserves theme', function () {
+    $user = User::factory()->create();
+
+    Preference::create([
+        'user_id' => $user->id,
+        'wake_up_time' => '07:00',
+        'sleep_time' => '22:00',
+        'study_preference' => 'morning',
+        'concentration_hours' => 4,
+        'desired_free_time' => 2,
+        'theme' => 'softBlush',
+    ]);
+
+    $this->actingAs($user)->post('/preferences', [
+        'wake_up_time' => '06:30',
+        'sleep_time' => '22:00',
+        'study_preference' => 'morning',
+        'concentration_hours' => 4,
+        'desired_free_time' => 2,
+        'theme' => 'softBlush',
+    ]);
+
+    $this->assertDatabaseHas('preferences', [
+        'user_id' => $user->id,
+        'theme' => 'softBlush',
+        'wake_up_time' => '06:30',
+    ]);
+});
+
+// ── Regression: Schedule generation with no preferences uses defaults ──
+
+test('schedule generation succeeds without preference record', function () {
+    $user = User::factory()->create();
+
+    $this->assertDatabaseMissing('preferences', ['user_id' => $user->id]);
+
+    FixedEvent::create([
+        'user_id' => $user->id,
+        'title' => 'Math',
+        'day_of_week' => 'Lundi',
+        'start_time' => '08:00:00',
+        'end_time' => '10:00:00',
+    ]);
+
+    $this->actingAs($user)->post('/schedules/generate')->assertRedirect();
+    $this->assertDatabaseCount('optimized_schedules', 3);
+});
+
+// ── Regression: TodoItem description is optional ──
+
+test('todo item can be created without description', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/todos', ['title' => 'No Description Todo']);
+    $this->assertDatabaseHas('todo_items', [
+        'user_id' => $user->id,
+        'title' => 'No Description Todo',
+        'description' => null,
+    ]);
+});
+
+// ── Regression: TodoItem scheduling fields are optional ──
+
+test('todo item saves with defaults when scheduling fields omitted', function () {
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->post('/todos', [
+        'title' => 'Simple Todo',
+        'priority' => 2,
+    ]);
+
+    $todo = \App\Models\TodoItem::where('user_id', $user->id)->first();
+    $this->assertEquals(false, $todo->is_scheduled);
+    $this->assertNull($todo->scheduled_day);
+    $this->assertNull($todo->scheduled_time);
+    $this->assertNull($todo->scheduled_duration);
+});

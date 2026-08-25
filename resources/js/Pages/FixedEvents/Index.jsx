@@ -2,29 +2,30 @@
 import { useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Pages/AppLayout';
 import { Head } from '@inertiajs/react';
+import TimeInput from '@/Components/TimeInput';
 
 const T = {
   fr: {
     fixedEvents: {
       title: "Cours fixes",
-      subtitle: "Ajoutez vos cours pour que l'IA gÃ©nÃ¨re votre planning",
-      statBadge: "{count} cours enregistrÃ©s",
+      subtitle: "Ajoutez vos cours pour que l'IA génère votre planning",
+      statBadge: "{count} cours enregistrés",
       addCourse: "Ajouter un cours",
-      subject: "MatiÃ¨re",
-      subjectPlaceholder: "Ex: MathÃ©matiques",
+      subject: "Matière",
+      subjectPlaceholder: "Ex: Mathématiques",
       teacher: "Enseignant",
       teacherPlaceholder: "Ex: M. Dupont",
       description: "Description",
       descriptionPlaceholder: "Notes optionnelles sur le cours...",
       day: "Jour",
       everyDay: "Tous les jours",
-      everyDayDesc: "Appliquer Ã  tous les jours (lundiâ€“samedi)",
-      startTime: "Heure dÃ©but",
+      everyDayDesc: "Appliquer à tous les jours (lundi–samedi)",
+      startTime: "Heure début",
       endTime: "Heure fin",
       addButton: "+ Ajouter le cours",
       adding: "Ajout en cours...",
       courseList: "Liste des cours",
-      emptyTitle: "Aucun cours ajoutÃ©",
+      emptyTitle: "Aucun cours ajouté",
       emptyDesc: "Ajoutez votre premier cours avec le formulaire",
       deleteConfirm: "Supprimer ce cours ?",
       days: {
@@ -51,7 +52,7 @@ const T = {
       descriptionPlaceholder: "Optional notes about the course...",
       day: "Day",
       everyDay: "Every day",
-      everyDayDesc: "Apply to all days (Mondayâ€“Saturday)",
+      everyDayDesc: "Apply to all days (Monday–Saturday)",
       startTime: "Start time",
       endTime: "End time",
       addButton: "+ Add course",
@@ -72,67 +73,39 @@ const T = {
   },
   ar: {
     fixedEvents: {
-      title: "Ø§Ù„Ø¯Ø±ÙˆØ³ Ø§Ù„Ø«Ø§Ø¨ØªØ©",
-      subtitle: "Ø£Ø¶Ù Ø¯Ø±ÙˆØ³Ùƒ Ù„ÙŠØªÙ…ÙƒÙ† Ø§Ù„Ø°ÙƒØ§Ø¡ Ø§Ù„Ø§ØµØ·Ù†Ø§Ø¹ÙŠ Ù…Ù† Ø¥Ù†Ø´Ø§Ø¡ Ø¬Ø¯ÙˆÙ„Ùƒ",
-      statBadge: "{count} Ø¯Ø±Ø³ Ù…Ø­ÙÙˆØ¸",
-      addCourse: "Ø¥Ø¶Ø§ÙØ© Ø¯Ø±Ø³",
-      subject: "Ø§Ù„Ù…Ø§Ø¯Ø©",
-      subjectPlaceholder: "Ù…Ø«Ø§Ù„: Ø§Ù„Ø±ÙŠØ§Ø¶ÙŠØ§Øª",
-      teacher: "Ø§Ù„Ù…Ø¹Ù„Ù…",
-      teacherPlaceholder: "Ù…Ø«Ø§Ù„: Ø§Ù„Ø³ÙŠØ¯ Ø£Ø­Ù…Ø¯",
-      description: "Ø§Ù„ÙˆØµÙ",
-      descriptionPlaceholder: "Ù…Ù„Ø§Ø­Ø¸Ø§Øª Ø®Ø§ØµØ© Ø¹Ù† Ø§Ù„Ø¯Ø±Ø³...",
-      day: "Ø§Ù„ÙŠÙˆÙ…",
-      everyDay: "ÙƒÙ„ ÙŠÙˆÙ…",
-      everyDayDesc: "ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ ÙƒÙ„ Ø§Ù„Ø£ÙŠØ§Ù… (Ø§Ù„Ø§Ø«Ù†ÙŠÙ†â€“Ø§Ù„Ø³Ø¨Øª)",
-      startTime: "ÙˆÙ‚Øª Ø§Ù„Ø¨Ø¯Ø¡",
-      endTime: "ÙˆÙ‚Øª Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡",
-      addButton: "+ Ø¥Ø¶Ø§ÙØ© Ø¯Ø±Ø³",
-      adding: "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¥Ø¶Ø§ÙØ©...",
-      courseList: "Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¯Ø±ÙˆØ³",
-      emptyTitle: "Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¯Ø±ÙˆØ³ Ù…Ø¶Ø§ÙØ©",
-      emptyDesc: "Ø£Ø¶Ù Ø¯Ø±Ø³Ùƒ Ø§Ù„Ø£ÙˆÙ„ Ø¨Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„Ù†Ù…ÙˆØ°Ø¬",
-      deleteConfirm: "Ù‡Ù„ ØªØ±ÙŠØ¯ Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø¯Ø±Ø³ØŸ",
+      title: "الدروس الثابتة",
+      subtitle: "أضف دروسك لتوليد جدولك الزمني بالذكاء الاصطناعي",
+      statBadge: "{count} درس محفوظ",
+      addCourse: "إضافة درس",
+      subject: "المادة",
+      subjectPlaceholder: "مثال: الرياضيات",
+      teacher: "المعلم",
+      teacherPlaceholder: "مثال: الأستاذ أحمد",
+      description: "الوصف",
+      descriptionPlaceholder: "ملاحظات اختيارية حول الدرس...",
+      day: "اليوم",
+      everyDay: "كل يوم",
+      everyDayDesc: "تطبيق على كل الأيام (الإثنين–السبت)",
+      startTime: "وقت البداية",
+      endTime: "وقت النهاية",
+      addButton: "+ إضافة درس",
+      adding: "جاري الإضافة...",
+      courseList: "قائمة الدروس",
+      emptyTitle: "لم تتم إضافة أي درس",
+      emptyDesc: "أضف درسك الأول باستخدام النموذج",
+      deleteConfirm: "هل تريد حذف هذا الدرس؟",
       days: {
-        monday: "Ø§Ù„Ø§Ø«Ù†ÙŠÙ†",
-        tuesday: "Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡",
-        wednesday: "Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡",
-        thursday: "Ø§Ù„Ø®Ù…ÙŠØ³",
-        friday: "Ø§Ù„Ø¬Ù…Ø¹Ø©",
-        saturday: "Ø§Ù„Ø³Ø¨Øª",
+        monday: "الإثنين",
+        tuesday: "الثلاثاء",
+        wednesday: "الأربعاء",
+        thursday: "الخميس",
+        friday: "الجمعة",
+        saturday: "السبت",
       },
     },
   },
 };
 
-
-function TimeInput({ value, onChange, id, hasError }) {
-  const [h, m] = (value || '09:00').split(':');
-  const hours = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
-  const minutes = ['00', '15', '30', '45'];
-  const baseStyle = {
-    flex: 1, padding: '9px 8px',
-    background: 'var(--sp-inputBg)',
-    border: '1px solid var(--sp-inputBorder)',
-    borderRadius: '8px',
-    fontSize: '13px', color: 'var(--sp-text)',
-    outline: 'none', cursor: 'pointer',
-    fontFamily: "'DM Sans',sans-serif",
-    appearance: 'none', WebkitAppearance: 'none',
-  };
-  const errStyle = hasError ? { borderColor: 'var(--sp-errorBorder)', background: 'var(--sp-errorBg)' } : {};
-  return (
-    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', width: '100%' }} id={id}>
-      <select value={h} onChange={e => onChange(e.target.value + ':' + m)} style={{...baseStyle, ...errStyle}}>
-        {hours.map(hh => <option key={hh} value={hh}>{hh}</option>)}
-      </select>
-      <span style={{ fontWeight: 700, color: 'var(--sp-textMuted)' }}>:</span>
-      <select value={m} onChange={e => onChange(h + ':' + e.target.value)} style={{...baseStyle, ...errStyle}}>
-        {minutes.map(mm => <option key={mm} value={mm}>{mm}</option>)}
-      </select>
-    </div>
-  );
-}
 
 export default function FixedEventsIndex({ fixedEvents }) {
   let lang = "fr";
@@ -152,12 +125,12 @@ export default function FixedEventsIndex({ fixedEvents }) {
   ];
 
   const dayColors = {
-    'Lundi':    { bg: 'var(--sp-accentLight)', color: 'var(--sp-accent)' },
-    'Mardi':    { bg: '#FDF2F8', color: '#DB2777' },
-    'Mercredi': { bg: '#ECFDF5', color: '#059669' },
-    'Jeudi':    { bg: '#FFF7ED', color: '#EA580C' },
-    'Vendredi': { bg: '#EFF6FF', color: '#2563EB' },
-    'Samedi':   { bg: '#F5F3FF', color: '#7C3AED' },
+    'Lundi':    { bg: 'var(--sp-day-lundi)', color: 'var(--sp-day-lundi-fg)' },
+    'Mardi':    { bg: 'var(--sp-day-mardi)', color: 'var(--sp-day-mardi-fg)' },
+    'Mercredi': { bg: 'var(--sp-day-mercredi)', color: 'var(--sp-day-mercredi-fg)' },
+    'Jeudi':    { bg: 'var(--sp-day-jeudi)', color: 'var(--sp-day-jeudi-fg)' },
+    'Vendredi': { bg: 'var(--sp-day-vendredi)', color: 'var(--sp-day-vendredi-fg)' },
+    'Samedi':   { bg: 'var(--sp-day-samedi)', color: 'var(--sp-day-samedi-fg)' },
   };
 
   const dayNameMap = {
@@ -198,10 +171,10 @@ export default function FixedEventsIndex({ fixedEvents }) {
   return (
     <AppLayout>
       <Head title={tr.title} />
-      <div style={{ ...s.page, direction: isRTL ? "rtl" : "ltr" }}>
+      <div style={s.page}>
         {/* Header */}
-        <div style={{ ...s.header, flexDirection: isRTL ? "row-reverse" : "row" }}>
-          <div style={{ textAlign: isRTL ? "right" : "left" }}>
+        <div style={s.header}>
+          <div style={{ textAlign: "start" }}>
             <h1 style={s.title}>{tr.title}</h1>
             <p style={s.subtitle}>{tr.subtitle}</p>
           </div>
@@ -210,10 +183,10 @@ export default function FixedEventsIndex({ fixedEvents }) {
           </div>
         </div>
 
-        <div style={{ ...s.layout, flexDirection: isRTL ? "row-reverse" : "row" }} className="sp-grid-2col">
+        <div style={s.layout} className="sp-grid-2col">
           {/* Form */}
           <div style={s.formCard}>
-            <div style={{ ...s.cardHeader, flexDirection: isRTL ? "row-reverse" : "row" }}>
+            <div style={s.cardHeader}>
               <div style={s.cardIcon}>
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" d="M12 4v16m8-8H4"/>
@@ -240,7 +213,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 />
               </div>
 
-              <div style={s.fieldRow}>
+              <div style={s.fieldRow} className="sp-field-row">
                 <div style={s.field}>
                   <label style={s.label} htmlFor="fe-teacher">{tr.teacher}</label>
                   <input
@@ -265,7 +238,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 </div>
               </div>
 
-              {/* Every day toggle â€” uses role="checkbox" for keyboard accessibility */}
+              {/* Every day toggle — uses role="checkbox" for keyboard accessibility */}
               <div
                 role="checkbox"
                 aria-checked={data.is_recurring_daily}
@@ -279,7 +252,6 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 }}
                 style={{
                   ...s.everyDayRow,
-                  flexDirection: isRTL ? "row-reverse" : "row",
                   background: data.is_recurring_daily ? 'var(--sp-accentLight)' : 'var(--sp-hoverBg)',
                   borderColor: data.is_recurring_daily ? 'var(--sp-accent)' : 'var(--sp-cardBorder)',
                   cursor: 'pointer',
@@ -301,13 +273,13 @@ export default function FixedEventsIndex({ fixedEvents }) {
                     )}
                   </div>
                 </div>
-                <div style={{ textAlign: isRTL ? "right" : "left" }}>
+                <div style={{ textAlign: "start" }}>
                   <div style={s.everyDayLabel}>{tr.everyDay}</div>
                   <div style={s.everyDayDesc}>{tr.everyDayDesc}</div>
                 </div>
               </div>
 
-              {/* Day selector â€” hidden when every day is checked */}
+              {/* Day selector — hidden when every day is checked */}
               {!data.is_recurring_daily && (
                 <div style={s.field}>
                   <label style={s.label} htmlFor="fe-day">{tr.day}</label>
@@ -323,7 +295,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 </div>
               )}
 
-              <div style={s.fieldRow}>
+              <div style={s.fieldRow} className="sp-field-row">
                 <div style={s.field}>
                   <label style={s.label} htmlFor="fe-start">{tr.startTime}</label>
                   <TimeInput value={data.start_time} onChange={v => setData("start_time", v)} id="fe-start" hasError={!!errors.start_time} />
@@ -353,7 +325,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
 
           {/* Course list */}
           <div style={s.listCard}>
-            <div style={{ ...s.cardHeader, flexDirection: isRTL ? "row-reverse" : "row" }}>
+            <div style={s.cardHeader}>
               <div style={s.cardIcon}>
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -373,15 +345,15 @@ export default function FixedEventsIndex({ fixedEvents }) {
                   const dayName = event.day_of_week;
                   const dc = dayColors[dayName] || { bg: 'var(--sp-subtleBg)', color: 'var(--sp-textSecondary)' };
                   return (
-                    <div key={event.id} style={{ ...s.eventRow, flexDirection: isRTL ? "row-reverse" : "row" }}>
+                    <div key={event.id} style={s.eventRow}>
                       <div style={{
                         ...s.dayBadge,
                         background: isDaily ? 'var(--sp-warningBg)' : dc.bg,
                         color: isDaily ? 'var(--sp-warning)' : dc.color,
                       }}>
-                        {isDaily ? 'â˜€' : (dayNameMap[dayName] || dayName || '').slice(0, 3)}
+                        {isDaily ? "\u2600" : (dayNameMap[dayName] || dayName || '').slice(0, 3)}
                       </div>
-                      <div style={{ ...s.eventInfo, textAlign: isRTL ? "right" : "left" }}>
+                      <div style={{ ...s.eventInfo, textAlign: "start" }}>
                         <span style={s.eventTitle}>{event.title}</span>
                         {event.teacher && <span style={s.eventTeacher}>👤 {event.teacher}</span>}
                         {event.description && <span style={s.eventDesc}>{event.description}</span>}
@@ -408,16 +380,16 @@ export default function FixedEventsIndex({ fixedEvents }) {
 }
 
 const s = {
-  page: { padding: '32px', maxWidth: '900px', overflowX: 'hidden' },
-  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px' },
-  title: { fontSize: '22px', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
-  subtitle: { fontSize: '14px', color: 'var(--sp-textSecondary)', margin: 0 },
+  page: { maxWidth: '1040px', margin: '0 auto', padding: '32px 24px 60px', overflowX: 'hidden' },
+  header: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' },
+  title: { fontSize: 'var(--sp-text-2xl)', fontWeight: 700, color: 'var(--sp-text)', margin: '0 0 4px' },
+  subtitle: { fontSize: 'var(--sp-text-lg)', color: 'var(--sp-textSecondary)', margin: 0 },
   statBadge: {
     padding: '6px 14px', background: 'var(--sp-accentLight)',
     color: 'var(--sp-accent)', borderRadius: '20px',
-    fontSize: '13px', fontWeight: 600,
+    fontSize: 'var(--sp-text-base)', fontWeight: 600,
   },
-  layout: { display: 'grid', gridTemplateColumns: '340px 1fr', gap: '20px', alignItems: 'start' },
+  layout: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(340px, 100%), 1fr))', gap: '12px', alignItems: 'start' },
   formCard: {
     background: 'var(--sp-card)', border: '1px solid var(--sp-cardBorder)',
     borderRadius: '14px', overflow: 'hidden',
@@ -435,21 +407,21 @@ const s = {
     color: 'var(--sp-accent)',
     borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center',
   },
-  cardTitle: { fontSize: '14px', fontWeight: 600, color: 'var(--sp-text)', margin: 0 },
+  cardTitle: { fontSize: 'var(--sp-text-lg)', fontWeight: 600, color: 'var(--sp-text)', margin: 0 },
   form: { padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' },
   fieldRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' },
   field: { display: 'flex', flexDirection: 'column', gap: '6px' },
-  label: { fontSize: '13px', fontWeight: 500, color: 'var(--sp-text)' },
+  label: { fontSize: 'var(--sp-text-base)', fontWeight: 500, color: 'var(--sp-text)' },
   input: {
     padding: '9px 12px',
     background: 'var(--sp-inputBg)',
     border: '1px solid var(--sp-inputBorder)', borderRadius: '8px',
-    fontSize: '13px', color: 'var(--sp-text)', outline: 'none',
+    fontSize: 'var(--sp-text-base)', color: 'var(--sp-text)', outline: 'none',
     width: '100%', boxSizing: 'border-box',
   },
   inputError: { borderColor: 'var(--sp-errorBorder)', background: 'var(--sp-errorBg)' },
-  fieldError: { fontSize: '12px', color: 'var(--sp-error)', fontWeight: 500 },
-  errorBanner: { padding: '10px 14px', borderRadius: '8px', background: 'var(--sp-errorBg)', border: '1px solid var(--sp-errorBorder)', color: 'var(--sp-error)', fontSize: '13px', fontWeight: 500 },
+  fieldError: { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-error)', fontWeight: 500 },
+  errorBanner: { padding: '10px 14px', borderRadius: '8px', background: 'var(--sp-errorBg)', border: '1px solid var(--sp-errorBorder)', color: 'var(--sp-error)', fontSize: 'var(--sp-text-base)', fontWeight: 500 },
   everyDayRow: {
     display: 'flex', alignItems: 'center', gap: '12px',
     padding: '12px 14px', borderRadius: '10px',
@@ -463,30 +435,30 @@ const s = {
     alignItems: 'center', justifyContent: 'center',
     transition: 'all 0.15s',
   },
-  everyDayLabel: { fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
-  everyDayDesc: { fontSize: '11px', color: 'var(--sp-textMuted)', marginTop: '1px' },
+  everyDayLabel: { fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-text)' },
+  everyDayDesc: { fontSize: 'var(--sp-text-xs)', color: 'var(--sp-textMuted)', marginTop: '1px' },
   submitBtn: { padding: '11px', background: 'var(--sp-accent)', color: 'var(--sp-accentText)',
     border: 'none', borderRadius: '10px',
-    fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+    fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer',
     width: '100%',
   },
   listBody: { padding: '8px 0' },
   empty: { padding: '40px 20px', textAlign: 'center' },
-  emptyText: { fontSize: '14px', fontWeight: 600, color: 'var(--sp-text)', margin: '0 0 4px' },
-  emptyDesc: { fontSize: '13px', color: 'var(--sp-textMuted)', margin: 0 },
+  emptyText: { fontSize: 'var(--sp-text-lg)', fontWeight: 600, color: 'var(--sp-text)', margin: '0 0 4px' },
+  emptyDesc: { fontSize: 'var(--sp-text-base)', color: 'var(--sp-textMuted)', margin: 0 },
   eventRow: {
     display: 'flex', alignItems: 'center', gap: '12px',
     padding: '12px 20px', borderBottom: '1px solid var(--sp-cardBorder)',
   },
   dayBadge: {
-    fontSize: '11px', fontWeight: 700,
+    fontSize: 'var(--sp-text-xs)', fontWeight: 700,
     padding: '4px 10px', borderRadius: '20px',
     minWidth: '36px', textAlign: 'center',
   },
-  eventInfo: { flex: 1, display: 'flex', flexDirection: 'column', gap: '2px' },
-  eventTitle: { fontSize: '13px', fontWeight: 600, color: 'var(--sp-text)' },
-  eventTeacher: { fontSize: '11px', color: 'var(--sp-accent)', fontWeight: 500 },
-  eventDesc: { fontSize: '11px', color: 'var(--sp-textMuted)', fontStyle: 'italic' },
-  eventTime: { fontSize: '12px', color: 'var(--sp-textMuted)' },
+  eventInfo: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' },
+  eventTitle: { fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  eventTeacher: { fontSize: 'var(--sp-text-xs)', color: 'var(--sp-accent)', fontWeight: 500 },
+  eventDesc: { fontSize: 'var(--sp-text-xs)', color: 'var(--sp-textMuted)', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
+  eventTime: { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textMuted)' },
   deleteBtn: { background: 'none', border: '1px solid var(--sp-errorBorder)', color: 'var(--sp-error)', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' },
 };
