@@ -37,4 +37,13 @@ return [
     'preferences_saved_fr'     => 'Préférences enregistrées avec succès !',
     'preferences_saved_en'     => 'Preferences saved successfully !',
     'preferences_saved_ar'     => 'تم حفظ التفضيلات بنجاح !',
+
+    // Search
+    'search_rate_limited'      => 'Trop de requêtes de recherche. Veuillez patienter un instant.',
+
+    // Sleep schedule
+    'sleep_schedule_saved'     => 'Horaires de sommeil enregistrés.',
+
+    // Preferences (generic)
+    'preferences_saved'        => 'Préférences enregistrées.',
 ];

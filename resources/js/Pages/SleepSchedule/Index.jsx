@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { router } from "@inertiajs/react";
 import AppLayout from "@/Pages/AppLayout";
+import TimeInput from "@/Components/TimeInput";
 import { useLang, useTheme } from "@/Pages/AppLayout";
 
 const FRENCH_DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
@@ -110,18 +111,18 @@ export default function Index({ sleepSchedule, dayTimes = [], days = FRENCH_DAYS
                 </div>
 
                 {mode === "same" && (
-                    <input type="time" value={isWake ? wakeSame : bedtimeSame}
-                        onChange={e => isWake ? setWakeSame(e.target.value) : setBedtimeSame(e.target.value)}
-                        style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${tk.inputBorder}`, background: tk.inputBg, color: tk.text, fontSize: "var(--sp-text-sm)", minWidth: 0, width: '100%', boxSizing: 'border-box', maxWidth: 200 }} />
+                    <TimeInput value={isWake ? wakeSame : bedtimeSame}
+                        onChange={v => isWake ? setWakeSame(v) : setBedtimeSame(v)}
+                        style={{ minWidth: 0, width: '100%', maxWidth: 200, boxSizing: 'border-box' }} />
                 )}
 
                 {mode === "different" && (
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8 }}>
                         {days.map((day, i) => (
                             <div key={day} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                <label style={{ fontSize: 11, color: tk.textMuted }}>{dayLabels[i]}</label>
-                                <input type="time" value={dayTimesObj[day] || ""} onChange={e => setDay(day, e.target.value)}
-                                    style={{ padding: "6px 8px", borderRadius: 6, border: `1px solid ${tk.inputBorder}`, background: tk.inputBg, color: tk.text, fontSize: 12, minWidth: 0, width: '100%', boxSizing: 'border-box' }} />
+                                <label style={{ fontSize: "var(--sp-text-xs)", color: tk.textMuted }}>{dayLabels[i]}</label>
+                                <TimeInput value={dayTimesObj[day] || ""} onChange={v => setDay(day, v)}
+                                    style={{ minWidth: 0, width: '100%', boxSizing: 'border-box' }} />
                             </div>
                         ))}
                     </div>
@@ -129,16 +130,16 @@ export default function Index({ sleepSchedule, dayTimes = [], days = FRENCH_DAYS
 
                 {mode === "except" && (
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                        <input type="time" value={isWake ? wakeSame : bedtimeSame}
-                            onChange={e => isWake ? setWakeSame(e.target.value) : setBedtimeSame(e.target.value)}
-                            style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${tk.inputBorder}`, background: tk.inputBg, color: tk.text, fontSize: "var(--sp-text-sm)", width: "fit-content", minWidth: 0, boxSizing: 'border-box' }} />
-                        <p style={{ fontSize: 11, color: tk.textMuted }}>{tr.diff_days}</p>
+                        <TimeInput value={isWake ? wakeSame : bedtimeSame}
+                            onChange={v => isWake ? setWakeSame(v) : setBedtimeSame(v)}
+                            style={{ width: "fit-content", minWidth: 0, boxSizing: 'border-box' }} />
+                        <p style={{ fontSize: "var(--sp-text-xs)", color: tk.textMuted }}>{tr.diff_days}</p>
                         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                             {days.map((day, i) => {
                                 const active = exceptDays.includes(day);
                                 return (
                                     <button key={day} type="button" onClick={() => toggleExceptDay(day, isWake)}
-                                        style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${active ? tk.warning : tk.inputBorder}`, background: active ? tk.warningBg : tk.card, color: active ? tk.warning : tk.text, fontSize: 11, cursor: "pointer" }}>
+                                        style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${active ? tk.warning : tk.inputBorder}`, background: active ? tk.warningBg : tk.card, color: active ? tk.warning : tk.text, fontSize: "var(--sp-text-xs)", cursor: "pointer" }}>
                                         {dayLabels[i]}
                                     </button>
                                 );
@@ -150,9 +151,9 @@ export default function Index({ sleepSchedule, dayTimes = [], days = FRENCH_DAYS
                                     const idx = days.indexOf(day);
                                     return (
                                         <div key={day} style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                                            <label style={{ fontSize: 11, color: tk.textMuted }}>{dayLabels[idx]}</label>
-                                            <input type="time" value={dayTimesObj[day] || ""} onChange={e => setDay(day, e.target.value)}
-                                                style={{ padding: "6px 8px", borderRadius: 6, border: `1px solid ${tk.inputBorder}`, background: tk.inputBg, color: tk.text, fontSize: 12, minWidth: 0, width: '100%', boxSizing: 'border-box' }} />
+                                            <label style={{ fontSize: "var(--sp-text-xs)", color: tk.textMuted }}>{dayLabels[idx]}</label>
+                                            <TimeInput value={dayTimesObj[day] || ""} onChange={v => setDay(day, v)}
+                                                style={{ minWidth: 0, width: '100%', boxSizing: 'border-box' }} />
                                         </div>
                                     );
                                 })}

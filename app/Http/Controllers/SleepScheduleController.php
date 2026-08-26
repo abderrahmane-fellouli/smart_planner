@@ -96,11 +96,7 @@ class SleepScheduleController extends Controller
         }
 
         $locale = $request->input('lang', 'fr');
-        $messages = [
-            'fr' => 'Horaires de sommeil enregistrés.',
-            'en' => 'Sleep schedule saved.',
-            'ar' => 'تم حفظ جدول النوم.',
-        ];
-        return redirect()->back()->with('success', $messages[$locale] ?? $messages['fr']);
+        app()->setLocale($locale);
+        return redirect()->back()->with('success', trans('messages.sleep_schedule_saved'));
     }
 }

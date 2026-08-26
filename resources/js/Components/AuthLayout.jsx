@@ -31,7 +31,7 @@ export function useAuthTheme() {
     useEffect(() => {
         document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
         try {
-            const savedTheme = localStorage.getItem('smartplanner_theme') || 'default';
+            const savedTheme = 'default';
             // Force light mode on auth pages — they should always appear light
             const tokens = (THEMES[savedTheme] || THEMES.default)['light'];
             document.body.style.background = tokens.body;

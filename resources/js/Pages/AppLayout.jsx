@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo, createContext, useContext } from "react";
+﻿import React, { useState, useEffect, useLayoutEffect, useMemo, createContext, useContext } from "react";
 import { Link, usePage, router } from "@inertiajs/react";
 import GlobalSearch from "@/Components/GlobalSearch";
 import ApplicationLogo from "@/Components/ApplicationLogo";
@@ -38,9 +38,9 @@ function FlashBanner() {
 }
 
 const TRANSLATIONS = {
-    fr: { nav_section:"Navigation", dashboard:"Tableau de bord", planning:"Mon planning", fixed_events:"Tâches fixes", preferences:"Préférences", statistics:"Statistiques", export:"Exporter", todos:"Tâches du jour", sleep_schedule:"Sommeil", generate_btn:"Générer le planning", profile_title:"Profil", logout:"Déconnexion", logout_confirm:"Êtes-vous sûr de vouloir vous déconnecter ?", yes:"Oui", cancel:"Non", fallback_name:"Utilisateur", dark_toggle_on:"Passer en mode clair", dark_toggle_off:"Passer en mode sombre", close_menu:"Fermer le menu", open_menu:"Ouvrir le menu", search_label:"Rechercher", close_search:"Fermer la recherche", dir:"ltr" },
-    en: { nav_section:"Navigation", dashboard:"Dashboard", planning:"My Schedule", fixed_events:"Fixed Tasks", preferences:"Preferences", statistics:"Statistics", export:"Export", todos:"Daily Tasks", sleep_schedule:"Sleep", generate_btn:"Generate Schedule", profile_title:"Profile", logout:"Logout", logout_confirm:"Are you sure you want to log out?", yes:"Yes", cancel:"Cancel", fallback_name:"User", dark_toggle_on:"Switch to light mode", dark_toggle_off:"Switch to dark mode", close_menu:"Close menu", open_menu:"Open menu", search_label:"Search", close_search:"Close search", dir:"ltr" },
-    ar: { nav_section:"التنقل", dashboard:"لوحة التحكم", planning:"جدولي", fixed_events:"المهام الثابتة", preferences:"التفضيلات", statistics:"الإحصائيات", export:"تصدير", todos:"مهام اليوم", sleep_schedule:"النوم", generate_btn:"إنشاء الجدول", profile_title:"الملف الشخصي", logout:"تسجيل الخروج", logout_confirm:"هل أنت متأكد من تسجيل الخروج؟", yes:"نعم", cancel:"إلغاء", fallback_name:"مستخدم", dark_toggle_on:"التبديل إلى الوضع الفاتح", dark_toggle_off:"التبديل إلى الوضع الداكن", close_menu:"إغلاق القائمة", open_menu:"فتح القائمة", search_label:"بحث", close_search:"إغلاق البحث", dir:"rtl" },
+    fr: { nav_section:"Navigation", dashboard:"Tableau de bord", planning:"Mon planning", fixed_events:"Tâches fixes", preferences:"Préférences", statistics:"Statistiques", export:"Exporter", todos:"Tâches du jour", sleep_schedule:"Sommeil", generate_btn:"Générer le planning", profile_title:"Profil", logout:"Déconnexion", logout_title:"Se déconnecter", logout_confirm:"Êtes-vous sûr de vouloir vous déconnecter ?", yes:"Oui", cancel:"Annuler", fallback_name:"Utilisateur", dark_toggle_on:"Passer en mode clair", dark_toggle_off:"Passer en mode sombre", close_menu:"Fermer le menu", open_menu:"Ouvrir le menu", search_label:"Rechercher", close_search:"Fermer la recherche", dir:"ltr" },
+    en: { nav_section:"Navigation", dashboard:"Dashboard", planning:"My Schedule", fixed_events:"Fixed Tasks", preferences:"Preferences", statistics:"Statistics", export:"Export", todos:"Daily Tasks", sleep_schedule:"Sleep", generate_btn:"Generate Schedule", profile_title:"Profile", logout:"Logout", logout_title:"Log out", logout_confirm:"Are you sure you want to log out?", yes:"Yes", cancel:"Cancel", fallback_name:"User", dark_toggle_on:"Switch to light mode", dark_toggle_off:"Switch to dark mode", close_menu:"Close menu", open_menu:"Open menu", search_label:"Search", close_search:"Close search", dir:"ltr" },
+    ar: { nav_section:"التنقل", dashboard:"لوحة التحكم", planning:"جدولي", fixed_events:"المهام الثابتة", preferences:"التفضيلات", statistics:"الإحصائيات", export:"تصدير", todos:"مهام اليوم", sleep_schedule:"النوم", generate_btn:"إنشاء الجدول", profile_title:"الملف الشخصي", logout:"تسجيل الخروج", logout_title:"تسجيل الخروج", logout_confirm:"هل أنت متأكد من أنك تريد تسجيل الخروج؟", yes:"نعم", cancel:"إلغاء", fallback_name:"مستخدم", dark_toggle_on:"التبديل إلى الوضع الفاتح", dark_toggle_off:"التبديل إلى الوضع الداكن", close_menu:"إغلاق القائمة", open_menu:"فتح القائمة", search_label:"بحث", close_search:"إغلاق البحث", dir:"rtl" },
 };
 
 export const LangContext = createContext({ lang: "fr", tr: TRANSLATIONS.fr, setLang: () => {} });
@@ -84,6 +84,90 @@ const LangSwitcher = ({ lang, tk, onLangChange, tr }) => (
     </div>
 );
 
+const LogoutModal = ({ tk, tr, isRTL, onConfirm, onCancel }) => {
+    const cancelRef = React.useRef(null);
+
+    React.useEffect(() => {
+        const timer = setTimeout(() => cancelRef.current?.focus(), 50);
+        const handleKey = (e) => {
+            if (e.key === 'Escape') onCancel();
+        };
+        document.addEventListener('keydown', handleKey);
+        document.body.style.overflow = 'hidden';
+        return () => {
+            clearTimeout(timer);
+            document.removeEventListener('keydown', handleKey);
+            document.body.style.overflow = '';
+        };
+    }, [onCancel]);
+
+    return (
+        <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logout-modal-title"
+            aria-describedby="logout-modal-desc"
+            style={{
+                position:'fixed', inset:0, zIndex:100, display:'flex', alignItems:'center', justifyContent:'center',
+                padding:'16px',
+            }}
+            onClick={onCancel}
+        >
+            <div style={{ position:'absolute', inset:0, background: tk.overlay || 'rgba(0,0,0,0.5)', backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)' }} />
+            <div
+                onClick={(e) => e.stopPropagation()}
+                style={{
+                    position:'relative', width:'100%', maxWidth:'400px', borderRadius:'16px', padding:'24px',
+                    background: tk.cardBg, border:`1px solid ${tk.sidebarBorder}`,
+                    boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                    animation: 'logoutModalIn 0.2s ease',
+                }}
+            >
+                <div style={{ textAlign:'center', marginBottom:'20px' }}>
+                    <div style={{ width:'48px', height:'48px', borderRadius:'12px', background: tk.dangerBg, display:'inline-flex', alignItems:'center', justifyContent:'center', marginBottom:'12px' }}>
+                        <svg width="24" height="24" fill="none" stroke={tk.danger} strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                    </div>
+                    <h2 id="logout-modal-title" style={{ margin:'0 0 8px', fontSize:'var(--sp-text-lg)', fontWeight:700, color:tk.text, textAlign:'center' }}>
+                        {tr.logout_title || 'Se déconnecter'}
+                    </h2>
+                    <p id="logout-modal-desc" style={{ margin:0, fontSize:'var(--sp-text-base)', color:tk.textSecondary, textAlign:'center' }}>
+                        {tr.logout_confirm || 'Êtes-vous sûr de vouloir vous déconnecter ?'}
+                    </p>
+                </div>
+                <div style={{ display:'flex', flexDirection: isRTL ? 'row-reverse' : 'row', gap:'10px', marginTop:'20px' }}>
+                    <button
+                        ref={cancelRef}
+                        onClick={onCancel}
+                        style={{
+                            flex:1, padding:'10px 16px', borderRadius:'10px', border:`1px solid ${tk.sidebarBorder}`,
+                            background: tk.subtleBg, color: tk.text, fontSize:'var(--sp-text-base)', fontWeight:600,
+                            cursor:'pointer', transition:'all 0.15s',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = tk.hoverBg; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = tk.subtleBg; }}
+                    >
+                        {tr.cancel || 'Annuler'}
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        style={{
+                            flex:1, padding:'10px 16px', borderRadius:'10px', border:'none',
+                            background: tk.danger, color:'#fff', fontSize:'var(--sp-text-base)', fontWeight:600,
+                            cursor:'pointer', transition:'all 0.15s',
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.9'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
+                    >
+                        {tr.logout_title || 'Se déconnecter'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const NavLinks = ({ tk, tr, NAV, url, onNavClick }) => {
     function isActive(href) { return url === href || url.startsWith(href + '/'); }
     return (
@@ -122,6 +206,7 @@ export default function AppLayout({ children }) {
     const user = props.auth?.user;
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
+    const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
     const [dark, setDark] = useState(() => {
         try { return localStorage.getItem("smartplanner_dark") === "true"; }
@@ -158,7 +243,7 @@ export default function AppLayout({ children }) {
         try { localStorage.setItem("smartplanner_theme", name); } catch {}
     };
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         try { localStorage.setItem("smartplanner_dark", dark); } catch {}
         try { localStorage.setItem("smartplanner_theme", themeName); } catch {}
         document.documentElement.dir = isRTL ? "rtl" : "ltr";
@@ -168,7 +253,8 @@ export default function AppLayout({ children }) {
         Object.entries(tk).forEach(([k, v]) => {
             document.documentElement.style.setProperty(`--sp-${k}`, v);
         });
-    }, [dark, themeName, isRTL, lang, tk]);
+        document.documentElement.style.setProperty('--sp-font', font);
+    }, [dark, themeName, isRTL, lang, tk, font]);
 
     useEffect(() => {
         if (drawerOpen) {
@@ -181,9 +267,7 @@ export default function AppLayout({ children }) {
 
     const toggleDark = () => setDark(d => !d);
     const handleLogout = () => {
-        if (window.confirm(tr.logout_confirm || "Êtes-vous sûr de vouloir vous déconnecter ?")) {
-            router.post('/logout');
-        }
+        setLogoutModalOpen(true);
     };
 
     const NAV = buildNav(tr);
@@ -195,6 +279,7 @@ export default function AppLayout({ children }) {
             <ThemeContext.Provider value={{ dark, tk, themeName, setThemeName }}>
             <style>{`
                 @keyframes flashIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+                @keyframes logoutModalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
             `}</style>
             <div style={{ display:"flex", minHeight:"100vh", fontFamily: font, background:tk.body }}>
 
@@ -258,8 +343,12 @@ export default function AppLayout({ children }) {
                             </svg>
                         </button>
                     </div>
-                    {/* Nav only — no logo, no dark toggle, no user bar, no logout */}
                     <NavLinks tk={tk} tr={tr} NAV={NAV} url={url} onNavClick={closeDrawer} />
+                    {/* Dark toggle + Logout in drawer */}
+                    <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"10px 14px", borderTop:`1px solid ${tk.sidebarBorder}` }}>
+                        <DarkToggle tk={tk} dark={dark} onToggle={toggleDark} tr={tr} size={36} />
+                        <LogoutBtn tk={tk} onLogout={handleLogout} tr={tr} size={36} />
+                    </div>
                     {/* Profile + Language at bottom of drawer */}
                     <div style={{ borderTop:`1px solid ${tk.sidebarBorder}` }}>
                         <Link href="/profile" onClick={closeDrawer} style={{ display:"flex", alignItems:"center", gap:"10px", padding:"12px", textDecoration:"none", color:tk.textSecondary, fontSize:"var(--sp-text-sm)", fontWeight:500 }}>
@@ -286,8 +375,8 @@ export default function AppLayout({ children }) {
                         <Link href="/dashboard" style={{ display:"flex", alignItems:"center", gap:"4px", textDecoration:"none" }}>
                             <ApplicationLogo size={22} />
                             <div style={{ display:"flex", flexDirection:"column", lineHeight:1.1, marginInlineStart:'2px', minWidth:0 }}>
-                                <span style={{ fontSize:"11px", fontWeight:800, color:tk.text }}>Smart</span>
-                                <span style={{ fontSize:"11px", fontWeight:800, color:tk.text }}>Planner</span>
+                                <span style={{ fontSize:"var(--sp-text-sm)", fontWeight:800, color:tk.text }}>Smart</span>
+                                <span style={{ fontSize:"var(--sp-text-sm)", fontWeight:800, color:tk.text }}>Planner</span>
                             </div>
                         </Link>
                         <div style={{ marginInlineStart:'auto', display:'flex', gap:'6px', alignItems:'center' }}>
@@ -325,6 +414,16 @@ export default function AppLayout({ children }) {
                             </div>
                         </div>
                     </div>
+                )}
+
+                {logoutModalOpen && (
+                    <LogoutModal
+                        tk={tk}
+                        tr={tr}
+                        isRTL={isRTL}
+                        onConfirm={() => { setLogoutModalOpen(false); router.post('/logout'); }}
+                        onCancel={() => setLogoutModalOpen(false)}
+                    />
                 )}
             </div>
             </ThemeContext.Provider>

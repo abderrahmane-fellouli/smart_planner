@@ -241,7 +241,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(tr.removePhotoConfirm || 'Remove profile photo?')) {
+                        if (confirm(tr.removePhotoConfirm)) {
                           router.delete(route('profile.photo.destroy'), {
                             onSuccess: () => setPhotoPreview(null),
                           });
@@ -249,7 +249,7 @@ export default function Edit({ mustVerifyEmail, status }) {
                       }}
                       style={{ ...s.changePhotoBtn, color: 'var(--sp-error)', borderColor: 'var(--sp-errorBorder)' }}
                     >
-                      {tr.removePhoto || 'Remove'}
+                      {tr.removePhoto}
                     </button>
                   )}
                 </div>

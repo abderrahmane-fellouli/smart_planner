@@ -41,6 +41,9 @@ const T = {
         moderate: "Mod\u00E9r\u00E9",
         hard: "Difficile",
         vHard: "Tr\u00E8s difficile",
+        deleteConfirm: "Supprimer cette t\u00E2che ?",
+        minUnit: "min",
+        toggle: "Basculer",
     },
     en: {
         title: "Daily Tasks",
@@ -78,6 +81,8 @@ const T = {
         hard: "Difficult",
         vHard: "Very difficult",
         deleteConfirm: "Delete this task?",
+        minUnit: "min",
+        toggle: "Toggle",
     },
     ar: {
         title: "\u0645\u0647\u0627\u0645 \u0627\u0644\u064A\u0648\u0645",
@@ -115,6 +120,8 @@ const T = {
         hard: "\u0635\u0639\u0628\u0629",
         vHard: "\u0635\u0639\u0648\u0628\u0629 \u062C\u062F\u0627\u064B",
         deleteConfirm: "\u0647\u0644 \u062A\u0631\u064A\u062F \u062D\u0630\u0641 \u0647\u0630\u0647 \u0627\u0644\u0645\u0647\u0645\u0629\u061F",
+        minUnit: "\u062F\u0642\u064A\u0642\u0629",
+        toggle: "\u062A\u0628\u062F\u064A\u0644",
     },
 };
 
@@ -284,7 +291,7 @@ export default function Index({ todos = [] }) {
         border: `1px solid ${tk.inputBorder}`,
         background: tk.inputBg,
         color: tk.text,
-        fontSize: 11,
+        fontSize: "var(--sp-text-xs)",
         cursor: "pointer",
     };
 
@@ -317,7 +324,7 @@ export default function Index({ todos = [] }) {
                         style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${titleError ? tk.danger : tk.inputBorder}`, background: tk.inputBg, color: tk.text, fontSize: "var(--sp-text-sm)", boxSizing: "border-box" }}
                     />
                     {titleError && (
-                        <p style={{ color: tk.danger, fontSize: 11, margin: "4px 0 6px", fontWeight: 600 }}>{titleError}</p>
+                        <p style={{ color: tk.danger, fontSize: "var(--sp-text-xs)", margin: "4px 0 6px", fontWeight: 600 }}>{titleError}</p>
                     )}
                     <textarea
                         value={newDescription}
@@ -335,14 +342,14 @@ export default function Index({ todos = [] }) {
                                     style={{
                                         background: "none", border: "none", cursor: "pointer",
                                         color: d <= newDifficulty ? tk.accent : tk.textMuted,
-                                        padding: 2, display: "flex", alignItems: "center", justifyContent: "center",
+                                        padding: 2, display: "flex", alignItems: "center", justifyContent: "center", minWidth: 36, minHeight: 36,
                                     }}>
                                     <StarIcon filled={d <= newDifficulty} size={18} />
                                 </button>
                             ))}
                         </div>
                         {/* Schedule toggle */}
-                        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: tk.textSecondary, cursor: "pointer" }}>
+                        <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: "var(--sp-text-xs)", color: tk.textSecondary, cursor: "pointer" }}>
                             <input type="checkbox" checked={newIsScheduled} onChange={e => setNewIsScheduled(e.target.checked)}
                                 style={{ accentColor: tk.accent }} />
                             {tr.schedule}
@@ -361,13 +368,13 @@ export default function Index({ todos = [] }) {
                                 <select value={newHour} onChange={e => setNewHour(e.target.value)} style={selectStyle}>
                                     {hours.map(h => <option key={h} value={h}>{h}</option>)}
                                 </select>
-                                <span style={{ color: tk.textMuted, fontSize: 11 }}>:</span>
+                                <span style={{ color: tk.textMuted, fontSize: "var(--sp-text-xs)" }}>:</span>
                                 <select value={newMinute} onChange={e => setNewMinute(e.target.value)} style={selectStyle}>
                                     {minutes.map(m => <option key={m} value={m}>{m}</option>)}
                                 </select>
                             </div>
                             <select value={newDuration} onChange={e => setNewDuration(Number(e.target.value))} style={selectStyle}>
-                                {[15, 30, 45, 60, 90, 120].map(m => <option key={m} value={m}>{m} min</option>)}
+                                {[15, 30, 45, 60, 90, 120].map(m => <option key={m} value={m}>{m} {tr.minUnit}</option>)}
                             </select>
                         </div>
                     )}
@@ -378,7 +385,7 @@ export default function Index({ todos = [] }) {
                     {tabs.map(tab => (
                         <button key={tab.key} onClick={() => setFilter(tab.key)}
                             style={{
-                                padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: filter === tab.key ? 700 : 500,
+                                padding: "5px 12px", borderRadius: 20, fontSize: "var(--sp-text-xs)", fontWeight: filter === tab.key ? 700 : 500,
                                 cursor: "pointer", border: "none",
                                 background: filter === tab.key ? tk.accent : tk.subtleBg,
                                 color: filter === tab.key ? tk.accentText : tk.textSecondary,
@@ -393,7 +400,7 @@ export default function Index({ todos = [] }) {
                                     padding: "3px 6px", borderRadius: 6, cursor: "pointer", border: "none",
                                     background: diffFilter === opt.value ? tk.accent : "transparent",
                                     color: diffFilter === opt.value ? tk.accentText : tk.textMuted,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    display: "flex", alignItems: "center", justifyContent: "center", minWidth: 36, minHeight: 36,
                                 }}>
                                 {opt.stars ? (
                                     <div style={{ display: "flex", gap: 1 }}>
@@ -402,7 +409,7 @@ export default function Index({ todos = [] }) {
                                         ))}
                                     </div>
                                 ) : (
-                                    <span style={{ fontSize: 11, fontWeight: 600 }}>{opt.labelKey ? tr[opt.labelKey] : ""}</span>
+                                    <span style={{ fontSize: "var(--sp-text-xs)", fontWeight: 600 }}>{opt.labelKey ? tr[opt.labelKey] : ""}</span>
                                 )}
                             </button>
                         ))}
@@ -428,13 +435,13 @@ export default function Index({ todos = [] }) {
                         {/* Checkbox */}
                         <button onClick={() => handleToggle(todo.id)}
                             style={{
-                                 width: 22, height: 22, minWidth: 28, minHeight: 28, borderRadius: 6, cursor: "pointer", flexShrink: 0,
+                                 width: 22, height: 22, minWidth: 36, minHeight: 36, borderRadius: 6, cursor: "pointer", flexShrink: 0,
                                 border: todo.completed ? "none" : `2px solid ${diffColor(todo.priority)}`,
                                 background: todo.completed ? tk.success : "transparent",
                                 color: todo.completed ? tk.accentText : "transparent",
-                                display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12,
+                                 display: "flex", alignItems: "center", justifyContent: "center", fontSize: "var(--sp-text-xs)",
                             }}
-                            aria-label="Toggle">
+                            aria-label={tr.toggle}>
                             {todo.completed ? "\u2713" : ""}
                         </button>
                         {/* Content */}
@@ -462,7 +469,7 @@ export default function Index({ todos = [] }) {
                             )}
                             <div style={{ display: "flex", gap: 4, marginTop: 3, flexWrap: "wrap" }}>
                                 {todo.is_scheduled && (
-                                    <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, background: `${tk.accent}18`, color: tk.accent, fontWeight: 600 }}>
+                                    <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, background: `color-mix(in srgb, ${tk.accent} 10%, transparent)`, color: tk.accent, fontWeight: 600 }}>
                                         {tr.daily_task} {todo.scheduled_time && `\u2022 ${todo.scheduled_time}`}
                                     </span>
                                 )}
@@ -482,7 +489,7 @@ export default function Index({ todos = [] }) {
                         )}
                         {/* Delete */}
                         <button onClick={() => handleDelete(todo.id)}
-                            style={{ background: "none", border: "none", color: tk.danger, cursor: "pointer", flexShrink: 0, padding: "2px 4px", minWidth: 28, minHeight: 28, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            style={{ background: "none", border: "none", color: tk.danger, cursor: "pointer", flexShrink: 0, padding: "2px 4px", minWidth: 36, minHeight: 36, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <CloseIcon size={14} />
                         </button>
                     </div>

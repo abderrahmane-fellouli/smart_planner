@@ -31,7 +31,7 @@ class SearchController extends Controller
         if (RateLimiter::tooManyAttempts($key, 30)) {
             return response()->json([
                 'error' => 'rate_limited',
-                'message' => 'Too many search requests. Please wait a moment.',
+                'message' => trans('messages.search_rate_limited'),
             ], 429);
         }
         RateLimiter::hit($key, 60);
