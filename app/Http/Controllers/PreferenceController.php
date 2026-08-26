@@ -25,7 +25,7 @@ class PreferenceController extends Controller
     public function updateTheme(Request $request)
     {
         $validated = $request->validate([
-            'theme' => 'required|string|in:default,softBlush,coolBlue,lavenderTeal',
+            'theme' => 'required|string|in:default,softBlush,coolBlue,lavenderTeal,greenNatural,roseRed',
         ]);
 
         Preference::updateOrCreate(
@@ -51,7 +51,7 @@ class PreferenceController extends Controller
             'study_preference'      => 'required|string|in:morning,normal,night,any',
             'concentration_hours'   => 'required|integer|min:1|max:12',
             'desired_free_time'     => 'required|integer|min:0|max:8',
-            'theme'                 => 'nullable|string|in:default,softBlush,coolBlue,lavenderTeal',
+            'theme'                 => 'nullable|string|in:default,softBlush,coolBlue,lavenderTeal,greenNatural,roseRed',
         ], [], [
             'wake_up_time'        => trans('preferences.wake_up'),
             'sleep_time'          => trans('preferences.sleep_time'),

@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function TimeInput({ value, onChange, id, hasError }) {
+export default function TimeInput({ value, onChange, id, hasError, style }) {
   const [h, m] = (value || '09:00').split(':');
   const hours = Array.from({length: 24}, (_, i) => String(i).padStart(2, '0'));
   const minutes = ['00', '15', '30', '45'];
@@ -11,12 +11,12 @@ export default function TimeInput({ value, onChange, id, hasError }) {
     borderRadius: '8px',
     fontSize: 'var(--sp-text-base)', color: 'var(--sp-text)',
     outline: 'none', cursor: 'pointer',
-    fontFamily: "'DM Sans',sans-serif",
+    fontFamily: "inherit",
     appearance: 'none', WebkitAppearance: 'none',
   };
   const errStyle = hasError ? { borderColor: 'var(--sp-errorBorder)', background: 'var(--sp-errorBg)' } : {};
   return (
-    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', width: '100%' }} id={id}>
+    <div style={{ display: 'flex', gap: '4px', alignItems: 'center', width: '100%', ...style }} id={id}>
       <select value={h} onChange={e => onChange(e.target.value + ':' + m)} style={{...baseStyle, ...errStyle}}>
         {hours.map(hh => <option key={hh} value={hh}>{hh}</option>)}
       </select>

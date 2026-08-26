@@ -1,8 +1,18 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
 import AppLayout from '@/Pages/AppLayout';
 import { Head } from '@inertiajs/react';
 import TimeInput from '@/Components/TimeInput';
+
+const CATEGORIES = [
+  { value: 'course', fr: 'Cours', en: 'Course', ar: 'مادة دراسية', icon: '📚' },
+  { value: 'exam', fr: 'Examen', en: 'Exam', ar: 'امتحان', icon: '📝' },
+  { value: 'work', fr: 'Travail', en: 'Work', ar: 'عمل', icon: '💼' },
+  { value: 'personal', fr: 'Personnel', en: 'Personal', ar: 'شخصي', icon: '🏠' },
+  { value: 'health', fr: 'Santé', en: 'Health', ar: 'صحة', icon: '🏥' },
+  { value: 'transport', fr: 'Transport', en: 'Transport', ar: 'نقل', icon: '🚌' },
+  { value: 'other', fr: 'Autre', en: 'Other', ar: 'أخرى', icon: '📌' },
+];
 
 const T = {
   fr: {
@@ -13,8 +23,8 @@ const T = {
       addCourse: "Ajouter un cours",
       subject: "Matière",
       subjectPlaceholder: "Ex: Mathématiques",
-      teacher: "Enseignant",
-      teacherPlaceholder: "Ex: M. Dupont",
+      category: "Catégorie",
+      customCategory: "Catégorie personnalisée...",
       description: "Description",
       descriptionPlaceholder: "Notes optionnelles sur le cours...",
       day: "Jour",
@@ -46,8 +56,8 @@ const T = {
       addCourse: "Add a course",
       subject: "Subject",
       subjectPlaceholder: "E.g., Mathematics",
-      teacher: "Teacher",
-      teacherPlaceholder: "E.g., Mr. Smith",
+      category: "Category",
+      customCategory: "Custom category...",
       description: "Description",
       descriptionPlaceholder: "Optional notes about the course...",
       day: "Day",
@@ -79,8 +89,8 @@ const T = {
       addCourse: "إضافة درس",
       subject: "المادة",
       subjectPlaceholder: "مثال: الرياضيات",
-      teacher: "المعلم",
-      teacherPlaceholder: "مثال: الأستاذ أحمد",
+      category: "الفئة",
+      customCategory: "فئة مخصصة...",
       description: "الوصف",
       descriptionPlaceholder: "ملاحظات اختيارية حول الدرس...",
       day: "اليوم",
@@ -115,6 +125,9 @@ export default function FixedEventsIndex({ fixedEvents }) {
   const tr = T[lang]?.fixedEvents || T.fr.fixedEvents;
   const isRTL = lang === "ar";
 
+  const [customCategory, setCustomCategory] = useState('');
+  const [showCustomInput, setShowCustomInput] = useState(false);
+
   const jours = [
     tr.days.monday,
     tr.days.tuesday,
@@ -144,7 +157,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
 
   const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
-    teacher: '',
+    category: '',
     description: '',
     day_of_week: tr.days.monday,
     start_time: '09:00',
@@ -152,13 +165,40 @@ export default function FixedEventsIndex({ fixedEvents }) {
     is_recurring_daily: false,
   });
 
+  const getCategoryMeta = (catValue) => {
+    const predefined = CATEGORIES.find(c => c.value === catValue);
+    if (predefined) return predefined;
+    return { value: catValue, fr: catValue, en: catValue, ar: catValue, icon: '📌' };
+  };
+
+  const getCategoryLabel = (catValue) => {
+    if (!catValue) return null;
+    const predefined = CATEGORIES.find(c => c.value === catValue);
+    if (predefined) return predefined[lang] || predefined.fr;
+    return catValue;
+  };
+
+  const handleCategorySelect = (value) => {
+    setData('category', value);
+    setShowCustomInput(false);
+    setCustomCategory('');
+  };
+
+  const handleCustomCategorySubmit = () => {
+    if (customCategory.trim()) {
+      setData('category', customCategory.trim());
+      setShowCustomInput(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     post('/fixed-events', { onSuccess: () => {
-      // Reset form after successful submission, keeping the day in current language
-      reset('title', 'teacher', 'description', 'start_time', 'end_time');
+      reset('title', 'category', 'description', 'start_time', 'end_time');
       setData('is_recurring_daily', false);
       setData('day_of_week', tr.days.monday);
+      setShowCustomInput(false);
+      setCustomCategory('');
     }});
   };
 
@@ -213,32 +253,92 @@ export default function FixedEventsIndex({ fixedEvents }) {
                 />
               </div>
 
-              <div style={s.fieldRow} className="sp-field-row">
-                <div style={s.field}>
-                  <label style={s.label} htmlFor="fe-teacher">{tr.teacher}</label>
-                  <input
-                    id="fe-teacher"
-                    type="text"
-                    style={s.input}
-                    placeholder={tr.teacherPlaceholder}
-                    value={data.teacher}
-                    onChange={e => setData('teacher', e.target.value)}
-                  />
+              {/* Category selector */}
+              <div style={s.field}>
+                <label style={s.label}>{tr.category}</label>
+                <div style={s.categoryWrap}>
+                  {CATEGORIES.map(cat => {
+                    const isSelected = data.category === cat.value;
+                    return (
+                      <button
+                        key={cat.value}
+                        type="button"
+                        onClick={() => handleCategorySelect(cat.value)}
+                        style={{
+                          ...s.categoryPill,
+                          background: isSelected ? 'var(--sp-accent)' : 'var(--sp-hoverBg)',
+                          color: isSelected ? 'var(--sp-accentText)' : 'var(--sp-text)',
+                          borderColor: isSelected ? 'var(--sp-accent)' : 'var(--sp-cardBorder)',
+                        }}
+                      >
+                        <span>{cat.icon}</span>
+                        <span>{cat[lang] || cat.fr}</span>
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => { setShowCustomInput(!showCustomInput); }}
+                    style={{
+                      ...s.categoryPill,
+                      background: showCustomInput ? 'var(--sp-accentLight)' : 'var(--sp-hoverBg)',
+                      color: showCustomInput ? 'var(--sp-accent)' : 'var(--sp-textMuted)',
+                      borderColor: showCustomInput ? 'var(--sp-accent)' : 'var(--sp-cardBorder)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    +
+                  </button>
                 </div>
-                <div style={s.field}>
-                  <label style={s.label} htmlFor="fe-description">{tr.description}</label>
-                  <input
-                    id="fe-description"
-                    type="text"
-                    style={s.input}
-                    placeholder={tr.descriptionPlaceholder}
-                    value={data.description}
-                    onChange={e => setData('description', e.target.value)}
-                  />
-                </div>
+                {showCustomInput && (
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <input
+                      type="text"
+                      style={s.input}
+                      placeholder={tr.customCategory}
+                      value={customCategory}
+                      onChange={e => setCustomCategory(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCustomCategorySubmit(); } }}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCustomCategorySubmit}
+                      style={{ ...s.submitBtn, width: 'auto', padding: '9px 16px', flexShrink: 0 }}
+                    >
+                      OK
+                    </button>
+                  </div>
+                )}
+                {data.category && (
+                  <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: 'var(--sp-text-xs)', color: 'var(--sp-textMuted)' }}>
+                      {getCategoryMeta(data.category).icon} {getCategoryLabel(data.category)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setData('category', '')}
+                      style={{ background: 'none', border: 'none', color: 'var(--sp-error)', cursor: 'pointer', fontSize: 'var(--sp-text-xs)', padding: '0 2px' }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {/* Every day toggle — uses role="checkbox" for keyboard accessibility */}
+              <div style={s.field}>
+                <label style={s.label} htmlFor="fe-description">{tr.description}</label>
+                <input
+                  id="fe-description"
+                  type="text"
+                  style={s.input}
+                  placeholder={tr.descriptionPlaceholder}
+                  value={data.description}
+                  onChange={e => setData('description', e.target.value)}
+                />
+              </div>
+
+              {/* Every day toggle */}
               <div
                 role="checkbox"
                 aria-checked={data.is_recurring_daily}
@@ -344,6 +444,8 @@ export default function FixedEventsIndex({ fixedEvents }) {
                   const isDaily = event.is_recurring_daily;
                   const dayName = event.day_of_week;
                   const dc = dayColors[dayName] || { bg: 'var(--sp-subtleBg)', color: 'var(--sp-textSecondary)' };
+                  const catMeta = event.category ? getCategoryMeta(event.category) : null;
+                  const catLabel = event.category ? getCategoryLabel(event.category) : null;
                   return (
                     <div key={event.id} style={s.eventRow}>
                       <div style={{
@@ -355,7 +457,21 @@ export default function FixedEventsIndex({ fixedEvents }) {
                       </div>
                       <div style={{ ...s.eventInfo, textAlign: "start" }}>
                         <span style={s.eventTitle}>{event.title}</span>
-                        {event.teacher && <span style={s.eventTeacher}>👤 {event.teacher}</span>}
+                        {catMeta && (
+                          <span style={s.eventCategory}>
+                            <span>{catMeta.icon}</span>
+                            <span style={{
+                              padding: '1px 8px',
+                              borderRadius: '10px',
+                              background: 'var(--sp-accentLight)',
+                              color: 'var(--sp-accent)',
+                              fontSize: 'var(--sp-text-xs)',
+                              fontWeight: 500,
+                            }}>
+                              {catLabel}
+                            </span>
+                          </span>
+                        )}
                         {event.description && <span style={s.eventDesc}>{event.description}</span>}
                         <span style={s.eventTime}>
                           {isDaily ? tr.everyDay + ' · ' : ''}
@@ -442,6 +558,17 @@ const s = {
     fontSize: 'var(--sp-text-base)', fontWeight: 600, cursor: 'pointer',
     width: '100%',
   },
+  categoryWrap: {
+    display: 'flex', flexWrap: 'wrap', gap: '6px',
+  },
+  categoryPill: {
+    display: 'flex', alignItems: 'center', gap: '4px',
+    padding: '5px 10px', borderRadius: '16px',
+    border: '1px solid', cursor: 'pointer',
+    fontSize: 'var(--sp-text-xs)', fontWeight: 500,
+    transition: 'all 0.15s',
+    lineHeight: '1.2',
+  },
   listBody: { padding: '8px 0' },
   empty: { padding: '40px 20px', textAlign: 'center' },
   emptyText: { fontSize: 'var(--sp-text-lg)', fontWeight: 600, color: 'var(--sp-text)', margin: '0 0 4px' },
@@ -457,7 +584,7 @@ const s = {
   },
   eventInfo: { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' },
   eventTitle: { fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-  eventTeacher: { fontSize: 'var(--sp-text-xs)', color: 'var(--sp-accent)', fontWeight: 500 },
+  eventCategory: { display: 'flex', alignItems: 'center', gap: '4px' },
   eventDesc: { fontSize: 'var(--sp-text-xs)', color: 'var(--sp-textMuted)', fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
   eventTime: { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textMuted)' },
   deleteBtn: { background: 'none', border: '1px solid var(--sp-errorBorder)', color: 'var(--sp-error)', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center' },

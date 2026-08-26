@@ -4,7 +4,7 @@
 
 /* ── Global font ── */
 body, input, button, select, textarea {
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--sp-font, 'DM Sans', sans-serif);
 }
 
 /* ── Responsive type scale ── */

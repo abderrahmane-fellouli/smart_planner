@@ -20,6 +20,7 @@ class FixedEventController extends Controller
         // When false, day_of_week is required and must be a valid day name.
         $rules = [
             'title'              => 'required|string|max:255',
+            'category'           => 'nullable|string|max:50',
             'start_time'         => 'required|date_format:H:i',
             'end_time'           => [
                 'required',
@@ -66,6 +67,7 @@ class FixedEventController extends Controller
             'title'              => $request->title,
             'teacher'            => $request->input('teacher'),
             'description'        => $request->input('description'),
+            'category'           => $request->input('category'),
             'is_recurring_daily' => $request->boolean('is_recurring_daily'),
             'day_of_week'        => $dayOfWeek,
             'start_time'         => $request->start_time,
