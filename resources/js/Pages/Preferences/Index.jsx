@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm, Link, router } from '@inertiajs/react';
-import AppLayout from '@/Pages/AppLayout';
+import AppLayout, { useTheme, useLang, LogoutModal } from '@/Pages/AppLayout';
 import { Head } from '@inertiajs/react';
-import { useTheme } from '@/Pages/AppLayout';
 import { THEMES } from '@/Themes';
 import TimeInput from '@/Components/TimeInput';
 import { useToast } from '@/Components/Toast';
@@ -39,6 +38,17 @@ const T = {
       saveSuccess: "Préférences enregistrées !",
       saveError: "Erreur lors de l'enregistrement.",
       themeSaveError: "Impossible d'enregistrer le thème.",
+      appearance: "Apparence",
+      appearance_desc: "Ajustez l'apparence de l'application",
+      dark_mode: "Mode sombre",
+      dark_mode_desc: "Basculez entre les thèmes clair et sombre",
+      light_mode: "Mode clair",
+      account: "Compte",
+      account_desc: "Gérez votre profil et votre session",
+      profile: "Profil",
+      profile_desc: "Modifier vos informations personnelles",
+      logout: "Se déconnecter",
+      logout_desc: "Terminnez votre session en cours",
     },
   },
   en: {
@@ -72,6 +82,17 @@ const T = {
       saveSuccess: "Preferences saved!",
       saveError: "Failed to save preferences.",
       themeSaveError: "Could not save the theme.",
+      appearance: "Appearance",
+      appearance_desc: "Adjust how the app looks",
+      dark_mode: "Dark mode",
+      dark_mode_desc: "Switch between light and dark themes",
+      light_mode: "Light mode",
+      account: "Account",
+      account_desc: "Manage your profile and session",
+      profile: "Profile",
+      profile_desc: "Edit your personal information",
+      logout: "Logout",
+      logout_desc: "End your current session",
     },
   },
   ar: {
@@ -105,12 +126,25 @@ const T = {
       saveSuccess: "تم حفظ التفضيلات!",
       saveError: "حدث خطأ أثناء الحفظ.",
       themeSaveError: "تعذر حفظ المظهر.",
+      appearance: "المظهر",
+      appearance_desc: "اضبط شكل التطبيق",
+      dark_mode: "الوضع الداكن",
+      dark_mode_desc: "التبديل بين الوضعين الفاتح والداكن",
+      light_mode: "الوضع الفاتح",
+      account: "الحساب",
+      account_desc: "إدارة ملفك الشخصي وجلسة العمل",
+      profile: "الملف الشخصي",
+      profile_desc: "تعديل معلوماتك الشخصية",
+      logout: "تسجيل الخروج",
+      logout_desc: "إنهاء جلستك الحالية",
     },
   },
 };
 
 export default function PreferencesIndex({ preferences }) {
-  const { themeName, setThemeName, dark } = useTheme();
+  const { themeName, setThemeName, dark, toggleDark, tk } = useTheme();
+  const appTr = useLang().tr;
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   let lang = "fr";
   if (typeof window !== "undefined") {
     lang = localStorage.getItem("smartplanner_lang") || "fr";
@@ -339,6 +373,95 @@ export default function PreferencesIndex({ preferences }) {
             </div>
           </div>
 
+          {/* ── Account & Appearance ── */}
+          <div style={s.card}>
+            <div style={s.cardHeader}>
+              <div style={s.cardIcon}>
+                <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+              </div>
+              <h2 style={s.cardTitle}>{tr.appearance}</h2>
+            </div>
+            <div style={s.cardBody}>
+              <p style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textSecondary)', margin: '0 0 14px' }}>{tr.appearance_desc}</p>
+              {/* Dark mode */}
+              <button
+                type="button"
+                onClick={() => toggleDark()}
+                aria-pressed={dark}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '14px', width: '100%',
+                  padding: '12px 14px', borderRadius: '10px', cursor: 'pointer', textAlign: 'start',
+                  background: 'var(--sp-hoverBg)', border: '1.5px solid var(--sp-cardBorder)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{
+                  width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'var(--sp-accentLight)', color: 'var(--sp-accent)',
+                }}>
+                  <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    {dark
+                      ? <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                      : <><circle cx="12" cy="12" r="4"/><path strokeLinecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></>}
+                  </svg>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-text)' }}>{dark ? tr.light_mode : tr.dark_mode}</div>
+                  <div style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textSecondary)' }}>{tr.dark_mode_desc}</div>
+                </div>
+                <span style={{ fontSize: 'var(--sp-text-sm)', fontWeight: 600, color: 'var(--sp-accent)' }}>{dark ? tr.light_mode : tr.dark_mode}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* ── Account ── */}
+          <div style={s.card}>
+            <div style={s.cardHeader}>
+              <div style={s.cardIcon}>
+                <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <h2 style={s.cardTitle}>{tr.account}</h2>
+            </div>
+            <div style={s.cardBody}>
+              <p style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textSecondary)', margin: '0 0 14px' }}>{tr.account_desc}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <Link href="/profile" style={{ display: 'flex', alignItems: 'center', gap: '14px', width: '100%', padding: '12px 14px', borderRadius: '10px', textDecoration: 'none', background: 'var(--sp-hoverBg)', border: '1.5px solid var(--sp-cardBorder)' }}>
+                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--sp-accentLight)', color: 'var(--sp-accent)' }}>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0, textAlign: 'start' }}>
+                    <div style={{ fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-text)' }}>{tr.profile}</div>
+                    <div style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textSecondary)' }}>{tr.profile_desc}</div>
+                  </div>
+                  <span style={{ fontSize: 'var(--sp-text-sm)', fontWeight: 600, color: 'var(--sp-accent)' }}>{tr.configure}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setLogoutModalOpen(true)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '14px', width: '100%',
+                    padding: '12px 14px', borderRadius: '10px', cursor: 'pointer', textAlign: 'start',
+                    background: 'var(--sp-dangerBg)', border: '1.5px solid var(--sp-dangerBorder)',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--sp-dangerBg)', color: 'var(--sp-danger)' }}>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-danger)' }}>{tr.logout}</div>
+                    <div style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-danger)' }}>{tr.logout_desc}</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* ── Sleep schedule link ── */}
           <Link href="/sleep-schedule" style={{ ...s.card, textDecoration: 'none', display: 'block' }}>
             <div style={{ ...s.cardBody, display: 'flex', alignItems: 'center', gap: '14px' }}>
@@ -362,6 +485,15 @@ export default function PreferencesIndex({ preferences }) {
           </div>
         </form>
       </div>
+      {logoutModalOpen && (
+        <LogoutModal
+          tk={tk}
+          tr={appTr}
+          isRTL={isRTL}
+          onConfirm={() => { setLogoutModalOpen(false); router.post('/logout'); }}
+          onCancel={() => setLogoutModalOpen(false)}
+        />
+      )}
     </AppLayout>
   );
 }

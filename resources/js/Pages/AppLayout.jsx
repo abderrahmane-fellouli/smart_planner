@@ -1,8 +1,12 @@
-﻿import React, { useState, useEffect, useLayoutEffect, useMemo, createContext, useContext } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link, usePage, router } from "@inertiajs/react";
 import GlobalSearch from "@/Components/GlobalSearch";
 import ApplicationLogo from "@/Components/ApplicationLogo";
 import { THEMES } from "@/Themes";
+import { useTheme, useLang } from "@/ThemeProvider";
+
+export { useTheme, useLang };
+export { LogoutModal };
 
 function FlashBanner() {
     const { props } = usePage();
@@ -37,18 +41,6 @@ function FlashBanner() {
     );
 }
 
-const TRANSLATIONS = {
-    fr: { nav_section:"Navigation", dashboard:"Tableau de bord", planning:"Mon planning", fixed_events:"Tâches fixes", preferences:"Préférences", statistics:"Statistiques", export:"Exporter", todos:"Tâches du jour", sleep_schedule:"Sommeil", generate_btn:"Générer le planning", profile_title:"Profil", logout:"Déconnexion", logout_title:"Se déconnecter", logout_confirm:"Êtes-vous sûr de vouloir vous déconnecter ?", yes:"Oui", cancel:"Annuler", fallback_name:"Utilisateur", dark_toggle_on:"Passer en mode clair", dark_toggle_off:"Passer en mode sombre", close_menu:"Fermer le menu", open_menu:"Ouvrir le menu", search_label:"Rechercher", close_search:"Fermer la recherche", dir:"ltr" },
-    en: { nav_section:"Navigation", dashboard:"Dashboard", planning:"My Schedule", fixed_events:"Fixed Tasks", preferences:"Preferences", statistics:"Statistics", export:"Export", todos:"Daily Tasks", sleep_schedule:"Sleep", generate_btn:"Generate Schedule", profile_title:"Profile", logout:"Logout", logout_title:"Log out", logout_confirm:"Are you sure you want to log out?", yes:"Yes", cancel:"Cancel", fallback_name:"User", dark_toggle_on:"Switch to light mode", dark_toggle_off:"Switch to dark mode", close_menu:"Close menu", open_menu:"Open menu", search_label:"Search", close_search:"Close search", dir:"ltr" },
-    ar: { nav_section:"التنقل", dashboard:"لوحة التحكم", planning:"جدولي", fixed_events:"المهام الثابتة", preferences:"التفضيلات", statistics:"الإحصائيات", export:"تصدير", todos:"مهام اليوم", sleep_schedule:"النوم", generate_btn:"إنشاء الجدول", profile_title:"الملف الشخصي", logout:"تسجيل الخروج", logout_title:"تسجيل الخروج", logout_confirm:"هل أنت متأكد من أنك تريد تسجيل الخروج؟", yes:"نعم", cancel:"إلغاء", fallback_name:"مستخدم", dark_toggle_on:"التبديل إلى الوضع الفاتح", dark_toggle_off:"التبديل إلى الوضع الداكن", close_menu:"إغلاق القائمة", open_menu:"فتح القائمة", search_label:"بحث", close_search:"إغلاق البحث", dir:"rtl" },
-};
-
-export const LangContext = createContext({ lang: "fr", tr: TRANSLATIONS.fr, setLang: () => {} });
-export const useLang = () => useContext(LangContext);
-
-const ThemeContext = createContext({ dark: false, tk: THEMES.default.light, themeName: 'default', setThemeName: () => {} });
-export const useTheme = () => useContext(ThemeContext);
-
 /* These must be defined OUTSIDE AppLayout to prevent remounting on every render.
  * Each receives the props it needs from AppLayout. */
 const DarkToggle = ({ tk, dark, onToggle, tr, size = 28 }) => (
@@ -66,6 +58,26 @@ const LogoutBtn = ({ tk, onLogout, tr, size = 28 }) => (
             <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
         </svg>
     </button>
+);
+
+const AccountControls = ({ tk, dark, onToggleDark, onLogout, tr, user, href, onNavClick, label, showEmail = true }) => (
+    <div style={{ display:'flex', alignItems:'center', gap:'6px', padding:'10px 12px', borderTop:`1px solid ${tk.sidebarBorder}`, background:tk.sidebarBg }}>
+        <Link href={href} onClick={onNavClick} aria-label={tr.profile_title} style={{ display:'flex', alignItems:'center', gap:'10px', flex:1, minWidth:0, textDecoration:'none', color:tk.text, padding:'6px 4px', borderRadius:'8px', textAlign:'start' }}>
+            <div style={{ width:'34px', height:'34px', borderRadius:'50%', overflow:'hidden', background: tk.accentLight, color:tk.accent, fontSize:'var(--sp-text-base)', fontWeight:700, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                {user?.profile_photo_url ? (
+                    <img src={user.profile_photo_url} alt={user?.name || "User"} style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                ) : (
+                    <span style={{ width:'100%', height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}>{user?.name?.charAt(0).toUpperCase() || "U"}</span>
+                )}
+            </div>
+            <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column' }}>
+                <span style={{ fontSize:'var(--sp-text-base)', fontWeight:600, color:tk.text, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{label || user?.name || tr.fallback_name}</span>
+                {showEmail && <span style={{ fontSize:'var(--sp-text-xs)', color:tk.textMuted, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{user?.email || ""}</span>}
+            </div>
+        </Link>
+        <DarkToggle tk={tk} dark={dark} onToggle={onToggleDark} tr={tr} size={38} />
+        <LogoutBtn tk={tk} onLogout={onLogout} tr={tr} size={38} />
+    </div>
 );
 
 const LangSwitcher = ({ lang, tk, onLangChange, tr }) => (
@@ -208,53 +220,10 @@ export default function AppLayout({ children }) {
     const [searchOpen, setSearchOpen] = useState(false);
     const [logoutModalOpen, setLogoutModalOpen] = useState(false);
 
-    const [dark, setDark] = useState(() => {
-        try { return localStorage.getItem("smartplanner_dark") === "true"; }
-        catch { return false; }
-    });
-
-    /* Theme: prefer backend preference, fallback to localStorage, then default */
-    const backendTheme = props.preferences?.theme;
-    const [themeName, setThemeNameState] = useState(() => {
-        try {
-            if (backendTheme) return backendTheme;
-            return localStorage.getItem("smartplanner_theme") || "default";
-        }
-        catch { return "default"; }
-    });
-
-    const [lang, setLangState] = useState(() => {
-        try { return localStorage.getItem("smartplanner_lang") || "fr"; }
-        catch { return "fr"; }
-    });
-
-    const tr = TRANSLATIONS[lang] || TRANSLATIONS.fr;
-    const tk = useMemo(() => (THEMES[themeName] || THEMES.default)[dark ? 'dark' : 'light'], [themeName, dark]);
-    const font = useMemo(() => (THEMES[themeName] || THEMES.default).font || "'DM Sans', sans-serif", [themeName]);
+    const { dark, tk, themeName, setThemeName, toggleDark } = useTheme();
+    const { lang, tr, setLang } = useLang();
+    const font = (THEMES[themeName] || THEMES.default).font || "'DM Sans', sans-serif";
     const isRTL = tr.dir === "rtl";
-
-    const setLang = (l) => {
-        setLangState(l);
-        try { localStorage.setItem("smartplanner_lang", l); } catch {}
-    };
-
-    const setThemeName = (name) => {
-        setThemeNameState(name);
-        try { localStorage.setItem("smartplanner_theme", name); } catch {}
-    };
-
-    useLayoutEffect(() => {
-        try { localStorage.setItem("smartplanner_dark", dark); } catch {}
-        try { localStorage.setItem("smartplanner_theme", themeName); } catch {}
-        document.documentElement.dir = isRTL ? "rtl" : "ltr";
-        document.documentElement.lang = lang;
-        document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-        document.documentElement.setAttribute("data-theme-name", themeName);
-        Object.entries(tk).forEach(([k, v]) => {
-            document.documentElement.style.setProperty(`--sp-${k}`, v);
-        });
-        document.documentElement.style.setProperty('--sp-font', font);
-    }, [dark, themeName, isRTL, lang, tk, font]);
 
     useEffect(() => {
         if (drawerOpen) {
@@ -264,8 +233,6 @@ export default function AppLayout({ children }) {
             return () => { document.body.style.overflow = ''; document.removeEventListener('keydown', handleEsc); };
         }
     }, [drawerOpen]);
-
-    const toggleDark = () => setDark(d => !d);
     const handleLogout = () => {
         setLogoutModalOpen(true);
     };
@@ -275,8 +242,7 @@ export default function AppLayout({ children }) {
     const closeDrawer = () => setDrawerOpen(false);
 
     return (
-        <LangContext.Provider value={{ lang, tr, setLang }}>
-            <ThemeContext.Provider value={{ dark, tk, themeName, setThemeName }}>
+        <>
             <style>{`
                 @keyframes flashIn { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
                 @keyframes logoutModalIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
@@ -285,13 +251,12 @@ export default function AppLayout({ children }) {
 
                 {/* DESKTOP sidebar — full, sticky, visible only >768px */}
                 <aside className="sp-desktop-sidebar" style={{ width:"240px", flexShrink:0, display:"flex", flexDirection:"column", position:"sticky", top:0, height:"100vh", overflowY:"auto", zIndex:30, background:tk.sidebarBg, borderInlineEnd: `1px solid ${tk.sidebarBorder}` }}>
-                    {/* Logo + Dark toggle */}
+                    {/* Logo */}
                     <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"16px 14px", borderBottom:`1px solid ${tk.sidebarBorder}` }}>
                         <Link href="/dashboard" style={{ display:"flex", alignItems:"center", gap:"8px", flex:1, minWidth:0, textDecoration:"none" }}>
                             <ApplicationLogo size={32} />
                             <span style={{ fontSize:"var(--sp-text-lg)", fontWeight:800, color:tk.text, letterSpacing:"-0.02em" }}>SmartPlanner</span>
                         </Link>
-                        <DarkToggle tk={tk} dark={dark} onToggle={toggleDark} tr={tr} />
                     </div>
                     <LangSwitcher lang={lang} tk={tk} onLangChange={(l) => { setLang(l); setTimeout(() => router.reload(), 100); }} tr={tr} />
                     {/* Search — desktop sidebar */}
@@ -308,27 +273,8 @@ export default function AppLayout({ children }) {
                             {tr.generate_btn}
                         </Link>
                     </div>
-                    {/* User bar + Profile + Logout */}
-                    <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"12px 14px", borderTop:`1px solid ${tk.sidebarBorder}`, background:tk.sidebarBg }}>
-                        <div style={{ width:"32px", height:"32px", borderRadius:"50%", overflow:"hidden", background: tk.accentLight, color:tk.accent, fontSize:"var(--sp-text-base)", fontWeight:700, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                            {user?.profile_photo_url ? (
-                                <img src={user.profile_photo_url} alt={user?.name || "User"} style={{ width:"100%", height:"100%", objectFit:"cover" }} />
-                            ) : (
-                                <span>{user?.name?.charAt(0).toUpperCase() || "U"}</span>
-                            )}
-                        </div>
-                        <div style={{ flex:1, minWidth:0, display:"flex", flexDirection:"column", textAlign: "start" }}>
-                            <span style={{ fontSize:"var(--sp-text-base)", fontWeight:600, color:tk.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.name || tr.fallback_name}</span>
-                            <span style={{ fontSize:"var(--sp-text-xs)", color:tk.textMuted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{user?.email || ""}</span>
-                        </div>
-                        <Link href="/profile" aria-label={tr.profile_title} title={tr.profile_title} style={{ width:"28px", height:"28px", borderRadius:"7px", background:tk.subtleBg, border:`1px solid ${tk.sidebarBorder}`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0, textDecoration:"none" }}>
-                            <svg width="15" height="15" fill="none" stroke={tk.textSecondary} strokeWidth="1.8" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </Link>
-                        <LogoutBtn tk={tk} onLogout={handleLogout} tr={tr} />
-                    </div>
+                    {/* User bar: Profile + Dark Mode + Logout grouped (desktop) */}
+                    <AccountControls tk={tk} dark={dark} onToggleDark={toggleDark} onLogout={handleLogout} tr={tr} user={user} href="/profile" />
                 </aside>
 
                 {/* MOBILE drawer — nav-only, slides in from left */}
@@ -344,23 +290,9 @@ export default function AppLayout({ children }) {
                         </button>
                     </div>
                     <NavLinks tk={tk} tr={tr} NAV={NAV} url={url} onNavClick={closeDrawer} />
-                    {/* Dark toggle + Logout in drawer */}
-                    <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"10px 14px", borderTop:`1px solid ${tk.sidebarBorder}` }}>
-                        <DarkToggle tk={tk} dark={dark} onToggle={toggleDark} tr={tr} size={36} />
-                        <LogoutBtn tk={tk} onLogout={handleLogout} tr={tr} size={36} />
-                    </div>
-                    {/* Profile + Language at bottom of drawer */}
-                    <div style={{ borderTop:`1px solid ${tk.sidebarBorder}` }}>
-                        <Link href="/profile" onClick={closeDrawer} style={{ display:"flex", alignItems:"center", gap:"10px", padding:"12px", textDecoration:"none", color:tk.textSecondary, fontSize:"var(--sp-text-sm)", fontWeight:500 }}>
-                            {user?.profile_photo_url ? (
-                                <img src={user.profile_photo_url} alt="" style={{ width:"32px", height:"32px", borderRadius:"50%", objectFit:"cover" }} />
-                            ) : (
-                                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 110 8 4 4 0 010-8z"/></svg>
-                            )}
-                            {tr.profile_title}
-                        </Link>
-                        <LangSwitcher lang={lang} tk={tk} onLangChange={(l) => { setLang(l); setTimeout(() => router.reload(), 100); }} tr={tr} />
-                    </div>
+                    {/* Account controls: Profile + Dark Mode + Logout grouped together */}
+                    <AccountControls tk={tk} dark={dark} onToggleDark={toggleDark} onLogout={handleLogout} tr={tr} user={user} href="/profile" onNavClick={closeDrawer} label={tr.profile_title} />
+                    <LangSwitcher lang={lang} tk={tk} onLangChange={(l) => { setLang(l); setTimeout(() => router.reload(), 100); }} tr={tr} />
                 </aside>
 
                 {/* Main content */}
@@ -392,8 +324,6 @@ export default function AppLayout({ children }) {
                                     <svg width="13" height="13" fill="none" stroke={tk.textSecondary} strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 110 8 4 4 0 010-8z"/></svg>
                                 )}
                             </Link>
-                            <DarkToggle tk={tk} dark={dark} onToggle={toggleDark} tr={tr} size={36} />
-                            <LogoutBtn tk={tk} onLogout={handleLogout} tr={tr} size={36} />
                         </div>
                     </div>
                     <FlashBanner />
@@ -426,7 +356,6 @@ export default function AppLayout({ children }) {
                     />
                 )}
             </div>
-            </ThemeContext.Provider>
-        </LangContext.Provider>
+        </>
     );
 }

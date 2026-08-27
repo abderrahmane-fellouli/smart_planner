@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 import { Ziggy } from './ziggy';
 import { route as ziggyRoute } from 'ziggy-js';
 import { ToastProvider } from './Components/Toast';
+import { ThemeProvider } from './ThemeProvider';
 
 window.route = (name, params, absolute = false) => ziggyRoute(name, params, absolute, Ziggy);
 
@@ -23,7 +24,9 @@ createInertiaApp({
         const root = createRoot(el);
         root.render(
             <ToastProvider>
-                <App {...props} />
+                <ThemeProvider preferences={props.initialPage?.props?.preferences}>
+                    <App {...props} />
+                </ThemeProvider>
             </ToastProvider>
         );
     },
