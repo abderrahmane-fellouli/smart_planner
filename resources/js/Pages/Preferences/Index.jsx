@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { useForm, Link, router } from '@inertiajs/react';
-import AppLayout, { useTheme, useLang, LogoutModal } from '@/Pages/AppLayout';
+import React from 'react';
+import { useForm, Link } from '@inertiajs/react';
+import AppLayout, { useTheme } from '@/Pages/AppLayout';
 import { Head } from '@inertiajs/react';
 import { THEMES } from '@/Themes';
 import TimeInput from '@/Components/TimeInput';
@@ -49,6 +49,9 @@ const T = {
       profile_desc: "Modifier vos informations personnelles",
       logout: "Se déconnecter",
       logout_desc: "Terminnez votre session en cours",
+      help: "Aide",
+      help_desc: "Suivez un parcours guidé pour découvrir SmartPlanner et construire votre premier planning pas à pas.",
+      start_guide: "Démarrer le guide SmartPlanner",
     },
   },
   en: {
@@ -93,6 +96,9 @@ const T = {
       profile_desc: "Edit your personal information",
       logout: "Logout",
       logout_desc: "End your current session",
+      help: "Help",
+      help_desc: "Follow a guided tour to discover SmartPlanner and build your first schedule step by step.",
+      start_guide: "Start SmartPlanner Guide",
     },
   },
   ar: {
@@ -137,20 +143,20 @@ const T = {
       profile_desc: "تعديل معلوماتك الشخصية",
       logout: "تسجيل الخروج",
       logout_desc: "إنهاء جلستك الحالية",
+      help: "المساعدة",
+      help_desc: "اتبع جولة إرشادية لاكتشاف SmartPlanner وبناء أول جدول لك خطوة بخطوة.",
+      start_guide: "بدء دليل SmartPlanner",
     },
   },
 };
 
 export default function PreferencesIndex({ preferences }) {
-  const { themeName, setThemeName, dark, toggleDark, tk } = useTheme();
-  const appTr = useLang().tr;
-  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const { themeName, setThemeName, dark, toggleDark } = useTheme();
   let lang = "fr";
   if (typeof window !== "undefined") {
     lang = localStorage.getItem("smartplanner_lang") || "fr";
   }
   const tr = T[lang]?.preferences || T.fr.preferences;
-  const isRTL = lang === "ar";
 
   const themeOptions = Object.entries(THEMES).map(([key, theme]) => ({
     key,
@@ -309,7 +315,7 @@ export default function PreferencesIndex({ preferences }) {
           </div>
 
           {/* ── Theme selector ── */}
-          <div style={s.card}>
+          <div style={s.card} data-tutorial-target="prefs-theme">
             <div style={s.cardHeader}>
               <div style={s.cardIcon}>
                 <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
@@ -374,7 +380,7 @@ export default function PreferencesIndex({ preferences }) {
           </div>
 
           {/* ── Account & Appearance ── */}
-          <div style={s.card}>
+          <div style={s.card} data-tutorial-target="prefs-appearance">
             <div style={s.cardHeader}>
               <div style={s.cardIcon}>
                 <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
@@ -440,24 +446,6 @@ export default function PreferencesIndex({ preferences }) {
                   </div>
                   <span style={{ fontSize: 'var(--sp-text-sm)', fontWeight: 600, color: 'var(--sp-accent)' }}>{tr.configure}</span>
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => setLogoutModalOpen(true)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '14px', width: '100%',
-                    padding: '12px 14px', borderRadius: '10px', cursor: 'pointer', textAlign: 'start',
-                    background: 'var(--sp-dangerBg)', border: '1.5px solid var(--sp-dangerBorder)',
-                    transition: 'all 0.15s',
-                  }}
-                >
-                  <div style={{ width: '34px', height: '34px', borderRadius: '8px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--sp-dangerBg)', color: 'var(--sp-danger)' }}>
-                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 'var(--sp-text-base)', fontWeight: 600, color: 'var(--sp-danger)' }}>{tr.logout}</div>
-                    <div style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-danger)' }}>{tr.logout_desc}</div>
-                  </div>
-                </button>
               </div>
             </div>
           </div>
@@ -479,21 +467,62 @@ export default function PreferencesIndex({ preferences }) {
           </Link>
 
           <div style={{ ...s.footer, textAlign: "start" }}>
-            <button type="submit" style={s.saveBtn} disabled={processing}>
+            <button type="submit" style={s.saveBtn} disabled={processing} data-tutorial-target="prefs-save">
               {processing ? tr.saving : tr.save}
             </button>
           </div>
         </form>
+
+        {/* ── Help & Tutorial (restart point for the guide) ── */}
+        <div style={{ marginTop: '16px' }}>
+          <div style={s.card}>
+            <div style={s.cardHeader}>
+              <div style={s.cardIcon}>
+                <svg width="16" height="16" fill="none" stroke="var(--sp-accent)" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 style={s.cardTitle}>{tr.help}</h2>
+            </div>
+            <div style={s.cardBody}>
+              <p style={{ fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textSecondary)', margin: '0 0 14px' }}>
+                {tr.help_desc}
+              </p>
+              <button
+                type="button"
+                data-tutorial-target="prefs-help"
+                onClick={() => {
+                  fetch('/tutorial/reset', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-Requested-With': 'XMLHttpRequest',
+                      'X-XSRF-TOKEN': decodeURIComponent(document.cookie.match(/XSRF-TOKEN=([^;]+)/)?.[1] || ''),
+                    },
+                  })
+                    .then(res => res.json())
+                    .then(() => {
+                      window.dispatchEvent(new Event('smartplanner:tutorial:start'));
+                    })
+                    .catch(() => {});
+                }}
+                style={{
+                  padding: '11px 24px',
+                  background: 'var(--sp-accent)',
+                  color: 'var(--sp-accentText)',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontSize: 'var(--sp-text-base)',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                {tr.start_guide}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-      {logoutModalOpen && (
-        <LogoutModal
-          tk={tk}
-          tr={appTr}
-          isRTL={isRTL}
-          onConfirm={() => { setLogoutModalOpen(false); router.post('/logout'); }}
-          onCancel={() => setLogoutModalOpen(false)}
-        />
-      )}
     </AppLayout>
   );
 }

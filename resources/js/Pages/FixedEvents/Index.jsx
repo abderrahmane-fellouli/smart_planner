@@ -225,7 +225,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
 
         <div style={s.layout} className="sp-grid-2col">
           {/* Form */}
-          <div style={s.formCard}>
+          <div style={s.formCard} data-tutorial-target="courses-form">
             <div style={s.cardHeader}>
               <div style={s.cardIcon}>
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -424,7 +424,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
           </div>
 
           {/* Course list */}
-          <div style={s.listCard}>
+          <div style={s.listCard} data-tutorial-target="courses-list">
             <div style={s.cardHeader}>
               <div style={s.cardIcon}>
                 <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -447,7 +447,7 @@ export default function FixedEventsIndex({ fixedEvents }) {
                   const catMeta = event.category ? getCategoryMeta(event.category) : null;
                   const catLabel = event.category ? getCategoryLabel(event.category) : null;
                   return (
-                    <div key={event.id} style={s.eventRow}>
+                    <div key={event.id} data-course-row style={s.eventRow}>
                       <div style={{
                         ...s.dayBadge,
                         background: isDaily ? 'var(--sp-warningBg)' : dc.bg,

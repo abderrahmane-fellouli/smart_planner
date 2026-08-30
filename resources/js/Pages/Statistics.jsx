@@ -234,7 +234,7 @@ export default function Statistics({ schedules = [], fixedEvents = [], user }) {
         </div>
 
         {/* KPI Cards */}
-        <div style={s.kpiRow} className="sp-kpi-row">
+        <div style={s.kpiRow} className="sp-kpi-row" data-tutorial-target="stats-kpi">
           {[
             { label: tr.hoursPerWeek, value: `${resume.total_heures_semaine ?? 0}${tr.hourUnit}`, icon: "⏱️", color: "var(--sp-accent)", bg: "var(--sp-accentLight)" },
             { label: tr.totalSessions, value: resume.sessions_totales ?? 0, icon: "📚", color: "var(--sp-type-equilibre-fg)", bg: "var(--sp-type-equilibre)" },
