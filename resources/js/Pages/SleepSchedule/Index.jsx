@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { router } from "@inertiajs/react";
+import { router, Head } from "@inertiajs/react";
 import AppLayout from "@/Pages/AppLayout";
 import TimeInput from "@/Components/TimeInput";
 import { useLang, useTheme } from "@/Pages/AppLayout";
@@ -166,13 +166,15 @@ export default function Index({ sleepSchedule, dayTimes = [], days = FRENCH_DAYS
     }
 
     return (
+        <>
+        <Head title={tr.title} />
         <AppLayout>
             <div style={{ maxWidth: 640, margin: "0 auto", padding: "20px 24px", overflowX: 'hidden' }}>
                 <h1 style={{ fontSize: "var(--sp-text-xl)", fontWeight: 700, color: tk.text, margin: "0 0 24px" }}>
                     {tr.title}
                 </h1>
                 <form onSubmit={handleSave}>
-                    <div style={{ background: tk.card, border: `1px solid ${tk.cardBorder}`, borderRadius: 12, padding: 20 }}>
+                    <div style={{ background: tk.card, border: `1px solid ${tk.cardBorder}`, borderRadius: 12, padding: 20 }} data-tutorial-target="sleep-form">
                         {renderModeSection(tr.wake, wakeMode, setWakeMode, true)}
                         {renderModeSection(tr.bedtime, bedtimeMode, setBedtimeMode, false)}
                     </div>
@@ -182,5 +184,6 @@ export default function Index({ sleepSchedule, dayTimes = [], days = FRENCH_DAYS
                 </form>
             </div>
         </AppLayout>
+        </>
     );
 }

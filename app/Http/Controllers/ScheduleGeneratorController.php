@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ScheduleActivatedMail;
+use App\Mail\ScheduleReadyMail;
 use App\Models\FixedEvent;
 use App\Models\Preference;
 use App\Models\SleepSchedule;
@@ -10,7 +12,10 @@ use App\Models\TodoItem;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Services\SchedulePlanner;
 use Inertia\Inertia;
 
 class ScheduleGeneratorController extends Controller
@@ -29,6 +34,43 @@ class ScheduleGeneratorController extends Controller
 
         return Inertia::render('Schedules/Index', [
             'schedules' => $schedules,
+        ]);
+    }
+
+    /**
+     * Calendar / Program page.
+     *
+     * Renders the SINGLE canonical active schedule (or the most recent one if
+     * nothing is active) as a visual day/week/month program. This is the same
+     * source of truth that drives the dashboard, export and statistics — the
+     * page never generates its own data.
+     */
+    public function calendar()
+    {
+        $user = auth()->user();
+
+        $schedule = OptimizedSchedule::where('user_id', $user->id)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$schedule) {
+            $schedule = OptimizedSchedule::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+        }
+
+        $frDayMap = [
+            1 => 'Lundi', 2 => 'Mardi', 3 => 'Mercredi', 4 => 'Jeudi',
+            5 => 'Vendredi', 6 => 'Samedi', 7 => 'Dimanche',
+        ];
+
+        $todayName = $frDayMap[Carbon::now()->isoWeekday()] ?? null;
+
+        return Inertia::render('Calendar/Index', [
+            'schedule'    => $schedule,
+            'todayName'   => $todayName,
+            'hasCourses'  => FixedEvent::where('user_id', $user->id)->exists(),
+            'scheduleUrl' => route('schedules.index'),
         ]);
     }
 
@@ -87,10 +129,18 @@ class ScheduleGeneratorController extends Controller
             $equilibre = $this->generateByType($fixedEvents, $prefs, 'equilibre');
             $leger     = $this->generateByType($fixedEvents, $prefs, 'leger');
 
-            $this->saveSchedule($userId, 'intensif',  $intensif);
-            $this->saveSchedule($userId, 'equilibre', $equilibre);
-            $this->saveSchedule($userId, 'leger',     $leger);
+            $this->saveSchedule($userId, 'intensif',  $intensif,  $this->explanationFor($intensif));
+            $this->saveSchedule($userId, 'equilibre', $equilibre, $this->explanationFor($equilibre));
+            $this->saveSchedule($userId, 'leger',     $leger,     $this->explanationFor($leger));
         });
+
+        // Notify the user that their fresh schedule is ready. This is a single,
+        // meaningful signal (not sent on every shop-floor recalculation).
+        try {
+            Mail::to(auth()->user())->send(new ScheduleReadyMail(auth()->user()));
+        } catch (\Throwable $e) {
+            Log::error('Schedule ready email failed: ' . $e->getMessage());
+        }
 
         return redirect()->back()->with('success', trans('messages.schedule_generated'));
     }
@@ -157,6 +207,7 @@ class ScheduleGeneratorController extends Controller
             $studySessions = [];
             $sessionsCount = 0;
             $totalMinutes = 0;
+            $autoMinutes = 0;
             // Track occupied time within this day to check overlaps between study sessions
             $occupiedRanges = [];
 
@@ -197,6 +248,48 @@ class ScheduleGeneratorController extends Controller
                 $dayWake  = 420;
                 $daySleep = 1380;
             }
+
+            // ── Capacity / overload report ─────────────────────────────────
+            // HARD ranges = fixed events + committed daily tasks (estimated at
+            // their requested slot). Sleep is HARD by construction (the awake
+            // window is [wake,sleep] and nothing is placed outside it).
+            $hardRanges = [];
+            foreach ($jourFixed as $event) {
+                $s = $this->toMinutes($event->start_time);
+                $e = $this->toMinutes($event->end_time);
+                if ($s < $e) {
+                    $hardRanges[] = ['start' => $s, 'end' => $e];
+                }
+            }
+
+            // Committed (is_scheduled) daily tasks also count as HARD intent,
+            // estimated at their requested time (they may slide later and the
+            // placement loop below re-checks overlap against real ranges).
+            foreach (TodoItem::where('user_id', auth()->id())
+                        ->where('is_scheduled', true)
+                        ->where('scheduled_day', $jour)
+                        ->whereNotNull('scheduled_time')
+                        ->whereNotNull('scheduled_duration')
+                        ->get() as $ct) {
+                $cs = $this->toMinutes($ct->scheduled_time);
+                $ce = $cs + (int) $ct->scheduled_duration;
+                if ($cs < $ce) {
+                    $hardRanges[] = ['start' => $cs, 'end' => $ce];
+                }
+            }
+
+            $dayCapacity = SchedulePlanner::dailyCapacity($dayWake, $daySleep, $hardRanges);
+
+            // desired_free_time is a SOFT preference: never fill the whole awake
+            // window. Cap auto+flexible study time to the awake window minus the
+            // requested free hours (and minus already-committed hard time).
+            $softFreeCap = SchedulePlanner::adjustedSessionCap($dayCapacity['awake'], $prefs?->desired_free_time ?? 2);
+            $autoMinutesBudget = max(0, $softFreeCap - $dayCapacity['occupied']);
+
+            // desired_free_time must meaningfully reduce volume: cap the number
+            // of auto sessions this day to however many fit in the budget.
+            $dayMaxSessions = max(1, (int) floor($autoMinutesBudget / max(1, $cfg['duration'])));
+            $dayMaxSessions = min($cfg['maxSessions'], $dayMaxSessions);
 
             $scheduledTodos = TodoItem::where('user_id', auth()->id())
                 ->where('is_scheduled', true)
@@ -248,7 +341,10 @@ class ScheduleGeneratorController extends Controller
             }
 
             foreach ($freeSlots as $slot) {
-                if ($sessionsCount >= $cfg['maxSessions']) break;
+                if ($sessionsCount >= $cfg['maxSessions'] || $sessionsCount >= $dayMaxSessions) break;
+                // desired_free_time (SOFT): stop filling once the auto-study
+                // budget for the day is reached.
+                if ($autoMinutesBudget !== null && $autoMinutes > 0 && $autoMinutes >= $autoMinutesBudget) break;
 
                 $slotStart = $this->toMinutes($slot['start']);
                 $slotEnd   = $this->toMinutes($slot['end']);
@@ -300,14 +396,89 @@ class ScheduleGeneratorController extends Controller
                 $studyRanges[]    = ['start' => $sessionStart, 'end' => $sessionEnd];
                 $sessionsCount++;
                 $totalMinutes += $sessionDuration;
+                $autoMinutes  += $sessionDuration;
+            }
+
+            // ── FLEXIBLE daily tasks ─────────────────────────────────────
+            // Pending (uncompleted), non-committed daily todos are placed in
+            // whatever free time remains, using a difficulty-based default
+            // duration. They are "flexible": they get a slot only if there is
+            // genuinely room, never by stealing from sleep or fixed events.
+            $flexibleTodos = TodoItem::where('user_id', auth()->id())
+                ->where('completed', false)
+                ->where('is_scheduled', false)
+                ->orderByDesc('priority')   // hardest / most important first
+                ->get();
+
+            foreach ($flexibleTodos as $flexTodo) {
+                if ($autoMinutesBudget !== null && $autoMinutes + (int) $flexTodo->scheduled_duration >= $autoMinutesBudget) {
+                    if ($autoMinutes >= $autoMinutesBudget) break;
+                }
+
+                $flexDuration = SchedulePlanner::difficultyDuration((int) $flexTodo->priority);
+
+                // Recompute free gaps on top of everything placed so far.
+                $sorted = $occupiedRanges;
+                usort($sorted, fn($a, $b) => $a['start'] - $b['start']);
+                $gaps = [];
+                $cursor = $dayWake;
+                foreach ($sorted as $o) {
+                    $os = max((int) $o['start'], $cursor);
+                    if ($os > $cursor) {
+                        $gaps[] = ['start' => $cursor, 'end' => $os];
+                    }
+                    $cursor = max($cursor, (int) $o['end']);
+                }
+                if ($cursor < $daySleep) {
+                    $gaps[] = ['start' => $cursor, 'end' => $daySleep];
+                }
+
+                // Place in the first gap that can fit with a real break.
+                $placed = false;
+                foreach ($gaps as $gap) {
+                    if ($placed) break;
+                    $gStart = (int) $gap['start'];
+                    $gEnd   = (int) $gap['end'];
+                    if ($gEnd - $gStart < $flexDuration) continue;
+                    // Shift within the gap (15-min steps) to respect breaks.
+                    $start = $gStart;
+                    while ($start + $flexDuration <= $gEnd) {
+                        if (!$this->breakConflict($start, $start + $flexDuration, $studyRanges, 5)
+                            && !$this->rangesOverlap($start, $start + $flexDuration, $occupiedRanges)) {
+                            $studySessions[] = [
+                                'debut'   => $this->minutesToTime($start),
+                                'fin'     => $this->minutesToTime($start + $flexDuration),
+                                'duree'   => $flexDuration,
+                                'matiere' => 'Tâche · ' . $flexTodo->title,
+                                'flexible'=> true,
+                            ];
+                            $occupiedRanges[] = ['start' => $start, 'end' => $start + $flexDuration];
+                            $studyRanges[]    = ['start' => $start, 'end' => $start + $flexDuration];
+                            $totalMinutes += $flexDuration;
+                            $autoMinutes  += $flexDuration;
+                            $sessionsCount++;
+                            $placed = true;
+                            break;
+                        }
+                        $start += 15;
+                    }
+                }
             }
 
             $schedule[$jour] = [
                 'cours_fixes'        => $jourFixed->values(),
                 'sessions_etude'     => $studySessions,
                 'total_heures_etude' => round($totalMinutes / 60, 1),
+                'capacity'           => $dayCapacity,
+                'overloaded'         => $dayCapacity['overloaded'],
+                'explanation'        => SchedulePlanner::dayExplanation($dayCapacity, [
+                    'sessions_etude' => $studySessions,
+                    'cours_fixes'    => $jourFixed->values(),
+                ]),
             ];
         }
+
+        $overloadedDays = array_filter($schedule, fn($d) => $d['overloaded'] ?? false);
 
         return [
             'type'    => $type,
@@ -316,6 +487,8 @@ class ScheduleGeneratorController extends Controller
                 'total_heures_semaine' => round(array_sum(array_column($schedule, 'total_heures_etude')), 1),
                 'moyenne_par_jour'     => round(array_sum(array_column($schedule, 'total_heures_etude')) / 7, 1),
                 'sessions_totales'     => array_sum(array_map(fn($j) => count($j['sessions_etude']), $schedule)),
+                'overloaded_days'      => count($overloadedDays),
+                'overloaded'           => count($overloadedDays) > 0,
             ],
         ];
     }
@@ -607,6 +780,12 @@ class ScheduleGeneratorController extends Controller
         $schedule = OptimizedSchedule::where('user_id', auth()->id())->findOrFail($id);
         $schedule->update(['is_active' => true]);
 
+        try {
+            Mail::to(auth()->user())->send(new ScheduleActivatedMail(auth()->user(), $schedule->type));
+        } catch (\Throwable $e) {
+            Log::error('Schedule activated email failed: ' . $e->getMessage());
+        }
+
         return redirect()->back()->with('success', trans('messages.schedule_activated'));
     }
 
@@ -636,7 +815,7 @@ class ScheduleGeneratorController extends Controller
     /**
      * Persist a generated schedule to the database.
      */
-    private function saveSchedule($userId, $type, $data)
+    private function saveSchedule($userId, $type, $data, $explanation = null)
     {
         $mondayOfWeek = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
 
@@ -644,9 +823,42 @@ class ScheduleGeneratorController extends Controller
             'user_id'       => $userId,
             'type'          => $type,
             'schedule'      => $data,
+            'explanations'  => $explanation,
             'generated_for' => $mondayOfWeek,
             'is_active'     => false,
         ]);
+    }
+
+    /**
+     * Build a short, honest human explanation for a generated schedule.
+     * Uses the per-day explanations already produced by the engine.
+     */
+    private function explanationFor(array $schedule): string
+    {
+        $details = $schedule['details'] ?? [];
+        $resume  = $schedule['resume']  ?? [];
+        $days    = SchedulePlanner::DAYS;
+
+        $overloaded = [];
+        foreach ($days as $jour) {
+            if (!empty($details[$jour]['overloaded'])) {
+                $overloaded[] = $jour;
+            }
+        }
+
+        $text = sprintf(
+            'Ce planning place %s session(s) d\'étude par semaine, soit environ %s h au total. ',
+            $resume['sessions_totales'] ?? 0,
+            $resume['total_heures_semaine'] ?? 0
+        );
+
+        if (count($overloaded) > 0) {
+            $text .= 'Attention : vos journées suivantes sont très chargées (plus de 85% du temps éveillé déjà occupé par vos cours et engagements) — les sessions d\'étude y sont réduites : ' . implode(', ', $overloaded) . '. ';
+        }
+
+        $text .= 'Le sommeil et vos cours fixes sont toujours respectés, et des pauses sont prévues entre les sessions.';
+
+        return $text;
     }
 
     // ── Time utility functions ──

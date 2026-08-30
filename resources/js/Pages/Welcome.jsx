@@ -57,6 +57,8 @@ const WT = {
         footerText: "© 2026 SmartPlanner · Planification d'études intelligente par IA",
         footerLogin: "Connexion",
         footerRegister: "Inscription",
+        footerPrivacy: "Confidentialité",
+        footerTerms: "Conditions",
     },
     en: {
         headTitle: "SmartPlanner - Plan your studies with AI",
@@ -108,6 +110,8 @@ const WT = {
         footerText: "© 2026 SmartPlanner · Smart AI-powered study planning",
         footerLogin: "Log in",
         footerRegister: "Sign up",
+        footerPrivacy: "Privacy",
+        footerTerms: "Terms",
     },
     ar: {
         headTitle: "سمارت بلانر - خطط لدراستك بالذكاء الاصطناعي",
@@ -159,6 +163,8 @@ const WT = {
         footerText: "© 2026 سمارت بلانر · تخطيط دراسي ذكي بالذكاء الاصطناعي",
         footerLogin: "دخول",
         footerRegister: "تسجيل",
+        footerPrivacy: "الخصوصية",
+        footerTerms: "الشروط",
     },
 };
 
@@ -177,7 +183,29 @@ export default function Welcome({ canLogin, canRegister }) {
 
     return (
         <>
-            <Head title={tr.headTitle} />
+            <Head title={tr.headTitle}>
+                {(() => {
+                    const origin = typeof window !== "undefined" ? window.location.origin : "";
+                    return (
+                        <>
+                            <meta name="description" content={tr.heroSub} />
+                            <meta property="og:title" content={tr.headTitle} />
+                            <meta property="og:description" content={tr.heroSub} />
+                            <meta property="og:type" content="website" />
+                            <meta property="og:url" content={origin + "/"} />
+                            <meta name="twitter:card" content="summary" />
+                            <meta name="twitter:title" content={tr.headTitle} />
+                            <meta name="twitter:description" content={tr.heroSub} />
+                            <script type="application/ld+json">{JSON.stringify({
+                                "@context": "https://schema.org",
+                                "@type": "WebSite",
+                                "name": "SmartPlanner",
+                                "url": origin + "/",
+                            })}</script>
+                        </>
+                    );
+                })()}
+            </Head>
             <div style={s.root} dir={lang === "ar" ? "rtl" : "ltr"}>
 
                 {/* NAVBAR */}
@@ -359,6 +387,8 @@ export default function Welcome({ canLogin, canRegister }) {
                         <div style={s.footerLinks}>
                             {canLogin && <Link href="/login" style={s.footerLink}>{tr.footerLogin}</Link>}
                             {canRegister && <Link href="/register" style={s.footerLink}>{tr.footerRegister}</Link>}
+                            <Link href="/privacy" style={s.footerLink}>{tr.footerPrivacy}</Link>
+                            <Link href="/terms" style={s.footerLink}>{tr.footerTerms}</Link>
                         </div>
                     </div>
                 </footer>
