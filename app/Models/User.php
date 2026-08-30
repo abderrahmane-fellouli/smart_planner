@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Notifications\Auth\ResetPassword;
+use App\Notifications\Auth\VerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -24,6 +26,7 @@ class User extends Authenticatable
         'last_name',
         'third_name',
         'pseudonym',
+        'locale',
         'email',
         'password',
         'profile_photo_path',
@@ -84,5 +87,21 @@ class User extends Authenticatable
     public function todos(): HasMany
     {
         return $this->hasMany(TodoItem::class);
+    }
+
+    /**
+     * Send the password reset notification using the branded, localized template.
+     */
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPassword($token));
+    }
+
+    /**
+     * Send the email verification notification using the branded, localized template.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new VerifyEmail);
     }
 }

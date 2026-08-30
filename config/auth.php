@@ -20,6 +20,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Email Verification
+    |--------------------------------------------------------------------------
+    |
+    | This option specifies the number of minutes that a signed email
+    | verification link remains valid before it expires.
+    |
+    */
+
+    'verification' => [
+        'expire' => 60,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Authentication Guards
     |--------------------------------------------------------------------------
     |

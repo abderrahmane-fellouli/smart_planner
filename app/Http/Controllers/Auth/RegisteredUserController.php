@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -71,12 +72,24 @@ class RegisteredUserController extends Controller
             'third_name' => $thirdName,
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'locale' => in_array($request->input('lang', 'fr'), ['fr', 'en', 'ar'], true)
+                        ? $request->input('lang', 'fr')
+                        : 'fr',
         ]);
-
-        event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Send the email verification notification. If SMTP delivery fails we do
+        // NOT crash the whole registration: the account is created and the user is
+        // logged in, they simply see a gentle notice and can re-request the link.
+        try {
+            $user->sendEmailVerificationNotification();
+            session()->flash('verification_sent', true);
+        } catch (\Throwable $e) {
+            Log::error('Verification email failed to send on registration: ' . $e->getMessage());
+            session()->flash('verification_send_error', true);
+        }
+
+        return redirect(route('verification.notice', absolute: false));
     }
 }

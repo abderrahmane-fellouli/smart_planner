@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class EmailVerificationNotificationController extends Controller
 {
@@ -17,8 +18,19 @@ class EmailVerificationNotificationController extends Controller
             return redirect()->intended(route('dashboard', absolute: false));
         }
 
-        $request->user()->sendEmailVerificationNotification();
+        $locale = $request->user()->locale;
+        if (in_array($locale, ['fr', 'en', 'ar'], true)) {
+            app()->setLocale($locale);
+        }
 
-        return back()->with('status', 'verification-link-sent');
+        try {
+            $request->user()->sendEmailVerificationNotification();
+
+            return back()->with('success', trans('messages.verification_link_sent'));
+        } catch (\Throwable $e) {
+            Log::error('Verification email resend failed: ' . $e->getMessage());
+
+            return back()->with('error', trans('messages.verification_send_failed'));
+        }
     }
 }

@@ -30,4 +30,17 @@ return [
 
     // Preferences (generic)
     'preferences_saved'        => 'Preferences saved.',
+
+    // Profile & account
+    'profile_updated'          => 'Profile updated successfully.',
+    'photo_removed'            => 'Profile photo removed.',
+    'password_updated'         => 'Password updated successfully.',
+    'email_changed_verify'     => 'Your email address was changed. A verification link has been sent to the new address.',
+    'verification_link_sent'   => 'A new verification link has been sent to your email address.',
+    'verification_send_failed' => 'Unable to send the verification email. Please try again later.',
+
+    // Todos
+    'todo_added'               => 'Task added.',
+    'todo_updated'             => 'Task updated.',
+    'todo_deleted'             => 'Task deleted.',
 ];

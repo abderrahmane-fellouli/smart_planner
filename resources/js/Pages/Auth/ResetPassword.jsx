@@ -37,7 +37,7 @@ export default function ResetPassword({ token, email }) {
   });
   const [showPassword, setShowPassword] = useState(false);
 
-  const submit = (e) => { e.preventDefault(); post(route('password.update')); };
+  const submit = (e) => { e.preventDefault(); post(route('password.store')); };
 
   return (
     <>
