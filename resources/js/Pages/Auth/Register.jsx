@@ -31,6 +31,7 @@ const T = {
     loginLink: "Se connecter",
     dir: "ltr",
     errorGeneric: "Veuillez corriger les erreurs ci-dessous.",
+    throttled: "Trop de tentatives d'inscription. Veuillez réessayer dans une minute.",
     showPassword: "Afficher le mot de passe",
     hidePassword: "Masquer le mot de passe",
   },
@@ -62,6 +63,7 @@ const T = {
     loginLink: "Sign in",
     dir: "ltr",
     errorGeneric: "Please correct the errors below.",
+    throttled: "Too many sign-up attempts. Please try again in a minute.",
     showPassword: "Show password",
     hidePassword: "Hide password",
   },
@@ -93,6 +95,7 @@ const T = {
     loginLink: "تسجيل الدخول",
     dir: "rtl",
     errorGeneric: "يرجى تصحيح الأخطاء أدناه.",
+    throttled: "محاولات تسجيل كثيرة جدًا. يرجى المحاولة مرة أخرى بعد دقيقة.",
     showPassword: "إظهار كلمة المرور",
     hidePassword: "إخفاء كلمة المرور",
   },
@@ -101,6 +104,7 @@ const T = {
 export default function Register() {
   const { lang, isRTL } = useAuthTheme();
   const tr = T[lang] || T.fr;
+  const { props: pageProps } = usePage();
 
   const { data, setData, post, processing, errors } = useForm({
     first_name: '',
@@ -115,9 +119,10 @@ export default function Register() {
   const [bannerError, setBannerError] = useState('');
 
   useEffect(() => {
-    if (errors && Object.keys(errors).length > 0) setBannerError(tr.errorGeneric);
+    if (pageProps?.flash?.throttled) setBannerError(tr.throttled);
+    else if (errors && Object.keys(errors).length > 0) setBannerError(tr.errorGeneric);
     else setBannerError('');
-  }, [errors, tr]);
+  }, [errors, tr, pageProps?.flash?.throttled]);
 
   const submit = (e) => { e.preventDefault(); setBannerError(''); post(route('register')); };
   const getFieldError = (key) => errors[key] ? (Array.isArray(errors[key]) ? errors[key][0] : errors[key]) : null;
