@@ -30,4 +30,17 @@ return [
 
     // Preferences (generic)
     'preferences_saved'        => 'تم حفظ التفضيلات.',
+
+    // Profile & account
+    'profile_updated'          => 'تم تحديث الملف الشخصي بنجاح.',
+    'photo_removed'            => 'تمت إزالة الصورة الشخصية.',
+    'password_updated'         => 'تم تحديث كلمة المرور بنجاح.',
+    'email_changed_verify'     => 'تم تغيير بريدك الإلكتروني. تم إرسال رابط التحقق إلى العنوان الجديد.',
+    'verification_link_sent'   => 'تم إرسال رابط تحقق جديد إلى بريدك الإلكتروني.',
+    'verification_send_failed' => 'تعذر إرسال بريد التحقق. يرجى المحاولة لاحقاً.',
+
+    // Todos
+    'todo_added'               => 'تمت إضافة المهمة.',
+    'todo_updated'             => 'تم تحديث المهمة.',
+    'todo_deleted'             => 'تم حذف المهمة.',
 ];

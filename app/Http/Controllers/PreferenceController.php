@@ -82,4 +82,24 @@ class PreferenceController extends Controller
         ];
         return redirect()->back()->with('success', $messages[$locale] ?? $messages['fr']);
     }
+
+    /**
+     * Persist the user's UI language.
+     *
+     * The frontend keeps the active language in localStorage, but emails are sent
+     * server-side, so we also store the locale on the user record. This lets the
+     * branded email templates render in the user's chosen language (FR/EN/AR + RTL).
+     */
+    public function updateLocale(Request $request)
+    {
+        $validated = $request->validate([
+            'locale' => 'required|string|in:fr,en,ar',
+        ]);
+
+        $user = auth()->user();
+        $user->locale = $validated['locale'];
+        $user->save();
+
+        return response()->json(['ok' => true, 'locale' => $user->locale]);
+    }
 }

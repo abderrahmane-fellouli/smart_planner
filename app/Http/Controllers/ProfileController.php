@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Mail\EmailChangedMail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -53,13 +56,35 @@ class ProfileController extends Controller
 
         $user->fill($validated);
 
+        $emailChanged = false;
         if ($user->isDirty('email')) {
+            $oldEmail = $user->getOriginal('email');
+            $newEmail = $user->email;
             $user->email_verified_at = null;
+            $emailChanged = true;
         }
 
         $user->save();
 
-        return Redirect::route('profile.edit');
+        // Resolve the UI language for the flash message from the user's stored
+        // locale so the success banner appears in the user's language.
+        if ($user->locale && in_array($user->locale, ['fr', 'en', 'ar'], true)) {
+            app()->setLocale($user->locale);
+        }
+
+        if ($emailChanged) {
+            try {
+                Mail::to($user)->send(new EmailChangedMail($user, $oldEmail, $newEmail));
+            } catch (\Throwable $e) {
+                Log::error('Email change notification failed: ' . $e->getMessage());
+            }
+
+            return Redirect::route('profile.edit')
+                ->with('success', trans('messages.email_changed_verify'));
+        }
+
+        return Redirect::route('profile.edit')
+            ->with('success', trans('messages.profile_updated'));
     }
 
     /**
@@ -96,6 +121,10 @@ class ProfileController extends Controller
 
         $user->update(['profile_photo_path' => null]);
 
-        return Redirect::route('profile.edit');
+        if ($user->locale && in_array($user->locale, ['fr', 'en', 'ar'], true)) {
+            app()->setLocale($user->locale);
+        }
+
+        return Redirect::route('profile.edit')->with('success', trans('messages.photo_removed'));
     }
 }

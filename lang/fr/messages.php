@@ -46,4 +46,17 @@ return [
 
     // Preferences (generic)
     'preferences_saved'        => 'Préférences enregistrées.',
+
+    // Profile & account
+    'profile_updated'          => 'Profil mis à jour avec succès.',
+    'photo_removed'            => 'Photo de profil supprimée.',
+    'password_updated'         => 'Mot de passe mis à jour avec succès.',
+    'email_changed_verify'     => 'Votre adresse email a été modifiée. Un lien de vérification a été envoyé à la nouvelle adresse.',
+    'verification_link_sent'   => 'Un nouveau lien de vérification a été envoyé à votre adresse email.',
+    'verification_send_failed' => 'Impossible d\'envoyer l\'email de vérification. Veuillez réessayer plus tard.',
+
+    // Todos
+    'todo_added'               => 'Tâche ajoutée.',
+    'todo_updated'             => 'Tâche mise à jour.',
+    'todo_deleted'             => 'Tâche supprimée.',
 ];

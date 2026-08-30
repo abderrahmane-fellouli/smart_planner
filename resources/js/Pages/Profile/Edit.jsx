@@ -1,6 +1,5 @@
 import { Head, useForm, usePage, router } from '@inertiajs/react';
-import AppLayout from '@/Pages/AppLayout';
-import { useLang } from '@/Pages/AppLayout';
+import AppLayout, { useTheme, useLang, LogoutModal } from '@/Pages/AppLayout';
 import { useState, useRef } from 'react';
 
 const T = {
@@ -38,6 +37,17 @@ const T = {
       confirmWithPassword: "Confirmez avec votre mot de passe",
       cancel: "Annuler",
       deleting: "Suppression...",
+      account: "👤 Compte",
+      accountSub: "Gérez l'accès à votre compte",
+      logoutBtn: "Se déconnecter",
+      logoutDesc: "Fermer votre session sur cet appareil",
+      emailVerified: "✅ Votre adresse email est vérifiée.",
+      resendVerification: "Renvoyer l'email de vérification",
+      resendSent: "✅ Lien de vérification renvoyé. Vérifiez votre boîte mail.",
+      resendCooldown: "Veuillez patienter avant de renvoyer.",
+      resendError: "Impossible d'envoyer l'email de vérification.",
+      removePhotoShort: "Retirer",
+      removePhotoAsk: "Confirmer la suppression ?",
     },
   },
   en: {
@@ -74,6 +84,17 @@ const T = {
       confirmWithPassword: "Confirm with your password",
       cancel: "Cancel",
       deleting: "Deleting...",
+      account: "👤 Account",
+      accountSub: "Manage access to your account",
+      logoutBtn: "Log out",
+      logoutDesc: "End your session on this device",
+      emailVerified: "✅ Your email address is verified.",
+      resendVerification: "Resend verification email",
+      resendSent: "✅ Verification link sent. Check your inbox.",
+      resendCooldown: "Please wait before resending.",
+      resendError: "Unable to send the verification email.",
+      removePhotoShort: "Remove",
+      removePhotoAsk: "Confirm removal?",
     },
   },
   ar: {
@@ -110,25 +131,45 @@ const T = {
       confirmWithPassword: "تأكيد باستخدام كلمة مرورك",
       cancel: "إلغاء",
       deleting: "جاري الحذف...",
+      account: "👤 الحساب",
+      accountSub: "إدارة الوصول إلى حسابك",
+      logoutBtn: "تسجيل الخروج",
+      logoutDesc: "إنهاء جلسة العمل على هذا الجهاز",
+      emailVerified: "✅ تم تأكيد بريدك الإلكتروني.",
+      resendVerification: "إعادة إرسال بريد التحقق",
+      resendSent: "✅ تم إرسال رابط التحقق. تحقق من بريدك.",
+      resendCooldown: "يرجى الانتظار قبل إعادة الإرسال.",
+      resendError: "تعذر إرسال بريد التحقق.",
+      removePhotoShort: "إزالة",
+      removePhotoAsk: "تأكيد الإزالة؟",
     },
   },
 };
 
-export default function Edit({ mustVerifyEmail, status }) {
+export default function Edit() {
   const { auth } = usePage().props;
   const user = auth.user;
+  const { tk } = useTheme();
 
   // Language detection
-  const { lang } = useLang();
+  const { lang, tr: appTr } = useLang();
   const tr = T[lang]?.profile || T.fr.profile;
-  // Status message mapping
-  let displayStatus = null;
-  if (status === 'profile-updated') displayStatus = tr.profileUpdated;
-  if (status === 'password-updated') displayStatus = tr.passwordUpdated;
+  const isRTL = lang === 'ar';
 
   // Profile photo state
   const [photoPreview, setPhotoPreview] = useState(null);
   const photoRef = useRef(null);
+  const [confirmRemovePhoto, setConfirmRemovePhoto] = useState(false);
+
+  // Logout modal
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+
+  // Email verification resend state + cooldown
+  const [resending, setResending] = useState(false);
+  const [resendMsg, setResendMsg] = useState(null);
+  const [resendError, setResendError] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const emailVerified = !!user.email_verified_at;
 
   // Forms
   const profileForm = useForm({
@@ -161,7 +202,9 @@ export default function Edit({ mustVerifyEmail, status }) {
 
   const submitProfile = (e) => {
     e.preventDefault();
-    profileForm.patch(route('profile.update'));
+    profileForm.patch(route('profile.update'), {
+      onSuccess: () => setConfirmRemovePhoto(false),
+    });
   };
 
   const submitPassword = (e) => {
@@ -174,6 +217,32 @@ export default function Edit({ mustVerifyEmail, status }) {
   const submitDelete = (e) => {
     e.preventDefault();
     deleteForm.delete(route('profile.destroy'));
+  };
+
+  const handleResendVerification = () => {
+    if (cooldown > 0 || resending) return;
+    setResending(true);
+    setResendError(false);
+    setResendMsg(null);
+    router.post(route('verification.send'), {}, {
+      preserveScroll: true,
+      onSuccess: () => {
+        setResendMsg(true);
+        setResending(false);
+        setCooldown(60);
+        const remaining = (n) => {
+          setCooldown(n);
+          if (n > 0) window.setTimeout(() => remaining(n - 1), 1000);
+        };
+        remaining(59);
+      },
+      onError: (errors) => {
+        setResendError(true);
+        setResendMsg('error');
+        setResending(false);
+      },
+      onFinish: () => setResending(false),
+    });
   };
 
   const nameForInitials = user.display_name || user.name || '';
@@ -192,13 +261,9 @@ export default function Edit({ mustVerifyEmail, status }) {
         </div>
 
         {/* Profile card */}
-        <div style={s.card} className="sp-profile-card">
+        <div style={s.card} className="sp-profile-card" data-tutorial-target="profile-info">
           <h2 style={s.cardTitle}>{tr.profileInfo}</h2>
           <p style={s.cardSub}>{tr.profileSub}</p>
-
-          {displayStatus === tr.profileUpdated && (
-            <div style={s.successMsg}>{displayStatus}</div>
-          )}
 
           <form onSubmit={submitProfile} style={s.form} encType="multipart/form-data">
 
@@ -241,15 +306,18 @@ export default function Edit({ mustVerifyEmail, status }) {
                     <button
                       type="button"
                       onClick={() => {
-                        if (confirm(tr.removePhotoConfirm)) {
-                          router.delete(route('profile.photo.destroy'), {
-                            onSuccess: () => setPhotoPreview(null),
-                          });
+                        if (!confirmRemovePhoto) {
+                          setConfirmRemovePhoto(true);
+                          return;
                         }
+                        setConfirmRemovePhoto(false);
+                        router.delete(route('profile.photo.destroy'), {
+                          onSuccess: () => setPhotoPreview(null),
+                        });
                       }}
                       style={{ ...s.changePhotoBtn, color: 'var(--sp-error)', borderColor: 'var(--sp-errorBorder)' }}
                     >
-                      {tr.removePhoto}
+                      {confirmRemovePhoto ? tr.removePhotoAsk : tr.removePhoto}
                     </button>
                   )}
                 </div>
@@ -319,8 +387,32 @@ export default function Edit({ mustVerifyEmail, status }) {
               {profileForm.errors.email && <span style={s.error} role="alert">{profileForm.errors.email}</span>}
             </div>
 
-            {mustVerifyEmail && user.email_verified_at === null && (
-              <div style={s.warningMsg}>{tr.emailNotVerified}</div>
+            {emailVerified ? (
+              <div style={s.successMsg}>{tr.emailVerified}</div>
+            ) : (
+              <div style={s.warningWrap}>
+                <div style={s.warningMsg}>{tr.emailNotVerified}</div>
+                <div style={s.resendRow}>
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resending || cooldown > 0}
+                    style={s.resendBtn}
+                  >
+                    {cooldown > 0
+                      ? `${tr.resendVerification} (${cooldown}s)`
+                      : resending
+                        ? '…'
+                        : tr.resendVerification}
+                  </button>
+                  {resendMsg === true && !resendError && (
+                    <span style={s.resendOk} role="status">{tr.resendSent}</span>
+                  )}
+                  {resendError && (
+                    <span style={s.resendBad} role="alert">{tr.resendError}</span>
+                  )}
+                </div>
+              </div>
             )}
 
             <div style={s.formFooter}>
@@ -335,10 +427,6 @@ export default function Edit({ mustVerifyEmail, status }) {
         <div style={s.card} className="sp-profile-card">
           <h2 style={s.cardTitle}>{tr.passwordSection}</h2>
           <p style={s.cardSub}>{tr.passwordSub}</p>
-
-          {displayStatus === tr.passwordUpdated && (
-            <div style={s.successMsg}>{displayStatus}</div>
-          )}
 
           <form onSubmit={submitPassword} style={s.form}>
             <div style={s.field}>
@@ -389,6 +477,19 @@ export default function Edit({ mustVerifyEmail, status }) {
           </form>
         </div>
 
+        {/* Account / logout */}
+        <div style={s.card} className="sp-profile-card">
+          <h2 style={s.cardTitle}>{tr.account}</h2>
+          <p style={s.cardSub}>{tr.accountSub}</p>
+          <button type="button" onClick={() => setLogoutModalOpen(true)} style={s.logoutBtn}>
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            <span style={{ flex: 1, textAlign: 'start' }}>{tr.logoutBtn}</span>
+          </button>
+          <p style={{ margin: '8px 0 0', fontSize: 'var(--sp-text-sm)', color: 'var(--sp-textMuted)' }}>{tr.logoutDesc}</p>
+        </div>
+
         {/* Danger zone */}
         <div style={{ ...s.card, border: '1px solid var(--sp-dangerBorder)', background: 'var(--sp-dangerBg)' }} className="sp-profile-card">
           <h2 style={{ ...s.cardTitle, color: 'var(--sp-danger)' }}>{tr.dangerZone}</h2>
@@ -425,6 +526,15 @@ export default function Edit({ mustVerifyEmail, status }) {
         </div>
 
       </div>
+      {logoutModalOpen && (
+        <LogoutModal
+          tk={tk}
+          tr={appTr}
+          isRTL={isRTL}
+          onConfirm={() => { setLogoutModalOpen(false); router.post('/logout'); }}
+          onCancel={() => setLogoutModalOpen(false)}
+        />
+      )}
     </AppLayout>
   );
 }
@@ -442,6 +552,12 @@ const s = {
 
   successMsg: { background: 'var(--sp-successBg)', border: '1px solid var(--sp-successBorder)', color: 'var(--sp-success)', borderRadius: '10px', padding: '10px 14px', fontSize: 'var(--sp-text-base)', marginBottom: '16px' },
   warningMsg: { background: 'var(--sp-warningBg)', border: '1px solid var(--sp-warningBorder)', color: 'var(--sp-warning)', borderRadius: '10px', padding: '10px 14px', fontSize: 'var(--sp-text-base)' },
+  warningWrap: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  resendRow: { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' },
+  resendBtn: { background: 'none', border: '1px solid var(--sp-accent)', color: 'var(--sp-accent)', borderRadius: '8px', padding: '8px 14px', fontSize: 'var(--sp-text-sm)', fontWeight: 600, cursor: 'pointer' },
+  resendOk: { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-success)', fontWeight: 500 },
+  resendBad: { fontSize: 'var(--sp-text-sm)', color: 'var(--sp-error)', fontWeight: 500 },
+  logoutBtn: { display: 'flex', alignItems: 'center', gap: '14px', width: '100%', padding: '12px 14px', borderRadius: '10px', cursor: 'pointer', background: 'var(--sp-dangerBg)', border: '1.5px solid var(--sp-dangerBorder)', color: 'var(--sp-danger)', fontSize: 'var(--sp-text-base)', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" },
 
   // Avatar
   avatarSection: { display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px', padding: '16px', background: 'var(--sp-hoverBg)', borderRadius: '12px', flexWrap: 'wrap' },

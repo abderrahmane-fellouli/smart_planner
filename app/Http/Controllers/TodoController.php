@@ -8,6 +8,13 @@ use Inertia\Inertia;
 
 class TodoController extends Controller
 {
+    private function locale(): void
+    {
+        $locale = auth()->user()->locale;
+        if (in_array($locale, ['fr', 'en', 'ar'], true)) {
+            app()->setLocale($locale);
+        }
+    }
     public function index()
     {
         $todos = TodoItem::where('user_id', auth()->id())
@@ -47,7 +54,9 @@ class TodoController extends Controller
             'scheduled_duration' => $validated['scheduled_duration'] ?? null,
         ]);
 
-        return redirect()->back();
+        $this->locale();
+
+        return redirect()->back()->with('success', trans('messages.todo_added'));
     }
 
     public function update(Request $request, $id)
@@ -74,13 +83,18 @@ class TodoController extends Controller
             $todo->update(['completed_at' => $validated['completed'] ? now() : null]);
         }
 
-        return redirect()->back();
+        $this->locale();
+
+        return redirect()->back()->with('success', trans('messages.todo_updated'));
     }
 
     public function destroy($id)
     {
         TodoItem::where('user_id', auth()->id())->findOrFail($id)->delete();
-        return redirect()->back();
+
+        $this->locale();
+
+        return redirect()->back()->with('success', trans('messages.todo_deleted'));
     }
 
     public function toggle($id)
