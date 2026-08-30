@@ -7,7 +7,7 @@ const T = {
   fr: {
     export: {
       title: "Exporter le planning",
-      subtitle: "Téléchargez votre planning en PDF",
+      subtitle: "Téléchargez votre planning en PDF ou CSV",
       emptyTitle: "Aucun planning disponible",
       emptySub: "Générez d'abord un planning depuis la page \"Mon planning\"",
       emptyBtn: "Aller à Mon planning →",
@@ -26,12 +26,15 @@ const T = {
       pdfOpening: "Ouverture...",
       pdfDesc: "S'ouvre dans un nouvel onglet · Imprimable avec Ctrl+P",
       infoText: "Le PDF s'ouvre dans un nouvel onglet. Utilisez Ctrl+P ou le bouton « Imprimer » pour sauvegarder en PDF.",
+      exportCsv: "Exporter en CSV",
+      csvOpening: "Téléchargement...",
+      csvDesc: "Télécharge le fichier CSV · Ouvre-le dans Excel ou Google Sheets",
     },
   },
   en: {
     export: {
       title: "Export Schedule",
-      subtitle: "Download your schedule as PDF",
+      subtitle: "Download your schedule as PDF or CSV",
       emptyTitle: "No schedule available",
       emptySub: "First generate a schedule from the \"My Schedule\" page",
       emptyBtn: "Go to My Schedule →",
@@ -50,12 +53,15 @@ const T = {
       pdfOpening: "Opening...",
       pdfDesc: "Opens in new tab · Printable with Ctrl+P",
       infoText: "The PDF opens in a new tab. Use Ctrl+P or the Print button to save as PDF.",
+      exportCsv: "Export as CSV",
+      csvOpening: "Downloading...",
+      csvDesc: "Downloads an Excel/Google Sheets compatible CSV file",
     },
   },
   ar: {
     export: {
       title: "تصدير الجدول",
-      subtitle: "قم بتنزيل جدولك بصيغة PDF",
+      subtitle: "قم بتنزيل جدولك بصيغة PDF أو CSV",
       emptyTitle: "لا يوجد جدول متاح",
       emptySub: "قم أولاً بإنشاء جدول من صفحة \"جدولي\"",
       emptyBtn: "الذهاب إلى جدولي →",
@@ -74,6 +80,9 @@ const T = {
       pdfOpening: "جاري الفتح...",
       pdfDesc: "يفتح في علامة تبويب جديدة · قابل للطباعة بـ Ctrl+P",
       infoText: "يفتح PDF في علامة تبويب جديدة. استخدم Ctrl+P أو زر الطباعة للحفظ بصيغة PDF.",
+      exportCsv: "تصدير بصيغة CSV",
+      csvOpening: "جاري التنزيل...",
+      csvDesc: "تنزيل ملف CSV متوافق مع Excel أو جداول بيانات Google",
     },
   },
 };
@@ -100,6 +109,18 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
     setLoading("pdf");
     const params = `?lang=${lang}${selectedId ? `&schedule_id=${selectedId}` : ""}`;
     window.open(`/export/pdf${params}`, "_blank");
+    setTimeout(() => setLoading(null), 1500);
+  };
+
+  const handleExportCsv = () => {
+    setLoading("csv");
+    const params = `?lang=${lang}${selectedId ? `&schedule_id=${selectedId}` : ""}`;
+    const a = document.createElement("a");
+    a.href = `/export/csv${params}`;
+    a.download = "";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     setTimeout(() => setLoading(null), 1500);
   };
 
@@ -196,6 +217,7 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                 <button
                   onClick={handleExportPdf}
                   disabled={!selectedId && !activeSchedule}
+                  data-tutorial-target="export-btn"
                   style={{
                     ...s.exportBtn,
                     opacity: (!selectedId && !activeSchedule) ? 0.5 : 1,
@@ -214,6 +236,33 @@ export default function ExportIndex({ activeSchedule, allSchedules, fixedEvents,
                       {loading === "pdf" ? tr.pdfOpening : tr.exportPdf}
                     </span>
                     <span style={s.exportBtnDesc}>{tr.pdfDesc}</span>
+                  </div>
+                  <svg width="16" height="16" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </button>
+
+                <button
+                  onClick={handleExportCsv}
+                  disabled={!selectedId && !activeSchedule}
+                  style={{
+                    ...s.exportBtn,
+                    opacity: (!selectedId && !activeSchedule) ? 0.5 : 1,
+                  }}
+                  onMouseEnter={e => { if (!e.currentTarget.disabled) { e.currentTarget.style.background = "var(--sp-subtleBg)"; e.currentTarget.style.borderColor = "var(--sp-accent)"; } }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "var(--sp-subtleBg)"; e.currentTarget.style.borderColor = "var(--sp-cardBorder)"; }}
+                >
+                  <div style={{ ...s.exportBtnIcon, background: "var(--sp-successBg)" }}>
+                    <svg width="28" height="28" fill="none" stroke="var(--sp-success)" strokeWidth="1.8" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0 0l-4-4m4 4l4-4"/>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>
+                    </svg>
+                  </div>
+                  <div style={{ ...s.exportBtnInfo, textAlign: "start" }}>
+                    <span style={s.exportBtnTitle}>
+                      {loading === "csv" ? tr.csvOpening : tr.exportCsv}
+                    </span>
+                    <span style={s.exportBtnDesc}>{tr.csvDesc}</span>
                   </div>
                   <svg width="16" height="16" fill="none" stroke="var(--sp-textMuted)" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
