@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from "react";
-import { router } from "@inertiajs/react";
+import { router, Head } from "@inertiajs/react";
 import AppLayout from "@/Pages/AppLayout";
 import { useLang, useTheme } from "@/Pages/AppLayout";
 import { useToast } from "@/Components/Toast";
@@ -296,6 +296,8 @@ export default function Index({ todos = [] }) {
     };
 
     return (
+        <>
+        <Head title={tr.title} />
         <AppLayout>
             <div style={{ maxWidth: 640, margin: "0 auto", padding: "24px 16px 60px" }}>
                 {/* Header + Progress Ring */}
@@ -315,7 +317,7 @@ export default function Index({ todos = [] }) {
                 </div>
 
                 {/* Add form */}
-                <form onSubmit={handleAdd} style={{ background: tk.card, border: `1px solid ${tk.cardBorder}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
+                <form onSubmit={handleAdd} data-tutorial-target="todos-form" style={{ background: tk.card, border: `1px solid ${tk.cardBorder}`, borderRadius: 12, padding: 14, marginBottom: 16 }}>
                     <input
                         type="text"
                         value={newTitle}
@@ -424,7 +426,7 @@ export default function Index({ todos = [] }) {
                 )}
 
                 {filtered.map(todo => (
-                    <div key={todo.id}
+                    <div key={todo.id} data-todo-row
                         style={{
                             display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
                             borderRadius: 8, marginBottom: 6,
@@ -496,5 +498,6 @@ export default function Index({ todos = [] }) {
                 ))}
             </div>
         </AppLayout>
+        </>
     );
 }

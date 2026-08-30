@@ -34,6 +34,21 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            // Interactive onboarding tutorial state for the logged-in user.
+            'tutorial' => fn () => $request->user()
+                ? \App\Http\Controllers\TutorialController::state()
+                : null,
+            // Lightweight data-existence flags so the onboarding guide can adapt
+            // its steps to what the user has already set up (it never forces
+            // duplicate courses/tasks/schedules).
+            'tourData' => fn () => $request->user()
+                ? [
+                    'has_courses'        => \App\Models\FixedEvent::where('user_id', $request->user()->id)->exists(),
+                    'has_todos'          => \App\Models\TodoItem::where('user_id', $request->user()->id)->exists(),
+                    'has_schedule'       => \App\Models\OptimizedSchedule::where('user_id', $request->user()->id)->exists(),
+                    'has_active_schedule'=> \App\Models\OptimizedSchedule::where('user_id', $request->user()->id)->where('is_active', true)->exists(),
+                ]
+                : null,
             // Flash messages from redirect()->back()->with('success', ...) etc.
             // Without this, controllers' flash messages are silently lost on the frontend.
             // The fn() closures (lazy evaluation) avoid reading session data until the
@@ -41,6 +56,7 @@ class HandleInertiaRequests extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error'   => fn () => $request->session()->get('error'),
+                'throttled' => fn () => $request->session()->get('throttled'),
             ],
         ];
     }
