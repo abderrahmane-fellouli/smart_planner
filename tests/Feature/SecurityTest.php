@@ -4,6 +4,11 @@ use App\Models\FixedEvent;
 use App\Models\OptimizedSchedule;
 use App\Models\Preference;
 use App\Models\User;
+use Illuminate\Support\Facades\Mail;
+
+beforeEach(function () {
+    Mail::fake();
+});
 
 // ── Authorization tests: users cannot access other users' data ──
 
