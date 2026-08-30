@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class LoginTest extends TestCase
@@ -12,11 +13,21 @@ class LoginTest extends TestCase
 
     protected function createUser(array $overrides = []): User
     {
-        return User::create(array_merge([
+        $verified = $overrides['email_verified_at'] ?? false;
+        unset($overrides['email_verified_at']);
+
+        $user = User::create(array_merge([
             'name'     => 'Test User',
             'email'    => 'test_' . time() . '_' . rand(1000,9999) . '@test.com',
             'password' => bcrypt('password'),
         ], $overrides));
+
+        if ($verified) {
+            $user->forceFill(['email_verified_at' => $verified === true ? now() : $verified])->save();
+            $user->refresh();
+        }
+
+        return $user;
     }
 
     /**
@@ -110,6 +121,8 @@ class LoginTest extends TestCase
      */
     public function test_register_then_login(): void
     {
+        Mail::fake();
+
         $email = 'reglogin_' . time() . '@test.com';
 
         $regResponse = $this->post('/register', [
@@ -136,7 +149,7 @@ class LoginTest extends TestCase
     public function test_login_then_access_dashboard(): void
     {
         $email = 'dash_' . time() . '@test.com';
-        $user = $this->createUser(['email' => $email]);
+        $user = $this->createUser(['email' => $email, 'email_verified_at' => now()]);
         $this->actingAs($user);
 
         $response = $this->get('/dashboard');
@@ -150,7 +163,7 @@ class LoginTest extends TestCase
     public function test_login_then_access_all_pages(): void
     {
         $email = 'pages_' . time() . '@test.com';
-        $user = $this->createUser(['email' => $email]);
+        $user = $this->createUser(['email' => $email, 'email_verified_at' => now()]);
         $this->actingAs($user);
 
         $pages = [
@@ -165,7 +178,7 @@ class LoginTest extends TestCase
 
         foreach ($pages as $page) {
             $response = $this->get($page);
-            $response->assertStatus(200, "Page {$page} should return 200");
+            $response->assertStatus(200, "Page {$page} should return 200, got {$response->getStatusCode()} location={$response->headers->get('Location')}");
         }
     }
 
