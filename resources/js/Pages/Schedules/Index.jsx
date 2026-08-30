@@ -192,7 +192,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
             <h1 style={s.title}>{tr.title}</h1>
             <p style={s.subtitle}>{tr.subtitle}</p>
           </div>
-          <button onClick={handleGenerate} style={s.generateBtn} disabled={processing}>
+          <button onClick={handleGenerate} style={s.generateBtn} disabled={processing} data-tutorial-target="schedules-generate">
             {processing
               ? <><Spinner />{tr.generating}</>
               : <><RefreshIcon />{tr.generate}</>}
@@ -231,7 +231,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
               const details    = plan.schedule?.details || {};
 
               return (
-                <div key={plan.id} style={{ ...s.card, ...(isActive ? { border: `2px solid ${cfg.color}` } : {}) }}>
+                <div key={plan.id} data-schedule-card style={{ ...s.card, ...(isActive ? { border: `2px solid ${cfg.color}` } : {}) }}>
 
                   {/* Top */}
                   <div style={{ ...s.cardTop, background: cfg.bg }}>
@@ -324,7 +324,7 @@ export default function SchedulesIndex({ schedules, activeSchedule }) {
                   <div style={s.cardFooter}>
                     {!isActive
                       ? <button onClick={() => handleActivate(plan.id)} style={{ ...s.activateBtn, background: cfg.color }}>{tr.activate}</button>
-                      : <span style={{ ...s.activeLabel, color: cfg.color }}>{tr.activeLabel}</span>
+                      : <span style={{ ...s.activeLabel, color: cfg.color }} data-schedule-active>{tr.activeLabel}</span>
                     }
                     <button onClick={() => handleDelete(plan.id)} style={s.deleteBtn}>{tr.delete}</button>
                   </div>

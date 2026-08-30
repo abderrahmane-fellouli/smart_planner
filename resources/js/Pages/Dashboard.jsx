@@ -14,6 +14,7 @@ const T = {
         generate:"Générer le planning", next_slot:"Prochain créneau",         quick_actions:"Actions rapides",
         add_task:"Ajouter une tâche fixe", generate_schedule:"Générer le planning",
         sleep_schedule:"Horaire de sommeil", edit_prefs:"Préférences", export:"Exporter", daily_tasks:"Tâches du jour",
+        calendar:"Calendrier",
         week:"Semaine", at:"à", dir:"ltr",
         tab_today:"Aujourd'hui", tab_tomorrow:"Demain", tab_week:"Cette semaine",
         sessions:"sessions", session:"session", no_sessions:"Aucune session",
@@ -41,6 +42,7 @@ const T = {
         generate:"Generate schedule", next_slot:"Next slot",         quick_actions:"Quick actions",
         add_task:"Add fixed task", generate_schedule:"Generate schedule",
         sleep_schedule:"Sleep schedule", edit_prefs:"Preferences", export:"Export", daily_tasks:"Daily Tasks",
+        calendar:"Calendar",
         week:"Week", at:"at", dir:"ltr",
         tab_today:"Today", tab_tomorrow:"Tomorrow", tab_week:"This week",
         sessions:"sessions", session:"session", no_sessions:"No sessions",
@@ -68,6 +70,7 @@ const T = {
         generate:"إنشاء الجدول", next_slot:"الفترة القادمة",         quick_actions:"إجراءات سريعة",
         add_task:"إضافة مهمة ثابتة", generate_schedule:"إنشاء الجدول",
         sleep_schedule:"جدول النوم", edit_prefs:"التفضيلات", export:"تصدير", daily_tasks:"مهام اليوم",
+        calendar:"التقويم",
         week:"الأسبوع", at:"في", dir:"rtl",
         tab_today:"اليوم", tab_tomorrow:"غداً", tab_week:"هذا الأسبوع",
         sessions:"جلسات", session:"جلسة", no_sessions:"لا توجد جلسات",
@@ -180,7 +183,7 @@ export default function Dashboard({
 
                 {/* Header */}
                 <div style={s.header}>
-                    <div style={{ textAlign: "start" }}>
+                    <div style={{ textAlign: "start" }} data-tutorial-target="dash-greeting">
                         <h1 style={s.greeting}>{greeting}, {user?.display_name || user?.name || "..."} 👋</h1>
                         <p style={s.date}>{now.toLocaleDateString(locale, { weekday:"long", day:"numeric", month:"long", year:"numeric" })}</p>
                     </div>
@@ -190,7 +193,7 @@ export default function Dashboard({
                 </div>
 
                 {/* Stats */}
-                <div style={s.statsRow}>
+                <div style={s.statsRow} data-tutorial-target="dash-overview">
                     <StatCard label={tr.tasks_week}  value={totalWeekSessions} />
                     <StatCard label={tr.fixed_tasks}  value={fixedEventsCount} />
                     <StatCard label={tr.study_time}   value={`${activeSchedule?.schedule?.resume?.total_heures_semaine ?? 0}h`} accent="var(--sp-success)" />
@@ -356,7 +359,7 @@ export default function Dashboard({
                         )}
 
                         {/* Quick actions */}
-                        <div style={s.card}>
+                        <div style={s.card} data-tutorial-target="dash-actions">
                                 <h2 style={{ ...s.cardTitle, textAlign: "start" }}>{tr.quick_actions}</h2>
                             <div style={s.actions}>
                                 {[
@@ -365,6 +368,7 @@ export default function Dashboard({
                                     { href:"/sleep-schedule",icon:"🌙", label:tr.sleep_schedule },
                                     { href:"/schedules",    icon:"⚡", label:tr.generate_schedule },
                                     { href:"/preferences",  icon:"⚙️", label:tr.edit_prefs },
+                                    { href:"/calendar",      icon:"📅", label:tr.calendar },
                                     { href:"/export",       icon:"📤", label:tr.export },
                                 ].map(a => (
                                     <Link key={a.href} href={a.href} style={s.actionBtn}>

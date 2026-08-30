@@ -11,7 +11,12 @@ class Preference extends Model
 
     protected $fillable = [
         'user_id', 'wake_up_time', 'sleep_time', 'study_preference',
-        'concentration_hours', 'desired_free_time', 'priorities', 'theme'
+        'concentration_hours', 'desired_free_time', 'priorities', 'theme',
+        'tutorial'
+    ];
+
+    protected $casts = [
+        'tutorial' => 'array',
     ];
 
     public function user()
