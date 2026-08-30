@@ -468,10 +468,16 @@ HTML;
     /**
      * Sanitize a cell value to prevent CSV injection (formula injection).
      * Cells starting with =, +, -, @, or tab are prefixed with a single quote
-     * so Excel treats them as text, not as formulas.
+     * so Excel treats them as text, not as formulas. Embedded CR/LF (CRLF, CR,
+     * LF) are collapsed to a single space so a user-controlled value cannot
+     * break out of its row into unintended additional CSV rows.
      */
     private function sanitizeCsvCell(string $value): string
     {
+        // Neutralize embedded line breaks first (before the formula check so a
+        // value like "=x\r\n" collapses to "=x " and still gets the quote).
+        $value = str_replace(["\r\n", "\r", "\n"], ' ', $value);
+
         $firstChar = substr($value, 0, 1);
         if (in_array($firstChar, ['=', '+', '-', '@', "\t"])) {
             return "'" . $value;
