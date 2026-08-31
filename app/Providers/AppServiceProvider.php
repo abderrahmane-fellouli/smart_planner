@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
+use Symfony\Component\Mailer\Transport\Dsn;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +41,12 @@ class AppServiceProvider extends ServiceProvider
             if (!Auth::check()) return null;
             $pref = \App\Models\Preference::where('user_id', Auth::id())->first();
             return $pref ? ['theme' => $pref->theme] : null;
+        });
+
+        $this->app['mail.manager']->extend('brevo', function () {
+            return (new BrevoTransportFactory())->create(
+                Dsn::fromString(config('services.brevo.dsn'))
+            );
         });
     }
 }
